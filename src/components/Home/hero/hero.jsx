@@ -1,0 +1,39 @@
+import { ButtonPrincipal } from '../../Button/ButtonPrincipal'
+import { ButtonOutline } from '../../Button/ButtonSecondary'
+
+export function Hero() {
+    return (
+        <section className="flex flex-col md:flex-row items-center justify-between gap-12 w-full max-w-[1280px] mx-auto px-10 py-20 md:py-12 rounded-2xl bg-gradient-to-br from-white via-blue-100 to-green-50/25 text-left box-border">
+            {/* Text side */}
+            <div className="flex-1 min-w-0 z-10">
+                <div className="inline-flex items-center gap-2 bg-[rgba(0,88,190,0.1)] text-[#0058be] px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-6">
+                    <span className="material-symbols-outlined text-[18px]">verified</span>
+                    <span>Gestión Académica de Precisión</span>
+                </div>
+                <h1 className="text-[clamp(36px,5vw,64px)] leading-tight font-bold mb-6 text-gray-900">
+                    Domina tu Semestre con <span className="text-[#0058be]">Intellect</span>
+                </h1>
+                <p className="text-base text-gray-500 mb-10 max-w-[500px]">
+                    Reduce la carga cognitiva y optimiza tu rendimiento académico. Una plataforma diseñada para el orden estructural y el enfoque absoluto en tus metas educativas.
+                </p>
+                <div className="flex flex-wrap gap-4">
+                    <ButtonPrincipal title="Seguir a elian" href="/course" />
+                    <ButtonOutline title="Donarle dinero a elian" href="/" />
+                </div>
+            </div>
+
+            {/* Image side */}
+            <div className="flex-none w-full max-w-[320px] md:w-[420px] md:max-w-[420px] relative order-2">
+                <div className="relative z-10 rounded-xl overflow-hidden shadow-2xl border border-gray-200">
+                    <img
+                        alt="Software dashboard interface mockup"
+                        src="https://png.pngtree.com/png-clipart/20240708/original/pngtree-sticker-of-a-cartoon-laptop-computer-with-pie-chart-png-image_15515880.png"
+                        className="w-full max-h-80 object-contain block"
+                    />
+                </div>
+                <div className="absolute w-64 h-64 rounded-full blur-3xl -z-10 -top-12 -right-12 bg-[rgba(0,88,190,0.1)]" />
+                <div className="absolute w-64 h-64 rounded-full blur-3xl -z-10 -bottom-12 -left-12 bg-[rgba(108,248,187,0.2)]" />
+            </div>
+        </section>
+    );
+}

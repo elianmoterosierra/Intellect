@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "title": "Entrega próxima: Ensayo de Física",
+    "subtitle": "2h restantes",
+    "urgent": true
+  },
+  {
+    "id": 2,
+    "title": "Nueva tarea asignada",
+    "subtitle": "Laboratorio de Química",
+    "urgent": false
+  },
+  {
+    "id": 3,
+    "title": "Recordatorio",
+    "subtitle": "Examen de Matemáticas mañana",
+    "urgent": false
+  },
+  {
+    "id": 4,
+    "title": "Proyecto final: Fecha límite extendida",
+    "subtitle": "Ahora disponible hasta el viernes",
+    "urgent": false
+  },
+  {
+    "id": 5,
+    "title": "Calificación publicada: Historia del Arte",
+    "subtitle": "Revisa tu calificación del parcial",
+    "urgent": false
+  },
+  {
+    "id": 6,
+    "title": "Tarea vencida: Ejercicios de Cálculo",
+    "subtitle": "Se descontará puntualidad",
+    "urgent": true
+  },
+  {
+    "id": 7,
+    "title": "Inscripción a tutoría abierta",
+    "subtitle": "Cupos limitados para Álgebra Lineal",
+    "urgent": false
+  },
+  {
+    "id": 8,
+    "title": "Cambio de aula: Química Orgánica",
+    "subtitle": "Laboratorio 301 a partir del lunes",
+    "urgent": true
+  }
+]
