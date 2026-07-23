@@ -1,6 +1,8 @@
 import { TaskItem } from './TaskItem/TaskItem';
+import { AddTaskButton } from './AddTask/AddTaskButton';
 
-export function UpcomingTasks({ task, courseId }) {
+
+export function UpcomingTasks({ tasks, courseId }) {
     return (
         <div className="md:col-span-12 bg-white rounded-xl border border-[#c2c6d6] shadow-sm overflow-hidden mt-2">
             {/* Header */}
@@ -13,24 +15,24 @@ export function UpcomingTasks({ task, courseId }) {
 
             {/* Task list */}
             <ul className="list-none p-0 m-0">
-                {task.map((t) => (
-                    <TaskItem
-                        key={t.id}
-                        title={t.title}
-                        subtitle={t.subtitle}
-                        hour={t.hour}
-                        dueDate={t.dueDate}
-                        taskId={t.id}
-                        courseId={courseId}
-                    />
-                ))}
+                {tasks.length === 0 ? (
+                    <li className="px-6 py-8 text-center text-[#424754]">
+                        Todavía no tienes tareas.
+                    </li>
+                ) : (
+                    tasks.map((task) => (
+                        <TaskItem
+                            key={task.id}
+                            task={task}
+                            courseId={courseId}
+                        />
+                    ))
+                )}
             </ul>
 
+
             {/* Add button */}
-            <button className="flex items-center justify-center gap-2 w-full py-4 bg-transparent border-none border-t border-[#c2c6d6] text-[#0058be] text-sm font-semibold cursor-pointer transition-colors duration-200 hover:bg-[#f2f3fd]">
-                <span className="material-symbols-outlined">add</span>
-                Nueva Tarea
-            </button>
+            <AddTaskButton courseId={courseId} />
         </div>
     )
 }

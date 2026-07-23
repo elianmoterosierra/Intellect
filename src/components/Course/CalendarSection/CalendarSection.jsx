@@ -4,7 +4,7 @@ import '../../../page/css/Calendar.css';
 import { Perfil } from '../../Perfil/Perfil';
 import { HeaderCalendar } from './Header/HeaderCalendar';
 
-export default function CalendarSection({ onToggleNotifications }) {
+export default function CalendarSection({ courseId, onToggleNotifications }) {
 
     const today = new Date();
     const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -49,7 +49,7 @@ export default function CalendarSection({ onToggleNotifications }) {
                 currentYear={currentYear} />
             <div className="calendar-container" style={{ overflowY: 'visible' }}>
                 <div className="calendar-grid">
-                    <Day currentMonth={currentMonth} currentYear={currentYear} />
+                    <Day courseId={courseId} currentMonth={currentMonth} currentYear={currentYear} />
                 </div>
             </div>
             {showPerfil && <Perfil onClose={() => setShowPerfil(false)} />}

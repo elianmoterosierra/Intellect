@@ -1,12 +1,10 @@
 import { useAuthStore } from "../../store/AuthStore";
-import { useNavigate } from "react-router";
 import { ButtonLogout } from "./ButtonLogout/ButtonLogout";
 
 export function Perfil({ onClose }) {
-    const { userName, logout } = useAuthStore();
-    const navigate = useNavigate();
+    const { user } = useAuthStore();
 
-    const initial = userName ? userName.charAt(0).toUpperCase() : "?";
+    const initial = user?.name ? user.name.charAt(0).toUpperCase() : "?";
 
     return (
         <div
@@ -53,7 +51,7 @@ export function Perfil({ onClose }) {
                             className="font-bold text-gray-800"
                             style={{ fontSize: "20px", margin: 0, letterSpacing: "-0.3px" }}
                         >
-                            {userName ?? "Usuario"}
+                            {user?.name ?? "Usuario"}
                         </h2>
                         <p className="text-sm mt-1" style={{ color: "#0058be" }}>
                             Miembro activo
@@ -66,8 +64,8 @@ export function Perfil({ onClose }) {
                     {/* Info rows */}
                     <div className="w-full flex flex-col gap-3">
                         {[
-                            { icon: "person", label: "Nombre", value: userName ?? "—" },
-                            { icon: "mail", label: "Email", value: userName ? `${userName.toLowerCase()}@mail.com` : "—" },
+                            { icon: "person", label: "Nombre", value: user?.name ?? "—" },
+                            { icon: "mail", label: "Email", value: user?.email ?? "—" },
                             { icon: "lock", label: "Contraseña", value: "••••••••" },
                         ].map(({ icon, label, value }) => (
                             <div

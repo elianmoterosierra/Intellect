@@ -1,13 +1,22 @@
 import { useState } from 'react';
+import { useAuthStore } from "../../../store/AuthStore";
 
 export function Login({ onSwitch, onSuccess }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const login = useAuthStore((state) => state.login);
+    const [error, setError] = useState('');
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!email || !password) return;
-        onSuccess(email.split('@')[0]);
+        const result = login({ email, password });
+        if (!result.success) {
+            setError(result.error);
+            return;
+        }
+
+        setError('');
+        onSuccess();
     };
 
     return (
@@ -35,6 +44,8 @@ export function Login({ onSwitch, onSuccess }) {
             >
                 Login
             </button>
+
+            {error && <span className="text-sm text-red-500">{error}</span>}
 
             <p className="text-sm text-gray-500 animate-inputIn" style={{ animationDelay: '0.4s', animationFillMode: 'both' }}>
                 ¿No tienes una cuenta?{' '}

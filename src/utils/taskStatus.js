@@ -35,7 +35,18 @@ export function getDaysDifference(targetDate, currentDate = new Date()) {
 export function getTaskStatusConfig(targetDate, currentDate = new Date()) {
     const diff = getDaysDifference(targetDate, currentDate);
 
-    if (diff === 1) {
+    if (diff !== null && diff < 0) {
+        return {
+            diff,
+            status: 'overdue',
+            bgColor: 'bg-[#ba1a1a]',
+            borderColor: 'border-[#ba1a1a]',
+            textColor: 'text-white',
+            pillBg: 'bg-white/15 text-white border border-white/30 font-bold',
+            icon: 'error',
+            badgeText: 'Tarea vencida',
+        };
+    } else if (diff === 1) {
         return {
             diff,
             status: 'tomorrow',

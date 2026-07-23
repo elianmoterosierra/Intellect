@@ -3,7 +3,7 @@ import { CourseCards } from '../components/SelectCourse/Course-card/Course-Card'
 import { useCourseStore } from '../store/courseStore';
 import { useNavigate } from 'react-router';
 
-function CourseButton({ courseId }) {
+export function CourseButton({ courseId }) {
     const navigate = useNavigate();
     const buttonStatus = useCourseStore(s => s.buttonStatus);
     const handleSelect = useCourseStore(s => s.handleSelect);

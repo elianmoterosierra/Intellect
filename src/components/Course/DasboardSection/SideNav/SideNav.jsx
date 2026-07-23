@@ -18,7 +18,9 @@ export function SideNav({ courseId, activeSection, onSectionChange }) {
     const handleLeave = useCourseStore(s => s.handleLeave);
 
     const confirmLeave = () => {
-        handleLeave(courseId);
+        const didLeave = handleLeave(courseId);
+        if (!didLeave) return;
+
         setShowModal(false);
         navigate('/course', { replace: true });
     };

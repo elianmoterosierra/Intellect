@@ -1,32 +1,37 @@
 import { create } from 'zustand';
+import { useAuthStore } from './AuthStore';
 
-function loadSelected() {
-    try {
-        const saved = localStorage.getItem('selectedCourses');
-        return saved ? JSON.parse(saved) : {};
-    } catch {
-        return {};
-    }
+function selectedCourseStatus() {
+    const courseId = useAuthStore.getState().user?.selectedCourseId;
+    return courseId ? { [courseId]: 'selected' } : {};
 }
 
-export const useCourseStore = create((set, get) => ({
-    buttonStatus: loadSelected(),
+export const useCourseStore = create((set) => ({
+    buttonStatus: selectedCourseStatus(),
 
-    syncFromStorage: () => set({ buttonStatus: loadSelected() }),
+    syncFromAuth: () => set({ buttonStatus: selectedCourseStatus() }),
 
     handleSelect: (courseId) => {
         set({ buttonStatus: { [courseId]: 'processing' } });
 
         setTimeout(() => {
+            useAuthStore.getState().setSelectedCourse(courseId);
             set({ buttonStatus: { [courseId]: 'selected' } });
-            localStorage.setItem('selectedCourses', JSON.stringify({ [courseId]: 'selected' }));
         }, 800);
     },
 
     handleLeave: (courseId) => {
-        const current = loadSelected();
-        delete current[courseId];
-        localStorage.setItem('selectedCourses', JSON.stringify(current));
-        set({ buttonStatus: current });
+        const selectedCourseId = useAuthStore.getState().user?.selectedCourseId;
+        if (selectedCourseId == null || String(selectedCourseId) !== String(courseId)) return false;
+
+        useAuthStore.getState().setSelectedCourse(null);
+        set({ buttonStatus: {} });
+        return true;
     },
 }));
+
+useAuthStore.subscribe((state, previousState) => {
+    if (state.user?.email !== previousState.user?.email) {
+        useCourseStore.getState().syncFromAuth();
+    }
+});

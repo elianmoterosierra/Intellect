@@ -8,7 +8,7 @@ import { Perfil } from "../Perfil/Perfil";
 export function Header() {
     const navigate = useNavigate();
     const { buttonStatus } = useCourseStore()
-    const { isLoggedIn, login } = useAuthStore()
+    const { isLoggedIn } = useAuthStore()
     const selectedCourseID = Object.keys(buttonStatus).find(id => buttonStatus[id] === 'selected');
     const [showForm, setShowForm] = useState(false);
     const [showPerfil, setShowPerfil] = useState(false);
@@ -20,13 +20,12 @@ export function Header() {
         }
     };
 
-    const handleAuthSuccess = (name) => {
-        login(name);
+    const handleAuthSuccess = () => {
         setShowForm(false);
         navigate('/course');
     };
 
-    const handlePerfil = (e) => {
+    const handlePerfil = () => {
         if (isLoggedIn) {
             setShowPerfil(true);
         } else {
@@ -45,16 +44,16 @@ export function Header() {
 
     return (
         <>
-            <header className="sticky top-0 z-50 flex items-center px-4 w-full h-16 bg-white/85 backdrop-blur-md border-b border-gray-200">
+            <header className="sticky top-0 z-50 flex items-center px-4 md:px-6 w-full h-16 bg-white/85 backdrop-blur-md border-b border-gray-200">
                 {/* Logo — izquierda */}
-                <div className="flex items-center gap-4">
+                <div className="flex flex-1 items-center gap-4">
                     <Link to="/" className="text-[28px] leading-9 font-bold text-[#0058be] tracking-tight no-underline">
                         Intellect
                     </Link>
                 </div>
 
                 {/* Nav links — centrado absoluto */}
-                <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 gap-1">
+                <nav className="hidden lg:flex flex-1 justify-center gap-1 whitespace-nowrap">
                     <Link className={linkClass('/')} to="/">Inicio</Link>
                     <Link className={linkClass('/course')} to="/course" onClick={handleCoursesClick}>Cursos</Link>
                     {selectedCourseID ? (
@@ -65,17 +64,17 @@ export function Header() {
                 </nav>
 
                 {/* Íconos — derecha */}
-                <div className="hidden md:flex items-center gap-2 ml-auto">
+                <div className="hidden lg:flex flex-1 items-center justify-end gap-2">
                     <button className="material-symbols-outlined border-none bg-transparent cursor-pointer p-2 text-gray-500 rounded-full transition-all duration-200 hover:bg-[rgba(33,112,228,0.08)] hover:text-[#0058be] active:scale-95">
                         notifications
                     </button>
-                    <button onClick={(e) => handlePerfil(e)} className="material-symbols-outlined border-none bg-transparent cursor-pointer p-2 text-gray-500 rounded-full transition-all duration-200 hover:bg-[rgba(33,112,228,0.08)] hover:text-[#0058be] active:scale-95">
+                    <button onClick={handlePerfil} className="material-symbols-outlined border-none bg-transparent cursor-pointer p-2 text-gray-500 rounded-full transition-all duration-200 hover:bg-[rgba(33,112,228,0.08)] hover:text-[#0058be] active:scale-95">
                         account_circle
                     </button>
                 </div>
 
                 {/* Hamburguesa — solo en móvil */}
-                <button className="material-symbols-outlined md:hidden ml-auto border-none bg-transparent cursor-pointer p-2 text-gray-500">
+                <button className="material-symbols-outlined lg:hidden ml-auto border-none bg-transparent cursor-pointer p-2 text-gray-500">
                     menu
                 </button>
 

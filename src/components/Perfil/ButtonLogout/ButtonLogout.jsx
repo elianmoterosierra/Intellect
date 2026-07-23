@@ -1,20 +1,14 @@
 import { useAuthStore } from "../../../store/AuthStore";
-import { useNavigate } from "react-router";
-import { useCourseStore } from "../../../store/courseStore";
+
 
 export function ButtonLogout({ onClose }) {
     const { logout } = useAuthStore();
-    const navigate = useNavigate();
-    const { handleLeave } = useCourseStore()
+
 
     const handleLogout = () => {
         logout();
         onClose();
-        navigate("/");
-        handleLeave();
-        localStorage.removeItem('selectedCourses');
-
-
+        window.location.assign("/");
     };
     return (
         <button

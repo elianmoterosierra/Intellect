@@ -10,11 +10,11 @@ export function CTASection() {
     const navigate = useNavigate();
 
     const [showForm, setShowForm] = useState(false);
-    const { isLoggedIn, login } = useAuthStore();
+    const { isLoggedIn } = useAuthStore();
 
-    const handleAuthSuccess = (name) => {
-        login(name);
+    const handleAuthSuccess = () => {
         setShowForm(false);
+        navigate('/course');
     };
 
     const handleCoursesClick = (e) => {

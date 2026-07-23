@@ -1,14 +1,31 @@
 import { useState } from 'react';
+import { useAuthStore } from "../../../store/AuthStore";
 
 export function Reguister({ onSwitch, onSuccess }) {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const register = useAuthStore((state) => state.register);
+    const [error, setError] = useState('');
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!name || !email || !password) return;
-        onSuccess(name);
+        if (name == ('') || email == ('') || password == ('')) return setError('Todos los campos son obligatorios');
+        else if (name.length < 3) return setError('El nombre debe tener al menos 3 caracteres');
+        else if (password.length < 6) return setError('La contraseña debe tener al menos 6 caracteres');
+        else if (password.includes(' ')) return setError('La contraseña no puede contener espacios');
+        else if (!email.includes('@')) return setError('El email debe tener un @');
+        else if (!email.includes('.')) return setError('El email debe tener un .');
+        else if (email.includes(' ')) return setError('El email no puede contener espacios');
+
+        else {
+            const result = register({ name, email, password });
+            if (!result.success) return setError(result.error);
+
+            setError('');
+            onSuccess();
+        }
+
     };
 
     return (
@@ -44,6 +61,7 @@ export function Reguister({ onSwitch, onSuccess }) {
             >
                 Register
             </button>
+            <span className="text-sm text-red-500 animate-inputIn" style={{ animationDelay: '0.5s', animationFillMode: 'both' }}>{error}</span>
 
             <p className="text-sm text-gray-500 animate-inputIn" style={{ animationDelay: '0.5s', animationFillMode: 'both' }}>
                 ¿Ya tienes una cuenta?{' '}

@@ -4,16 +4,6 @@ export const courseData = [
         title: "Ingeniería de Software - 5to Curso",
         description: "Avanza en el desarrollo de sistemas complejos, patrones de arquitectura y gestión de ciclo de vida del software.",
         icon: "code",
-        task: [
-            {
-                id: 1,
-                title: "Ensayo de Física: Termodinámica",
-                subtitle: "Física Cuántica",
-                hour: "Hoy, 23:59",
-                dueDate: new Date(2026, 6, 14, 23, 59),
-                completed: false,
-            }
-        ],
         notification: [
             {
                 "id": 1,
@@ -58,32 +48,6 @@ export const courseData = [
         title: "Electricidad - 5to Curso",
         description: "Avanza en el mundo de la electricidad y la automatizacion industrial, aprendiendo sobre sistemas complejos, patrones de arquitectura y gestión de ciclo de vida del software.",
         icon: "bolt",
-        task: [
-            {
-                id: 1,
-                title: "Esquema eléctrico residencial",
-                subtitle: "Plano unifilar",
-                hour: "Hoy, 23:59",
-                dueDate: new Date(2026, 6, 14, 23, 59),
-                completed: false,
-            },
-            {
-                id: 2,
-                title: "Cálculo de conductores",
-                subtitle: "Sección y caída de tensión",
-                hour: "Mañana, 23:59",
-                dueDate: new Date(2026, 6, 17, 23, 59),
-                completed: false,
-            },
-            {
-                id: 3,
-                title: "Informe de instalación",
-                subtitle: "Normativa vigente",
-                hour: "Viernes, 23:59",
-                dueDate: new Date(2026, 6, 19, 23, 59),
-                completed: false,
-            }
-        ],
         notification: [
             {
                 "id": 1,
@@ -128,32 +92,6 @@ export const courseData = [
         title: "Refrigeracion - 5to Curso",
         description: "Avanza en el mundo de los sistemas de refrigeracion y aire acondicionado, aprendiendo sobre ciclo de vida del software.",
         icon: "snowflake",
-        task: [
-            {
-                id: 1,
-                title: "Diagrama de ciclo frigorífico",
-                subtitle: "Presiones y temperaturas",
-                hour: "Hoy, 23:59",
-                dueDate: new Date(2026, 6, 14, 23, 59),
-                completed: false,
-            },
-            {
-                id: 2,
-                title: "Mantenimiento de unidad condensadora",
-                subtitle: "Procedimiento paso a paso",
-                hour: "Mañana, 23:59",
-                dueDate: new Date(2026, 6, 17, 23, 59),
-                completed: false,
-            },
-            {
-                id: 3,
-                title: "Cálculo de carga térmica",
-                subtitle: "Selección de equipo",
-                hour: "Viernes, 23:59",
-                dueDate: new Date(2026, 6, 19, 23, 59),
-                completed: false,
-            }
-        ],
         notification: [
             {
                 "id": 1,
@@ -198,32 +136,6 @@ export const courseData = [
         title: "Comercio Internacional - 5to Curso",
         description: "Avanza en el mundo de los negocios y el comercio internacional, aprendiendo sobre ciclo de vida del software.",
         icon: "money",
-        task: [
-            {
-                id: 1,
-                title: "Análisis de mercado global",
-                subtitle: "Exportaciones e importaciones",
-                hour: "Hoy, 23:59",
-                dueDate: new Date(2026, 6, 14, 23, 59),
-                completed: false,
-            },
-            {
-                id: 2,
-                title: "Estudio de caso: Incoterms",
-                subtitle: "Términos de negociación",
-                hour: "Mañana, 23:59",
-                dueDate: new Date(2026, 6, 17, 23, 59),
-                completed: false,
-            },
-                {
-                id: 3,
-                title: "Plan de negocios internacional",
-                subtitle: "Estrategia de entrada",
-                hour: "Viernes, 23:59",
-                dueDate: new Date(2026, 6, 19, 23, 59),
-                completed: false,
-            }
-        ],
         notification: [
             {
                 "id": 1,

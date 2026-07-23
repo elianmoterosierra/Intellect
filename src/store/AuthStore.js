@@ -1,31 +1,86 @@
 import { create } from 'zustand';
 
-function loadAuth() {
+const AUTH_KEY = 'auth';
+const USERS_KEY = 'users';
+const loggedOutState = { isLoggedIn: false, user: null };
+
+function readStorage(key, fallback) {
     try {
-        const saved = localStorage.getItem('auth');
-        return saved ? JSON.parse(saved) : { isLoggedIn: false, userName: null };
+        const saved = localStorage.getItem(key);
+        return saved ? JSON.parse(saved) : fallback;
     } catch {
-        return { isLoggedIn: false, userName: null };
+        return fallback;
     }
 }
 
-export const useAuthStore = create((set) => ({
-    ...loadAuth(),
+function loadUsers() {
+    const users = readStorage(USERS_KEY, []);
+    return Array.isArray(users) ? users : [];
+}
 
-    login: (userName) => {
-        const data = { isLoggedIn: true, userName };
-        localStorage.setItem('auth', JSON.stringify(data));
-        set(data);
+function loadAuth() {
+    const auth = readStorage(AUTH_KEY, loggedOutState);
+    return auth?.isLoggedIn && auth?.user ? auth : loggedOutState;
+}
+
+function saveAuth(user) {
+    const auth = { isLoggedIn: true, user };
+    localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
+    return auth;
+}
+
+export const useAuthStore = create((set, get) => ({
+    ...loadAuth(),
+    users: loadUsers(),
+
+    login: ({ email, password }) => {
+        const normalizedEmail = email.trim().toLowerCase();
+        const user = get().users.find(
+            (candidate) => candidate.email.toLowerCase() === normalizedEmail && candidate.password === password,
+        );
+
+        if (!user) {
+            return { success: false, error: 'El email o la contraseña son incorrectos.' };
+        }
+
+        const auth = saveAuth(user);
+        set(auth);
+        return { success: true, user };
     },
 
-    register: (userName) => {
-        const data = { isLoggedIn: true, userName };
-        localStorage.setItem('auth', JSON.stringify(data));
-        set(data);
+    register: ({ name, email, password }) => {
+        const normalizedEmail = email.trim().toLowerCase();
+        const users = get().users;
+
+        if (users.some((candidate) => candidate.email.toLowerCase() === normalizedEmail)) {
+            return { success: false, error: 'Ya existe una cuenta con ese email.' };
+        }
+
+        const user = { name: name.trim(), email: normalizedEmail, password };
+        const updatedUsers = [...users, user];
+        localStorage.setItem(USERS_KEY, JSON.stringify(updatedUsers));
+
+        const auth = saveAuth(user);
+        set({ ...auth, users: updatedUsers });
+        return { success: true, user };
+    },
+
+    setSelectedCourse: (courseId) => {
+        const currentUser = get().user;
+        if (!currentUser) return;
+
+        const user = { ...currentUser, selectedCourseId: courseId };
+        const users = get().users.map((candidate) =>
+            candidate.email === user.email ? user : candidate,
+        );
+
+        localStorage.setItem(USERS_KEY, JSON.stringify(users));
+        const auth = saveAuth(user);
+        set({ ...auth, users });
     },
 
     logout: () => {
-        localStorage.removeItem('auth');
-        set({ isLoggedIn: false, userName: null });
+        localStorage.removeItem(AUTH_KEY);
+        set(loggedOutState);
     },
 }));

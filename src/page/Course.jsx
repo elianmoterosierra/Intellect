@@ -7,7 +7,7 @@ import { useParams, Link } from 'react-router';
 import { courseData } from '../data/data';
 
 const CalendarSection = lazy(() => import('../components/Course/CalendarSection/CalendarSection'));
-const Dashboard = lazy(() => import('../components/Course/DasboardSection/Dashboard/Dashboard'));
+const Dashboard = lazy(() => import('../components/Course/DasboardSection/Dashboard'));
 
 export default function Course() {
   const { courseId } = useParams();
@@ -45,7 +45,7 @@ export default function Course() {
 
           {activeSection === 'calendar' && (
             <Suspense fallback={<div className="p-10 text-center text-[#424754]">Cargando calendario...</div>}>
-              <CalendarSection onToggleNotifications={() => setIsNotificationOpen(v => !v)} />
+              <CalendarSection courseId={course.id} onToggleNotifications={() => setIsNotificationOpen(v => !v)} />
             </Suspense>
           )}
 
@@ -66,7 +66,7 @@ export default function Course() {
       </div>
 
       {/* ===== NOTIFICATION PANEL (global) ===== */}
-      {isNotificationOpen && <NotificationPanel onClose={() => setIsNotificationOpen(false)} />}
+      {isNotificationOpen && <NotificationPanel courseId={course.id} onClose={() => setIsNotificationOpen(false)} />}
 
       {/* ===== BOTTOM NAV (mobile only) ===== */}
       <BottomNav activeSection={activeSection} onSectionChange={setActiveSection} />

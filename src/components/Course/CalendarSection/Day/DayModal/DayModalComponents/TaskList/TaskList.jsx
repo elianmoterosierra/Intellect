@@ -19,7 +19,7 @@ export function TaskList({ tasks, handleToggle, dayDate }) {
                         <div className="flex flex-col gap-0.5 min-w-0">
                             <div className="flex items-center gap-1.5">
                                 {cfg.icon && (
-                                    <span className="material-symbols-outlined text-base leading-none shrink-0 text-amber-600">{cfg.icon}</span>
+                                    <span className={`material-symbols-outlined text-base leading-none shrink-0 ${cfg.status === 'overdue' ? 'text-white' : 'text-amber-600'}`}>{cfg.icon}</span>
                                 )}
                                 <span className={`text-sm font-medium truncate ${cfg.textColor} ${task.completed ? 'line-through opacity-50' : ''}`}>
                                     {task.title}

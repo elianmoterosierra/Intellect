@@ -1,4 +1,8 @@
-export function Notification({ notification }) {
+import { getTaskNotifications } from '../../../../utils/taskNotifications';
+
+export function Notification({ tasks }) {
+    const notifications = getTaskNotifications(tasks).slice(0, 4);
+
     return (
         <div className="md:col-span-8 bg-white rounded-xl border border-[#c2c6d6] p-6 shadow-sm flex flex-col gap-4">
             {/* Header */}
@@ -8,7 +12,9 @@ export function Notification({ notification }) {
             </div>
             {/* Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {notification.map((n) => (
+                {notifications.length === 0 ? (
+                    <p className="md:col-span-2 py-5 text-center text-sm text-[#727785]">No tienes tareas pendientes.</p>
+                ) : notifications.map((n) => (
                     <NotificationItem
                         key={n.id}
                         title={n.title}

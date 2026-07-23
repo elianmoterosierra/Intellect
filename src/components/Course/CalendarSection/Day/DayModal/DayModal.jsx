@@ -6,7 +6,7 @@ const getMonthName = (year, month) =>
     new Date(year, month).toLocaleString('es-ES', { month: 'long' })
         .replace(/^\w/, c => c.toUpperCase());
 
-export function DayModal({ day, tasks, year, month, onClose, onAddTask, onToggleTask }) {
+export function DayModal({ day, tasks, courseId, year, month, onClose, onAddTask, onToggleTask }) {
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({ title: '', description: '' });
     const [closing, setClosing] = useState(false);
@@ -24,7 +24,16 @@ export function DayModal({ day, tasks, year, month, onClose, onAddTask, onToggle
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!form.title.trim()) return;
-        onAddTask(day.id, { id: `t-${Date.now()}`, title: form.title, description: form.description, completed: false });
+        const dueDate = new Date(year, month, day.number, 23, 59);
+        onAddTask(courseId, {
+            id: crypto.randomUUID(),
+            title: form.title.trim(),
+            subtitle: form.description.trim() || 'Sin descripción',
+            description: form.description.trim(),
+            dueDate: dueDate.toISOString(),
+            hour: dueDate.toLocaleDateString('es-DO', { day: 'numeric', month: 'short' }),
+            completed: false,
+        });
         setForm({ title: '', description: '' });
         setShowForm(false);
     };
@@ -37,7 +46,7 @@ export function DayModal({ day, tasks, year, month, onClose, onAddTask, onToggle
     const dayDate = new Date(year, month, day.number);
 
     const handleToggle = (taskId) => {
-        onToggleTask(day.id, taskId);
+        onToggleTask(courseId, taskId);
     };
 
     return (

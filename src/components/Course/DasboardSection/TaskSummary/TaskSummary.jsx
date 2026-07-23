@@ -1,31 +1,10 @@
-import { useState, useEffect } from 'react';
-
-function getCompletedCount(tasks, courseId) {
-    return tasks.filter(t => {
-        const key = `completed-${courseId}-${t.id}`;
-        try {
-            return localStorage.getItem(key) === 'true';
-        } catch {
-            return false;
-        }
-    }).length;
-}
-
-export function TaskSummary({ tasks, courseId }) {
-    const [completedCount, setCompletedCount] = useState(() => getCompletedCount(tasks, courseId));
+export function TaskSummary({ tasks }) {
+    const completedCount = tasks.filter((task) => task.completed).length;
     const total = tasks.length;
     const pendingCount = total - completedCount;
-    const progress = total > 0 ? Math.round((completedCount / total) * 100) : 0;
-
-    useEffect(() => {
-        const handleUpdate = () => setCompletedCount(getCompletedCount(tasks, courseId));
-        window.addEventListener('taskUpdate', handleUpdate);
-        return () => window.removeEventListener('taskUpdate', handleUpdate);
-    }, [tasks, courseId]);
-
-    const handleRefresh = () => {
-        setCompletedCount(getCompletedCount(tasks, courseId));
-    };
+    const progress = total > 0
+        ? Math.round((completedCount / total) * 100)
+        : 0;
 
     return (
         <div className="md:col-span-4 bg-gradient-to-br from-[#2170e4] to-[#005ac2] text-[#fefcff] rounded-xl p-6 shadow-sm flex flex-col justify-between">
@@ -54,12 +33,6 @@ export function TaskSummary({ tasks, courseId }) {
                         <div className="text-xs leading-4 tracking-widest font-semibold uppercase opacity-80">Progreso</div>
                         <div className="text-xl leading-7 font-semibold">{progress}%</div>
                     </div>
-                    <button
-                        onClick={handleRefresh}
-                        className="flex items-center gap-1 text-sm leading-5 opacity-90 hover:opacity-100 transition-opacity bg-transparent border-none text-[#fefcff] cursor-pointer"
-                    >
-                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>refresh</span>
-                    </button>
                 </div>
                 <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
                     <div className="h-full bg-[#fefcff] rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
