@@ -1,0 +1,239 @@
+# CLAUDE.md
+
+Guía para agentes que trabajen en el proyecto **Intellect** (anteriormente `elian-proyect`). Léela antes de modificar código: resume arquitectura, convenciones y comandos para evitar romper el modelo de datos compartidos.
+
+## 1. Resumen del proyecto
+
+Plataforma web de **gestión académica** construida con **React 19 + Vite 8**, con autenticación local, selección de curso, tareas compartidas por curso con progreso individual por usuario, calendario mensual y notificaciones derivadas de la fecha de entrega. Todo el estado se persiste en `localStorage` (no hay backend).
+
+- **Nombre interno del repo:** `elian-proyect` (`package.json`).
+- **Producto:** Intellect.
+- **Tipo de app:** SPA con `react-router` 8 y `lazy()` por ruta.
+
+## 2. Stack y dependencias
+
+| Herramienta | Versión | Propósito |
+|---|---|---|
+| React | 19.2 | UI |
+| React DOM | 19.2 | Render |
+| React Router | 8.2 | Ruteo SPA |
+| Zustand | 5.0 | Estado global y stores |
+| Vite | 8.1 | Dev server / build |
+| `@vitejs/plugin-react` + Babel | última | React Compiler (`reactCompilerPreset`) |
+| Tailwind CSS | 3.4 | Estilos y animaciones custom |
+| ESLint | 10 | Lint (`@eslint/js`, `react-hooks`, `react-refresh`) |
+
+> Hay `babel-plugin-react-compiler` y `@rolldown/plugin-babel` activos. No introduzcas soluciones que dependan de runtime que se opongan al compilador (p. ej. mutación de props).
+
+## 3. Comandos
+
+```bash
+npm run dev      # Vite dev server
+npm run build    # Build de producción (revisa errores de tipo/import)
+npm run preview  # Sirve dist/
+npm run lint     # ESLint sobre .js/.jsx (ignora dist/)
+```
+
+Antes de cerrar una tarea, ejecuta **lint** y, si toca código de producción, **build**.
+
+## 4. Estructura de carpetas
+
+```
+src/
+├── App.jsx                       # Router + lazy + Suspense + Layout
+├── main.jsx                      # createRoot + StrictMode
+├── index.css                     # Tailwind base + tokens
+├── assets/                       # Imágenes y SVGs estáticos
+├── data/                         # data.jsx (cursos), notifications.json
+├── Hooks/                        # useDaysInMonth, useMonthDay
+├── page/                         # Páginas (rutas)
+│   ├── home.jsx
+│   ├── SelectCourse.jsx          # Exporta { CoursePage }
+│   ├── Course.jsx                # Dashboard del curso
+│   └── css/Calendar.css
+├── ProtectedRoutes/
+│   └── DashBoardProtected.jsx    # HOC/guard de auth para /course y /course-dashboard/:id
+├── store/
+│   ├── AuthStore.js              # Sesión + usuarios + progreso individual
+│   ├── courseStore.js            # Estado de selección del curso
+│   └── taskStorage.js            # Tareas compartidas por curso
+├── utils/
+│   ├── taskStatus.js             # overdue / tomorrow / dayAfterTomorrow / normal
+│   └── taskNotifications.js      # Notificaciones derivadas de tareas pendientes
+└── components/
+    ├── Layout/Layout.jsx
+    ├── Header/                   # header.jsx
+    ├── Footer/Footer.jsx
+    ├── Form/                     # FormSection + modales (Login.jsx, Reguister.jsx)
+    ├── Perfil/                   # Perfil + ButtonLogout
+    ├── Button/                   # ButtonPrincipal, ButtonSecondary
+    ├── CardRol/RoleCard.jsx
+    ├── Home/                     # hero, Role, CallToAction, features/*
+    ├── SelectCourse/             # Hero, Course-card/{Course-Card, Card/CourseCard}
+    └── Course/
+        ├── DasboardSection/      # Dashboard, Notification(ion), SideNav,
+        │                         # TaskSummary, AppBar/BottomNav (mobile),
+        │                         # UpcomingTasks/{AddTask, TaskItem}
+        └── CalendarSection/      # CalendarSection, Header, Day/{Day, DayCard, DayModal}
+```
+
+> **Ojo con el typo histórico:** `DasboardSection` (sin la segunda “h”) y `Reguister.jsx`. Mantén la capitalización y nombres de archivo existentes; renombrarlos rompe imports.
+
+## 5. Modelo de datos (localStorage)
+
+### Claves
+
+- `users` — array de cuentas registradas.
+- `auth` — `{ isLoggedIn: true, user }` cuando hay sesión; se elimina al hacer `logout`.
+- `tasksByCourse` — mapa `{ [courseId]: Task[] }` con tareas **compartidas** del curso.
+
+### Forma de un usuario
+
+```js
+{
+  name: string,
+  email: string,        // normalizado a lowercase
+  password: string,     // ⚠️ demo local, NO producción
+  selectedCourseId: string | null,
+  taskStatusByCourse: {
+    [courseId]: {
+      [taskId]: { completed: boolean, /* ... */ }
+    }
+  }
+}
+```
+
+### Forma de una tarea
+
+```js
+{
+  id: crypto.randomUUID(),
+  title: 'Terminar informe',
+  subtitle: 'Física',
+  dueDate: '2026-07-24T23:59:00.000Z',  // ISO, UTC
+  hour: '24 jul',                        // etiqueta formateada lista para UI
+}
+```
+
+`completed` **nunca** se guarda en la tarea compartida. Se deriva de `user.taskStatusByCourse[courseId][taskId].completed`. Combina las dos fuentes antes de renderizar (dashboard, calendario, notificaciones).
+
+## 6. Stores (Zustand)
+
+### `useAuthStore` — `src/store/AuthStore.js`
+
+- Estado: `isLoggedIn`, `user`, `users` (todos se hidratan desde `localStorage` al crear el store).
+- Acciones:
+  - `login({ email, password })` → `{ success, user|error }`.
+  - `register({ name, email, password })` → normaliza email, valida duplicados.
+  - `setSelectedCourse(courseId)` — persiste en `users` y `auth`.
+  - `toggleTaskStatus(courseId, taskId)` — invierte `completed` solo del usuario actual.
+  - `logout()` — limpia `auth` (no `users`).
+- Persistencia: **manual** con `localStorage` en cada acción (no usa middleware `persist`).
+- Almacena contraseñas en claro: **no apto para producción**.
+
+### `useTaskStore` — `src/store/taskStorage.js`
+
+- Estado: `tasksByCourse`.
+- Acciones:
+  - `addTask(courseId, task)` — añade al array del curso y persiste.
+  - `deleteTask(courseId, taskId)` — filtra y persiste.
+- Es la **única** fuente de definiciones de tareas; el calendario y el dashboard la consumen directo.
+
+### `useCourseStore` — `src/store/courseStore.js`
+
+- Wrapper de UI para seleccionar/abandonar curso. Sincroniza con `user.selectedCourseId` de `useAuthStore`.
+
+## 7. Rutas y protecciones
+
+| Ruta | Componente | Protegida |
+|---|---|---|
+| `/` | `HomePage` (`page/home.jsx`, lazy) | No |
+| `/course` | `CoursePage` (`page/SelectCourse.jsx`, lazy) | `DashBoardProtected` |
+| `/course-dashboard/:courseId` | `Course` (`page/Course.jsx`, lazy) | `DashBoardProtected` |
+
+- Carga con `React.lazy` + `Suspense` → `PageLoader` (spinner inline, no CSS externo).
+- `Layout` envuelve rutas públicas; las protegidas se renderizan dentro de su guard.
+- `DashBoardProtected` debe redirigir a `/` (login) si no hay sesión y a `/course` si ya hay curso seleccionado pero la ruta exige uno nuevo (verifica antes de asumir comportamiento).
+
+## 8. Estados de tarea (`utils/taskStatus.js`)
+
+Derivados en cada render desde `dueDate` y el `completed` del usuario:
+
+| Estado | Condición | UI |
+|---|---|---|
+| `overdue` | `dueDate < ahora` y no completada | Fondo rojo, texto blanco, badge “Tarea vencida” |
+| `tomorrow` | Vence mañana | Ámbar con alerta |
+| `dayAfterTomorrow` | Vence en dos días | Esmeralda |
+| `normal` | Resto | Neutro |
+
+Una tarea completada nunca aparece como vencida.
+
+## 9. Notificaciones (`utils/taskNotifications.js`)
+
+- Se generan desde las **tareas pendientes** del usuario actual.
+- Ordenadas por `dueDate`.
+- Marcan como urgentes: vencidas, hoy o mañana.
+- Alimentan la tarjeta de notificaciones del dashboard y el panel de la campana del header.
+- **No** hay notificaciones hardcodeadas para el dashboard: si ves `notifications.json`, es solo histórico/referencia.
+
+## 10. Calendario
+
+- `CalendarSection.jsx` — controla el mes visible.
+- `Day.jsx` — genera días con `useMonthDay`.
+- `DayCard.jsx` — filtra tareas del curso por fecha.
+- `DayModal.jsx` — muestra, crea y completa tareas del día seleccionado (contiene `AddTask`, `FormTask`, `TaskList`).
+- Reusa la fuente única de `taskStorage` + estado individual de `AuthStore`; **no** mantener un store paralelo.
+
+## 11. Estilos y theming
+
+- Tailwind 3 + tokens propios en `src/index.css`.
+- Animaciones custom declaradas en `tailwind.config.js`: `fadeIn`, `slideInRight`, `slideInLeft`, `overlayIn`, `pillIn`, `inputIn`, `overlayOut`, `modalOut`. Reutilízalas en lugar de inventar nuevas cuando aplique.
+- Tipografías cargadas por `<link>` en `index.html` (Inter y Material Symbols Outlined). Los iconos vienen de la fuente `Material Symbols Outlined` con clases utilitarias.
+- `eslint.config.js` usa configuración flat: ignora `dist`, aplica `react-hooks/recommended` y `react-refresh/vite` sobre `**/*.{js,jsx}`.
+
+## 12. Convenciones de código
+
+- **Componentes funcionales** + hooks. Sin clases.
+- JSX con extensión `.jsx`.
+- `export default` para componentes de página y componente principal; **named exports** para stores y utilidades.
+- Comentarios concisos en español (mantén el tono del proyecto).
+- Estados globales solo con Zustand; nada de Context para cosas de negocio.
+- Persistencia manual: si añades un nuevo store, persiste a `localStorage` desde la acción, no con `persist` middleware, salvo que migres todo.
+- Fechas siempre **ISO UTC** en `dueDate`; formatea en el borde de la UI.
+- Ids con `crypto.randomUUID()`.
+- Nombres de archivo tal cual están (incluyendo los typos históricos `DasboardSection` y `Reguister.jsx`); al refactorizar, busca los import sites primero.
+
+## 13. Responsive
+
+- Sidebar de navegación completa en escritorio.
+- `AppBar` + `BottomNav` para móvil.
+- Cualquier layout nuevo debe considerar ambos breakpoints.
+
+## 14. Lo que NO hacer
+
+- **No** guardes `completed` dentro de la tarea compartida en `tasksByCourse`.
+- **No** crees un store paralelo al de tareas; el calendario debe leer de `useTaskStore` + `useAuthStore`.
+- **No** metas credenciales en git: la app ya tiene passwords en `localStorage`; no las añadas también a logs.
+- **No** introduzcas un backend o librería de auth nueva sin discutirlo: hoy es deliberadamente demo.
+- **No** renombres `DasboardSection` ni `Reguister.jsx` sin actualizar todos los imports.
+- **No** metas la lógica de notificaciones dentro de los componentes: vive en `utils/`.
+
+## 15. Verificación antes de cerrar tarea
+
+```bash
+npm run lint
+npm run build
+```
+
+Si modificas stores, limpia `localStorage` del navegador o considera versionar la clave si cambia el shape (`tasksByCourse`, `auth`, `users`).
+
+## 16. Glosario rápido
+
+- **Curso** — uno de los definidos en `data/data.jsx` (id estable).
+- **Tarea compartida** — vive en `tasksByCourse[courseId]`, la ven todos los usuarios del curso.
+- **Progreso individual** — `user.taskStatusByCourse[courseId][taskId].completed`; no afecta a otros usuarios.
+- **Notificación** — derivado en runtime desde tareas pendientes; nunca se persiste.
+- **Vencida** — `dueDate < now && !completed`.
+
+---
+Mantenlo breve: si añades una sección, borra la que quede obsoleta. La memoria del proyecto vive en el código; este archivo apunta a ella.

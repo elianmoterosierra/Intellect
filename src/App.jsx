@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router'
 import { Layout } from './components/Layout/Layout'
-
+import DashBoardProtected from './ProtectedRoutes/DashBoardProtected'
 // Lazy imports: cada página se descarga solo cuando el usuario la visita
 const HomePage = lazy(() => import('./page/home'))
 const CoursePage = lazy(() => import('./page/SelectCourse').then(m => ({ default: m.CoursePage })))
@@ -36,10 +36,10 @@ function App() {
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<HomePage />} />
-            <Route path="/course" element={<CoursePage />} />
+            <Route path="/course" element={<DashBoardProtected><CoursePage /></DashBoardProtected>} />
 
           </Route>
-          <Route path="/course-dashboard/:courseId" element={<Course />} />
+          <Route path="/course-dashboard/:courseId" element={<DashBoardProtected><Course /></DashBoardProtected>} />
         </Routes>
       </Suspense>
     </BrowserRouter>

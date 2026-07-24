@@ -1,5 +1,5 @@
 
-import { useTaskStore } from '../../../../../store/taskStorage';
+import { useAuthStore } from '../../../../../store/AuthStore';
 import { getDaysDifference } from '../../../../../utils/taskStatus';
 
 const badgeStyles = {
@@ -18,12 +18,12 @@ function getBadgeClass(dueDate) {
 
 
 export function TaskItem({ task, courseId }) {
-    const toggleTask = useTaskStore((state) => state.toggleTask);
+    const toggleTaskStatus = useAuthStore((state) => state.toggleTaskStatus);
     const done = task.completed;
     const isOverdue = !done && getDaysDifference(task.dueDate) < 0;
 
     const handleToggle = () => {
-        toggleTask(courseId, task.id);
+        toggleTaskStatus(courseId, task.id);
     };
     const badgeVariant = done ? 'success' : getBadgeClass(task.dueDate);
 

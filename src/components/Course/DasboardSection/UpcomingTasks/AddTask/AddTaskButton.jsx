@@ -49,7 +49,6 @@ export function AddTaskButton({ courseId }) {
             subtitle: subtitle.trim() || 'Sin descripción',
             dueDate: date.toISOString(),
             hour: date.toLocaleDateString('es-DO', { day: 'numeric', month: 'short' }),
-            completed: false,
         });
 
         setTitle('');

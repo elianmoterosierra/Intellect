@@ -1,8 +1,9 @@
-import { memo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { getTaskStatusConfig } from '../../../../../utils/taskStatus';
 import { DayModal } from '../DayModal/DayModal';
 import { EMPTY_TASKS } from '../../../../../Hooks/useMonthDay';
 import { useTaskStore } from '../../../../../store/taskStorage';
+import { useAuthStore } from '../../../../../store/AuthStore';
 
 const typeStyles = {
     past: 'opacity-50 bg-[#f2f3fd]',
@@ -17,11 +18,20 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const courseTasks = useTaskStore((state) => state.tasksByCourse[courseId] ?? EMPTY_TASKS);
     const addTask = useTaskStore((state) => state.addTask);
-    const toggleTask = useTaskStore((state) => state.toggleTask);
-    const tasks = courseTasks.filter((task) => {
-        const date = new Date(task.dueDate);
-        return date.getFullYear() === year && date.getMonth() === month && date.getDate() === number;
-    });
+    const user = useAuthStore((state) => state.user);
+    const toggleTaskStatus = useAuthStore((state) => state.toggleTaskStatus);
+    const tasks = useMemo(
+        () => courseTasks
+            .filter((task) => {
+                const date = new Date(task.dueDate);
+                return date.getFullYear() === year && date.getMonth() === month && date.getDate() === number;
+            })
+            .map((task) => ({
+                ...task,
+                completed: user?.taskStatusByCourse?.[courseId]?.[task.id]?.completed ?? false,
+            })),
+        [courseTasks, courseId, number, user, year, month],
+    );
 
     const isTomorrow = type === 'tomorrow';
     const isToday = type === 'today';
@@ -64,7 +74,7 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId }) {
                     month={month}
                     onClose={() => setIsModalOpen(false)}
                     onAddTask={addTask}
-                    onToggleTask={toggleTask}
+                    onToggleTask={toggleTaskStatus}
                 />
             )}
         </>

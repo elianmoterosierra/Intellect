@@ -31,21 +31,6 @@ export const useTaskStore = create((set) => ({
             return { tasksByCourse };
         }),
 
-    toggleTask: (courseId, taskId) =>
-        set((state) => {
-            const tasksByCourse = {
-                ...state.tasksByCourse,
-                [courseId]: (state.tasksByCourse[courseId] ?? []).map((task) =>
-                    task.id === taskId
-                        ? { ...task, completed: !task.completed }
-                        : task
-                ),
-            };
-
-            saveTasks(tasksByCourse);
-            return { tasksByCourse };
-        }),
-
     deleteTask: (courseId, taskId) =>
         set((state) => {
             const tasksByCourse = {

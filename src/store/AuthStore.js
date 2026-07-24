@@ -29,6 +29,7 @@ function saveAuth(user) {
     return auth;
 }
 
+
 export const useAuthStore = create((set, get) => ({
     ...loadAuth(),
     users: loadUsers(),
@@ -56,7 +57,13 @@ export const useAuthStore = create((set, get) => ({
             return { success: false, error: 'Ya existe una cuenta con ese email.' };
         }
 
-        const user = { name: name.trim(), email: normalizedEmail, password };
+        const user = {
+            name: name.trim(),
+            email: normalizedEmail,
+            password,
+            selectedCourseId: null,
+            taskStatusByCourse: {},
+        };
         const updatedUsers = [...users, user];
         localStorage.setItem(USERS_KEY, JSON.stringify(updatedUsers));
 
@@ -77,6 +84,40 @@ export const useAuthStore = create((set, get) => ({
         localStorage.setItem(USERS_KEY, JSON.stringify(users));
         const auth = saveAuth(user);
         set({ ...auth, users });
+    },
+
+    toggleTaskStatus: (courseId, taskId) => {
+        const currentUser = get().user;
+        if (!currentUser) return;
+
+        const courseStatus = currentUser.taskStatusByCourse?.[courseId] ?? {};
+        const currentTask = courseStatus[taskId] ?? { completed: false };
+        const user = {
+            ...currentUser,
+            taskStatusByCourse: {
+                ...currentUser.taskStatusByCourse,
+                [courseId]: {
+                    ...courseStatus,
+                    [taskId]: {
+                        ...currentTask,
+                        completed: !currentTask.completed,
+                    },
+                },
+            },
+        };
+        const users = get().users.map((candidate) =>
+            candidate.email === user.email ? user : candidate
+        );
+
+        localStorage.setItem(USERS_KEY, JSON.stringify(users));
+        localStorage.setItem(
+            AUTH_KEY,
+            JSON.stringify({ isLoggedIn: true, user })
+        );
+
+        set({ user, users });
+
+
     },
 
     logout: () => {

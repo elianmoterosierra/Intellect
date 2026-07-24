@@ -1,10 +1,20 @@
 import { useTaskStore } from '../../../../store/taskStorage';
 import { getTaskNotifications } from '../../../../utils/taskNotifications';
+import { useAuthStore } from '../../../../store/AuthStore';
+import { useMemo } from 'react';
 
 const EMPTY_TASKS = [];
 
 export function NotificationPanel({ courseId, onClose }) {
-    const tasks = useTaskStore((state) => state.tasksByCourse[courseId] ?? EMPTY_TASKS);
+    const sharedTasks = useTaskStore((state) => state.tasksByCourse[courseId] ?? EMPTY_TASKS);
+    const user = useAuthStore((state) => state.user);
+    const tasks = useMemo(
+        () => sharedTasks.map((task) => ({
+            ...task,
+            completed: user?.taskStatusByCourse?.[courseId]?.[task.id]?.completed ?? false,
+        })),
+        [sharedTasks, user, courseId],
+    );
     const notifications = getTaskNotifications(tasks);
 
     return (

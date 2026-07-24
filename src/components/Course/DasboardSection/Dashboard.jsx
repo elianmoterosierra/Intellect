@@ -3,11 +3,28 @@ import { Notification } from './Notification/Notification';
 import { TaskSummary } from './TaskSummary/TaskSummary';
 import { UpcomingTasks } from './UpcomingTasks/UpcomingTasks';
 import { useTaskStore } from '../../../store/taskStorage';
+import { useAuthStore } from '../../../store/AuthStore';
+import { useMemo } from 'react';
 
 const EMPTY_TASKS = [];
 
 export default function Dashboard({ course }) {
-    const tasks = useTaskStore((state) => state.tasksByCourse[course.id] ?? EMPTY_TASKS);
+    const sharedTasks = useTaskStore(
+        (state) => state.tasksByCourse[course.id] ?? EMPTY_TASKS
+    );
+
+    const user = useAuthStore((state) => state.user);
+
+    const tasks = useMemo(
+        () =>
+            sharedTasks.map((task) => ({
+                ...task,
+                completed:
+                    user?.taskStatusByCourse?.[course.id]?.[task.id]
+                        ?.completed ?? false,
+            })),
+        [sharedTasks, user, course.id]
+    );
 
     return (
         <div className="p-4 md:p-10">

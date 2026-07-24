@@ -32,7 +32,6 @@ export function DayModal({ day, tasks, courseId, year, month, onClose, onAddTask
             description: form.description.trim(),
             dueDate: dueDate.toISOString(),
             hour: dueDate.toLocaleDateString('es-DO', { day: 'numeric', month: 'short' }),
-            completed: false,
         });
         setForm({ title: '', description: '' });
         setShowForm(false);
