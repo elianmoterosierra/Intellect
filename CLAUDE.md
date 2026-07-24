@@ -2,6 +2,10 @@
 
 Guía para agentes que trabajen en el proyecto **Intellect** (anteriormente `elian-proyect`). Léela antes de modificar código: resume arquitectura, convenciones y comandos para evitar romper el modelo de datos compartidos.
 
+## IMPORTANTE
+
+Al momento que vayas a explicar lo que ahi que hacer explicamelo de manera breve y sencilla sin muchos tecnicismos, y tambien no toques ningun archivo sin mi consentimiento.
+
 ## 1. Resumen del proyecto
 
 Plataforma web de **gestión académica** construida con **React 19 + Vite 8**, con autenticación local, selección de curso, tareas compartidas por curso con progreso individual por usuario, calendario mensual y notificaciones derivadas de la fecha de entrega. Todo el estado se persiste en `localStorage` (no hay backend).
@@ -58,6 +62,7 @@ src/
 │   ├── courseStore.js            # Estado de selección del curso
 │   └── taskStorage.js            # Tareas compartidas por curso
 ├── utils/
+│   ├── courseSections.js         # COURSE_SECTIONS: claves de navegación del curso
 │   ├── taskStatus.js             # overdue / tomorrow / dayAfterTomorrow / normal
 │   └── taskNotifications.js      # Notificaciones derivadas de tareas pendientes
 └── components/
@@ -71,9 +76,11 @@ src/
     ├── Home/                     # hero, Role, CallToAction, features/*
     ├── SelectCourse/             # Hero, Course-card/{Course-Card, Card/CourseCard}
     └── Course/
+        ├── AddTaskSection/       # Sección "Agregar Tareas" (AddTaskSection,
+        │                         #   DeleteTaskButton, TaskList)
         ├── DasboardSection/      # Dashboard, Notification(ion), SideNav,
         │                         # TaskSummary, AppBar/BottomNav (mobile),
-        │                         # UpcomingTasks/{AddTask, TaskItem}
+        │                         # UpcomingTasks/{AddTask, AddTaskModal, TaskItem}
         └── CalendarSection/      # CalendarSection, Header, Day/{Day, DayCard, DayModal}
 ```
 
@@ -168,6 +175,17 @@ Derivados en cada render desde `dueDate` y el `completed` del usuario:
 
 Una tarea completada nunca aparece como vencida.
 
+## 8.5 Secciones del curso (`utils/courseSections.js`)
+
+- `COURSE_SECTIONS` exporta las claves canónicas que se renderizan en `Course.jsx`:
+  `DASHBOARD` (`'dashboard'`), `CALENDAR` (`'calendar'`), `ADD_TASKS` (`'Agregar Tareas'`).
+- Es la **única fuente** de las keys de `activeSection`. `SideNav`, `BottomNav` y `Course.jsx`
+  las importan desde aquí; no hardcodear strings sueltas en los navs.
+- La sección `ADD_TASKS` renderiza `<AddTaskSection courseId={...} />` con `React.lazy()`
+  y muestra la lista completa de tareas del curso con botón de eliminar.
+- El modal de creación de tareas vive en `DasboardSection/UpcomingTasks/AddTaskModal/TaskModal.jsx`
+  y se reutiliza tanto desde el dashboard (`AddTaskButton`) como desde `AddTaskSection`.
+
 ## 9. Notificaciones (`utils/taskNotifications.js`)
 
 - Se generan desde las **tareas pendientes** del usuario actual.
@@ -217,6 +235,8 @@ Una tarea completada nunca aparece como vencida.
 - **No** introduzcas un backend o librería de auth nueva sin discutirlo: hoy es deliberadamente demo.
 - **No** renombres `DasboardSection` ni `Reguister.jsx` sin actualizar todos los imports.
 - **No** metas la lógica de notificaciones dentro de los componentes: vive en `utils/`.
+- **No** hardcodees las keys de sección (`'dashboard'`, `'calendar'`, `'Agregar Tareas'`) en
+  componentes de navegación: usa `COURSE_SECTIONS` desde `utils/courseSections.js`.
 
 ## 15. Verificación antes de cerrar tarea
 

@@ -4,7 +4,7 @@ import { AddTaskButton } from './AddTask/AddTaskButton';
 
 export function UpcomingTasks({ tasks, courseId }) {
     return (
-        <div className="md:col-span-12 bg-white rounded-xl border border-[#c2c6d6] shadow-sm overflow-hidden mt-2">
+        <div className=" md:col-span-12 bg-white rounded-xl border border-[#c2c6d6] shadow-sm overflow-hidden mt-2">
             {/* Header */}
             <div className="px-6 py-4 border-b border-[#c2c6d6] flex justify-between items-center bg-[rgba(242,243,253,0.3)]">
                 <h3 className="text-2xl leading-8 font-semibold tracking-tight text-[#191b23]">Próximas Tareas</h3>
@@ -32,7 +32,9 @@ export function UpcomingTasks({ tasks, courseId }) {
 
 
             {/* Add button */}
-            <AddTaskButton courseId={courseId} />
+            <div className="flex justify-center my-4">
+                <AddTaskButton courseId={courseId} />
+            </div>
         </div>
     )
 }

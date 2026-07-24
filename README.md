@@ -7,6 +7,10 @@ Aplicación web de gestión académica creada con React y Vite. Permite registra
 - Registro, inicio y cierre de sesión con persistencia local.
 - Un curso seleccionado por cada usuario.
 - Creación de tareas compartidas por todos los miembros de un curso.
+- Modal independiente e interactiva de creación de tareas (`AddTaskModal`).
+- Sección dedicada para la visualización y gestión de "Agregar Tareas" (`AddTaskSection`).
+- Eliminación de tareas del curso desde la sección "Agregar Tareas".
+- Constantes centralizadas para la gestión de secciones (`courseSections.js`).
 - Completado individual de tareas desde el dashboard y el calendario.
 - Tareas y progreso guardados en `localStorage`.
 - Resumen automático de tareas completadas, pendientes y progreso.
@@ -34,7 +38,7 @@ Aplicación web de gestión académica creada con React y Vite. Permite registra
 | `/course` | Selección de curso |
 | `/course-dashboard/:courseId` | Dashboard, tareas, calendario y notificaciones del curso |
 
-Las páginas principales y el calendario se cargan con `React.lazy()` y `Suspense`.
+Las páginas principales, secciones y el calendario se cargan con `React.lazy()` y `Suspense`.
 
 ## Estado y persistencia
 
@@ -134,6 +138,7 @@ src/
 │   ├── courseStore.js        # Estado de selección del curso
 │   └── taskStorage.js        # Tareas compartidas y persistentes por curso
 ├── utils/
+│   ├── courseSections.js     # Constantes de las secciones de navegación
 │   ├── taskStatus.js         # Estados visuales de las tareas
 │   └── taskNotifications.js  # Notificaciones derivadas de tareas
 ├── data/
@@ -146,6 +151,7 @@ src/
     ├── Header/               # Navegación principal y autenticación
     ├── Form/                 # Login y registro
     └── Course/
+        ├── AddTaskSection/   # Sección dedicada a la gestión de tareas
         ├── DasboardSection/  # Dashboard, tareas y notificaciones
         └── CalendarSection/  # Calendario y modal de día
 ```
@@ -177,6 +183,7 @@ src/
 │   ├── courseStore.js
 │   └── taskStorage.js
 ├── utils/
+│   ├── courseSections.js
 │   ├── taskNotifications.js
 │   └── taskStatus.js
 └── components/
@@ -206,6 +213,10 @@ src/
     │       ├── Course-Card.jsx
     │       └── Card/CourseCard.jsx
     └── Course/
+        ├── AddTaskSection/
+        │   ├── AddTaskSection.jsx
+        │   ├── DeleteTaskButton/DeleteTask.jsx
+        │   └── TaskList/TaskList.jsx
         ├── DasboardSection/
         │   ├── Dashboard.jsx
         │   ├── Header/HeaderDashboard.jsx
@@ -218,6 +229,7 @@ src/
         │   └── UpcomingTasks/
         │       ├── UpcomingTasks.jsx
         │       ├── AddTask/AddTaskButton.jsx
+        │       ├── AddTaskModal/TaskModal.jsx
         │       └── TaskItem/TaskItem.jsx
         └── CalendarSection/
             ├── CalendarSection.jsx

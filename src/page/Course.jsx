@@ -5,14 +5,16 @@ import { AppBar } from '../components/Course/DasboardSection/AppBar(mobile)/AppB
 import { NotificationPanel } from '../components/Course/DasboardSection/NotificationPanel/NotificationPanel';
 import { useParams, Link } from 'react-router';
 import { courseData } from '../data/data';
+import { COURSE_SECTIONS } from '../utils/courseSections';
 
 const CalendarSection = lazy(() => import('../components/Course/CalendarSection/CalendarSection'));
 const Dashboard = lazy(() => import('../components/Course/DasboardSection/Dashboard'));
+const AddTaskSection = lazy(() => import('../components/Course/AddTaskSection/AddTaskSection'));
 
 export default function Course() {
   const { courseId } = useParams();
   const course = courseData.find(c => c.id === Number(courseId));
-  const [activeSection, setActiveSection] = useState('dashboard');
+  const [activeSection, setActiveSection] = useState(COURSE_SECTIONS.DASHBOARD);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   if (!course) return (
@@ -49,19 +51,13 @@ export default function Course() {
             </Suspense>
           )}
 
-          {activeSection === 'tasks' && (
-            <div className="p-4 md:p-10 text-[#424754]">
-              <h2 className="text-xl font-semibold text-[#191b23] mb-2">Tasks</h2>
-              <p>Sección de tareas — Próximamente</p>
-            </div>
+          {activeSection === 'Agregar Tareas' && (
+            <Suspense fallback={<div className="p-10 text-center text-[#424754]">Cargando tareas...</div>}>
+              <AddTaskSection courseId={course.id} />
+            </Suspense>
           )}
 
-          {activeSection === 'administration' && (
-            <div className="p-4 md:p-10 text-[#424754]">
-              <h2 className="text-xl font-semibold text-[#191b23] mb-2">Administration</h2>
-              <p>Administración — Próximamente</p>
-            </div>
-          )}
+
         </main>
       </div>
 

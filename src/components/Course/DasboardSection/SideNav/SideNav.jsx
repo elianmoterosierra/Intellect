@@ -1,15 +1,15 @@
 import { Link, useNavigate } from 'react-router';
 import { useState } from 'react';
 import { useCourseStore } from '../../../../store/courseStore';
+import { COURSE_SECTIONS } from '../../../../utils/courseSections';
 
 const navLink = "flex items-center gap-4 px-4 py-2 rounded-xl transition-colors duration-200 text-[#424754] no-underline text-sm leading-5 hover:bg-blue-500 cursor-pointer border-none w-full text-left font-[inherit]";
 const navLinkActive = "bg-blue-500 text-white font-semibold";
 
 const sections = [
-    { key: 'dashboard', icon: 'dashboard', label: 'General' },
-    { key: 'calendar', icon: 'calendar_month', label: 'Calendario' },
-    { key: 'tasks', icon: 'assignment', label: 'Tareas' },
-
+    { key: COURSE_SECTIONS.DASHBOARD, icon: 'dashboard', label: 'General' },
+    { key: COURSE_SECTIONS.CALENDAR, icon: 'calendar_month', label: 'Calendario' },
+    { key: COURSE_SECTIONS.ADD_TASKS, icon: 'assignment', label: 'Agregar Tareas' },
 ];
 
 export function SideNav({ courseId, activeSection, onSectionChange }) {

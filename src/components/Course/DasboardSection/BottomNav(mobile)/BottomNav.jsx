@@ -1,7 +1,9 @@
+import { COURSE_SECTIONS } from '../../../../utils/courseSections';
+
 const navItems = [
-    { key: 'dashboard', icon: 'dashboard' },
-    { key: 'calendar', icon: 'calendar_month' },
-    { key: 'tasks', icon: 'assignment' },
+    { key: COURSE_SECTIONS.DASHBOARD, icon: 'dashboard' },
+    { key: COURSE_SECTIONS.CALENDAR, icon: 'calendar_month' },
+    { key: COURSE_SECTIONS.ADD_TASKS, icon: 'assignment' },
 ];
 
 export function BottomNav({ activeSection, onSectionChange }) {
