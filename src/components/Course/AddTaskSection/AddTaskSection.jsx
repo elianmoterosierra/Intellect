@@ -1,5 +1,3 @@
-import { useTaskStore } from "../../../store/taskStorage";
-import { getTaskStatusConfig } from "../../../utils/taskStatus";
 import { AddTaskButton } from "../DasboardSection/UpcomingTasks/AddTask/AddTaskButton";
 
 import { TaskList } from "./TaskList/TaskList";

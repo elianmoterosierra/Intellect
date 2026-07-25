@@ -73,18 +73,30 @@ src/
     ├── Perfil/                   # Perfil + ButtonLogout
     ├── Button/                   # ButtonPrincipal, ButtonSecondary
     ├── CardRol/RoleCard.jsx
-    ├── Home/                     # hero, Role, CallToAction, features/*
+    ├── Home/                     # hero, Role, CallToAction, features/{featuresSection,
+    │                             #   CalendarCard, ManagementCard, Progress}
     ├── SelectCourse/             # Hero, Course-card/{Course-Card, Card/CourseCard}
+    ├── Perfil/                   # Perfil + ButtonLogout
     └── Course/
         ├── AddTaskSection/       # Sección "Agregar Tareas" (AddTaskSection,
-        │                         #   DeleteTaskButton, TaskList)
-        ├── DasboardSection/      # Dashboard, Notification(ion), SideNav,
-        │                         # TaskSummary, AppBar/BottomNav (mobile),
+        │                         #   DeleteTaskButton, TaskList,
+        │                         #   ConfirnDelete/ConfirmDelete)
+        ├── Common/               # DetailsModal: modal de detalle reusado
+        │                         #   desde Dashboard, AddTaskSection, Calendar y
+        │                         #   Notificaciones. Lee `completed` en vivo.
+        ├── DasboardSection/      # Dashboard, Header, Notification/,
+        │                         # NotificationPanel/, SideNav, TaskSummary,
+        │                         # AppBar (mobile) + BottomNav (mobile),
         │                         # UpcomingTasks/{AddTask, AddTaskModal, TaskItem}
-        └── CalendarSection/      # CalendarSection, Header, Day/{Day, DayCard, DayModal}
+        └── CalendarSection/      # CalendarSection, Header,
+                                  #   Day/{Day, DayCard,
+                                  #   DayModal/{DayModal,
+                                  #   DayModalComponents/{AddTask, FormTask, TaskList}}}
 ```
 
-> **Ojo con el typo histórico:** `DasboardSection` (sin la segunda “h”) y `Reguister.jsx`. Mantén la capitalización y nombres de archivo existentes; renombrarlos rompe imports.
+> **Ojo con los typos históricos:** `DasboardSection` (sin la segunda “h”), `Reguister.jsx` y
+> la carpeta `AddTaskSection/ConfirnDelete/` (con la n y la r invertidas en `Confirn`).
+> Mantén la capitalización y nombres de archivo existentes; renombrarlos rompe imports.
 
 ## 5. Modelo de datos (localStorage)
 
@@ -175,6 +187,19 @@ Derivados en cada render desde `dueDate` y el `completed` del usuario:
 
 Una tarea completada nunca aparece como vencida.
 
+## 8.6 Límites de texto por contexto
+
+Para mantener la UI ordenada, los títulos/descripciones se truncan o limitan según dónde se muestran:
+
+| Campo | Ubicación | Límite |
+|---|---|---|
+| Título | Dashboard / AddTaskSection | 20 chars |
+| Título | Calendario (DayCard) | 15 chars |
+| Título | Notificaciones | 10 chars |
+| Subtítulo | Dashboard / AddTaskSection | 30 chars |
+| Título (input) | Modal crear tarea | 30 chars |
+| Descripción (textarea) | Modal crear tarea | 2000 chars (contador en vivo, auto-resize hasta 6 líneas, Guardar se bloquea al exceder) |
+
 ## 8.5 Secciones del curso (`utils/courseSections.js`)
 
 - `COURSE_SECTIONS` exporta las claves canónicas que se renderizan en `Course.jsx`:
@@ -183,8 +208,13 @@ Una tarea completada nunca aparece como vencida.
   las importan desde aquí; no hardcodear strings sueltas en los navs.
 - La sección `ADD_TASKS` renderiza `<AddTaskSection courseId={...} />` con `React.lazy()`
   y muestra la lista completa de tareas del curso con botón de eliminar.
+- La confirmación de borrado vive en `AddTaskSection/ConfirnDelete/ConfirmDelete.jsx`
+  y se reutiliza desde `DeleteTaskButton` (no abrir un modal propio por botón).
 - El modal de creación de tareas vive en `DasboardSection/UpcomingTasks/AddTaskModal/TaskModal.jsx`
   y se reutiliza tanto desde el dashboard (`AddTaskButton`) como desde `AddTaskSection`.
+- El modal de detalle de tarea vive en `Course/Common/DetailsModal/` y se reutiliza desde
+  Dashboard (`TaskItem`), AddTaskSection (`TaskList`), Calendar (`DayModal.TaskList`) y
+  el panel de notificaciones. Lee `completed` en vivo del store de auth.
 
 ## 9. Notificaciones (`utils/taskNotifications.js`)
 
@@ -200,6 +230,7 @@ Una tarea completada nunca aparece como vencida.
 - `Day.jsx` — genera días con `useMonthDay`.
 - `DayCard.jsx` — filtra tareas del curso por fecha.
 - `DayModal.jsx` — muestra, crea y completa tareas del día seleccionado (contiene `AddTask`, `FormTask`, `TaskList`).
+  Al hacer clic en una tarea del listado del día, cierra el modal del día y abre el `DetailsModal` (`Common`).
 - Reusa la fuente única de `taskStorage` + estado individual de `AuthStore`; **no** mantener un store paralelo.
 
 ## 11. Estilos y theming
@@ -233,7 +264,7 @@ Una tarea completada nunca aparece como vencida.
 - **No** crees un store paralelo al de tareas; el calendario debe leer de `useTaskStore` + `useAuthStore`.
 - **No** metas credenciales en git: la app ya tiene passwords en `localStorage`; no las añadas también a logs.
 - **No** introduzcas un backend o librería de auth nueva sin discutirlo: hoy es deliberadamente demo.
-- **No** renombres `DasboardSection` ni `Reguister.jsx` sin actualizar todos los imports.
+- **No** renombres `DasboardSection`, `Reguister.jsx` ni `AddTaskSection/ConfirnDelete/` sin actualizar todos los imports.
 - **No** metas la lógica de notificaciones dentro de los componentes: vive en `utils/`.
 - **No** hardcodees las keys de sección (`'dashboard'`, `'calendar'`, `'Agregar Tareas'`) en
   componentes de navegación: usa `COURSE_SECTIONS` desde `utils/courseSections.js`.

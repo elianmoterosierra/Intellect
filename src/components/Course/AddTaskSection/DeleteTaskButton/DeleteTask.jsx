@@ -23,7 +23,7 @@ export function DeleteTask({ courseId, taskId, isOverdue }) {
                 Eliminar
             </button>
             {showConfirmModal && (
-                <ConfirmDelete taskId={taskId} courseId={courseId} OpenModal={OpenModal} setShowConfirmModal={setShowConfirmModal} />
+                <ConfirmDelete taskId={taskId} courseId={courseId} setShowConfirmModal={setShowConfirmModal} />
             )}
         </>
     )

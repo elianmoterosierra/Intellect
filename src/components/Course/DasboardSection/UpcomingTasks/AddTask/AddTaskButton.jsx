@@ -38,6 +38,11 @@ export function AddTaskButton({ courseId }) {
     const handleSubmit = (event) => {
         event.preventDefault();
 
+        if (subtitle.length > 2000) {
+            setError(`Te has excedido por ${subtitle.length - 2000} caracteres: ${subtitle.length}/2000`);
+            return;
+        }
+
         if (!title.trim() || !dueDate) {
             setError('Escribe un título y selecciona una fecha de entrega.');
             return;

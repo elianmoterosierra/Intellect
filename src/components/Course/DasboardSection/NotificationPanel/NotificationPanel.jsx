@@ -34,7 +34,7 @@ export function NotificationPanel({ courseId, onClose }) {
                             {notification.urgent ? 'warning' : 'assignment'}
                         </span>
                         <div>
-                            <p className="notification-item-text font-semibold">{notification.title}</p>
+                            <p className="notification-item-text font-semibold">{notification.title.length > 10 ? notification.title.slice(0, 10) + '…' : notification.title}</p>
                             <p className="notification-item-time">{notification.subtitle}</p>
                         </div>
                     </div>

@@ -6,7 +6,7 @@ const getMonthName = (year, month) =>
     new Date(year, month).toLocaleString('es-ES', { month: 'long' })
         .replace(/^\w/, c => c.toUpperCase());
 
-export function DayModal({ day, tasks, courseId, year, month, onClose, onAddTask, onToggleTask }) {
+export function DayModal({ day, tasks, courseId, year, month, onClose, onAddTask, onToggleTask, onTaskClick }) {
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({ title: '', description: '' });
     const [closing, setClosing] = useState(false);
@@ -128,7 +128,7 @@ export function DayModal({ day, tasks, courseId, year, month, onClose, onAddTask
 
                 {/* ── Task list ── */}
                 <div className="px-6 py-4 max-h-60 overflow-y-auto flex flex-col gap-3">
-                    <TaskList tasks={tasks} handleToggle={handleToggle} dayDate={dayDate} />
+                    <TaskList tasks={tasks} handleToggle={handleToggle} dayDate={dayDate} onTaskClick={onTaskClick} />
                 </div>
 
                 {/* ── Add task form ── */}

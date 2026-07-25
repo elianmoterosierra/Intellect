@@ -1,6 +1,7 @@
 import { getTaskStatusConfig } from "../../../../../../../utils/taskStatus";
 
-export function TaskList({ tasks, handleToggle, dayDate }) {
+export function TaskList({ tasks, handleToggle, dayDate, onTaskClick }) {
+
     return (
         <div className="flex flex-col gap-3">
             {tasks.length === 0 && (
@@ -14,7 +15,8 @@ export function TaskList({ tasks, handleToggle, dayDate }) {
                 return (
                     <div
                         key={task.id}
-                        className={`flex items-start justify-between gap-3 px-3 py-2.5 rounded-xl border transition-all ${cfg.bgColor} ${cfg.borderColor}`}
+                        className={`flex items-start justify-between gap-3 px-3 py-2.5 rounded-xl border transition-all cursor-pointer ${cfg.bgColor} ${cfg.borderColor}`}
+                        onClick={() => onTaskClick(task)}
                     >
                         <div className="flex flex-col gap-0.5 min-w-0">
                             <div className="flex items-center gap-1.5">
@@ -32,7 +34,10 @@ export function TaskList({ tasks, handleToggle, dayDate }) {
                             )}
                         </div>
                         <button
-                            onClick={() => handleToggle(task.id)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggle(task.id);
+                            }}
                             className={`shrink-0 px-2.5 py-1 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
                                 task.completed
                                     ? 'bg-gray-200 text-gray-500 line-through cursor-default'

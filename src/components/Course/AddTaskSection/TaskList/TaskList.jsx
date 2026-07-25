@@ -1,13 +1,24 @@
 import { useTaskStore } from "../../../../store/taskStorage";
+import { useAuthStore } from "../../../../store/AuthStore";
 import { getTaskStatusConfig } from "../../../../utils/taskStatus";
-
+import { useState, useMemo } from "react";
 import { DeleteTask } from "../DeleteTaskButton/DeleteTask";
+import { DetailsModal } from "../../Common/DetailsModal/DetailsModal";
 
 export function TaskList({ courseId }) {
     const tasksByCourse = useTaskStore((state) => state.tasksByCourse);
+    const user = useAuthStore((state) => state.user);
+    const [selectedTask, setSelectedTask] = useState(null);
 
-    const tasks = tasksByCourse?.[courseId] ?? [];
-    console.log('[AddTaskSection] mounted with courseId =', courseId, 'tasks =', tasks);
+    const tasks = useMemo(() => {
+        const rawTasks = tasksByCourse?.[courseId] ?? [];
+        return rawTasks.map((task) => ({
+            ...task,
+            completed:
+                user?.taskStatusByCourse?.[courseId]?.[task.id]
+                    ?.completed ?? false,
+        }));
+    }, [tasksByCourse, courseId, user]);
 
 
     return (
@@ -31,13 +42,14 @@ export function TaskList({ courseId }) {
                         return (
                             <li
                                 key={task.id}
-                                className={`relative pl-4 pr-4 py-2.5 flex items-center gap-3 border-t first:border-t-0 transition-colors duration-200 group ${isOverdue
-                                    ? 'bg-[#ba1a1a] border-[#ba1a1a] text-white'
+                                className={`relative pl-4 pr-4 py-2.5 flex items-center gap-3 border-t first:border-t-0 transition-colors duration-200 group cursor-pointer ${isOverdue
+                                    ? 'bg-[#ba1a1a] border-[#ba1a1a] text-white hover:bg-[#991313]'
                                     : 'border-[#c2c6d6] hover:bg-[#f2f3fd]'
                                     }`}
+                                onClick={() => setSelectedTask(task)}
                             >
                                 <p className={`absolute left-0 right-0 top-2.5 px-24 text-center text-lg leading-5 font-semibold overflow-hidden text-ellipsis whitespace-nowrap pointer-events-none ${isOverdue ? 'text-white' : 'text-[#191b23]'}`}>
-                                    {task.title}
+                                    {task.title.length > 20 ? task.title.slice(0, 20) + '…' : task.title}
                                 </p>
                                 <div className="flex-1 min-w-0 pt-5">
                                     <div className="flex items-center gap-3 mt-0.5">
@@ -46,7 +58,7 @@ export function TaskList({ courseId }) {
                                             <span className="material-symbols-outlined" style={{ fontSize: '30px' }}>
                                                 school
                                             </span>
-                                            {task.subtitle}
+                                            {task.subtitle.length > 30 ? task.subtitle.slice(0, 30) + '…' : task.subtitle}
                                         </span>
                                     </div>
                                 </div>
@@ -60,13 +72,22 @@ export function TaskList({ courseId }) {
                                     </span>
                                 </div>
 
-                                <DeleteTask courseId={courseId} taskId={task.id} isOverdue={isOverdue} />
+                                <div onClick={(e) => e.stopPropagation()}>
+                                    <DeleteTask courseId={courseId} taskId={task.id} isOverdue={isOverdue} />
+                                </div>
                             </li>
                         );
                     })
                 )}
             </ul>
 
+            {selectedTask && (
+                <DetailsModal
+                    task={selectedTask}
+                    courseId={courseId}
+                    onClose={() => setSelectedTask(null)}
+                />
+            )}
         </>
     )
 }

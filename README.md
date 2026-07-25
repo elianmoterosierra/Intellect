@@ -7,16 +7,19 @@ Aplicación web de gestión académica creada con React y Vite. Permite registra
 - Registro, inicio y cierre de sesión con persistencia local.
 - Un curso seleccionado por cada usuario.
 - Creación de tareas compartidas por todos los miembros de un curso.
-- Modal independiente e interactiva de creación de tareas (`AddTaskModal`).
+- Modal único de creación de tareas (`AddTaskModal/TaskModal.jsx`) reusado desde el dashboard y la sección "Agregar Tareas".
+- Descripción con textarea de auto-resize hasta 6 líneas, contador de caracteres en vivo y botón Guardar bloqueado al superar el límite de 2000 caracteres en el modal de creación.
 - Sección dedicada para la visualización y gestión de "Agregar Tareas" (`AddTaskSection`).
-- Eliminación de tareas del curso desde la sección "Agregar Tareas".
+- Eliminación de tareas del curso desde la sección "Agregar Tareas", con confirmación previa en `ConfirnDelete/ConfirmDelete.jsx`.
+- Modal de detalle de tarea (`Common/DetailsModal`) integrado en todos los listados, con estado `completed` en vivo desde el store.
 - Constantes centralizadas para la gestión de secciones (`courseSections.js`).
-- Completado individual de tareas desde el dashboard y el calendario.
+- Completado individual de tareas desde el dashboard, el calendario y el modal de detalle.
 - Tareas y progreso guardados en `localStorage`.
 - Resumen automático de tareas completadas, pendientes y progreso.
 - Notificaciones dinámicas para tareas pendientes, próximas o vencidas.
 - Estado visual para tareas vencidas: fondo rojo y texto blanco.
-- Calendario mensual que muestra las tareas según su fecha de entrega.
+- Calendario mensual que muestra las tareas según su fecha de entrega. Al hacer clic en una tarea del día se cierra el modal del día y se abre el detalle.
+- Límites de texto por contexto (títulos truncados según la ubicación).
 - Diseño responsive: navegación completa en escritorio y menú compacto en pantallas pequeñas.
 
 ## Tecnologías
@@ -25,6 +28,8 @@ Aplicación web de gestión académica creada con React y Vite. Permite registra
 |---|---|
 | React 19 | Interfaz de usuario |
 | Vite 8 | Servidor de desarrollo y build |
+| `@vitejs/plugin-react` + `@rolldown/plugin-babel` | Pipeline de React con Babel |
+| `babel-plugin-react-compiler` | React Compiler (memoización automática) |
 | React Router 8 | Rutas de la SPA |
 | Zustand 5 | Estado global y persistencia local |
 | Tailwind CSS 3 | Estilos y animaciones |
@@ -110,6 +115,19 @@ La aplicación combina las tareas de `tasksByCourse[courseId]` con `user.taskSta
 
 Las tareas completadas no se muestran como vencidas.
 
+## Límites de texto
+
+Los títulos y descripciones se truncan según el contexto para mantener una interfaz ordenada:
+
+| Campo | Ubicación | Límite |
+|---|---|---|
+| Título | Dashboard / AddTaskSection | 20 caracteres |
+| Título | Calendario (DayCard) | 15 caracteres |
+| Título | Notificaciones | 10 caracteres |
+| Subtítulo | Dashboard / AddTaskSection | 30 caracteres |
+| Título (input) | Modal crear tarea | 30 caracteres |
+| Descripción (textarea) | Modal crear tarea | 2000 caracteres (contador en vivo, crece hasta 6 líneas) |
+
 ## Notificaciones
 
 `src/utils/taskNotifications.js` crea notificaciones desde las tareas pendientes del usuario:
@@ -151,8 +169,8 @@ src/
     ├── Header/               # Navegación principal y autenticación
     ├── Form/                 # Login y registro
     └── Course/
-        ├── AddTaskSection/   # Sección dedicada a la gestión de tareas
-        ├── DasboardSection/  # Dashboard, tareas y notificaciones
+        ├── AddTaskSection/   # Sección "Agregar Tareas" (TaskList + ConfirmDelete + AddTaskButton)
+        ├── DasboardSection/  # Dashboard, tareas, notificaciones y modal único de creación
         └── CalendarSection/  # Calendario y modal de día
 ```
 

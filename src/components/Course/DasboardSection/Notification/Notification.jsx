@@ -35,7 +35,7 @@ export function NotificationItem({ title, subtitle, type }) {
             : 'bg-[#f2f3fd] border-[#c2c6d6]'
             }`}>
             <p className={`text-sm leading-5 font-semibold ${isUrgent ? 'text-[#ba1a1a]' : 'text-[#191b23]'}`}>
-                {title}
+                {title.length > 10 ? title.slice(0, 10) + '…' : title}
             </p>
             <p className={`text-xs leading-4 tracking-wider font-semibold uppercase mt-0.5 ${isUrgent ? 'text-[#ba1a1a] opacity-80' : 'text-[#424754]'}`}>
                 {subtitle}

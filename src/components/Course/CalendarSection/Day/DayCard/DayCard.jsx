@@ -4,6 +4,7 @@ import { DayModal } from '../DayModal/DayModal';
 import { EMPTY_TASKS } from '../../../../../Hooks/useMonthDay';
 import { useTaskStore } from '../../../../../store/taskStorage';
 import { useAuthStore } from '../../../../../store/AuthStore';
+import { DetailsModal } from '../../../Common/DetailsModal/DetailsModal';
 
 const typeStyles = {
     past: 'opacity-50 bg-[#f2f3fd]',
@@ -16,6 +17,7 @@ const typeStyles = {
 export const DayCard = memo(function DayCard({ day, year, month, courseId }) {
     const { name, number, type } = day;
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [detailsTask, setDetailsTask] = useState(null);
     const courseTasks = useTaskStore((state) => state.tasksByCourse[courseId] ?? EMPTY_TASKS);
     const addTask = useTaskStore((state) => state.addTask);
     const user = useAuthStore((state) => state.user);
@@ -56,7 +58,7 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId }) {
                         return (
                             <div key={task.id} className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${task.completed ? 'bg-gray-100 text-gray-400 line-through' : status.pillBg}`}>
                                 {status.icon && !task.completed && <span className="material-symbols-outlined text-[12px] leading-none">{status.icon}</span>}
-                                <span className="truncate">{task.title}</span>
+                                {task.title.length > 15 ? task.title.slice(0, 15) + '…' : task.title}
                             </div>
                         );
                     })}
@@ -75,6 +77,18 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId }) {
                     onClose={() => setIsModalOpen(false)}
                     onAddTask={addTask}
                     onToggleTask={toggleTaskStatus}
+                    onTaskClick={(task) => {
+                        setIsModalOpen(false);
+                        setDetailsTask(task);
+                    }}
+                />
+            )}
+
+            {detailsTask && (
+                <DetailsModal
+                    task={detailsTask}
+                    courseId={courseId}
+                    onClose={() => setDetailsTask(null)}
                 />
             )}
         </>
