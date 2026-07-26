@@ -16,6 +16,7 @@ export default function Course() {
   const course = courseData.find(c => c.id === Number(courseId));
   const [activeSection, setActiveSection] = useState(COURSE_SECTIONS.DASHBOARD);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   if (!course) return (
     <div className="flex flex-col items-center justify-center h-screen text-[#424754]">
@@ -35,10 +36,15 @@ export default function Course() {
       <div className="flex flex-col flex-1 w-full md:ml-64">
 
         {/* TopAppBar (mobile only) */}
-        <AppBar onToggleNotifications={() => setIsNotificationOpen(v => !v)} />
+        <AppBar
+          activeSection={activeSection}
+          onToggleNotifications={() => setIsNotificationOpen(v => !v)}
+          onToggleSearch={() => setIsSearchOpen(v => !v)}
+          isSearchOpen={isSearchOpen}
+        />
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto bg-[#f9f9ff]">
+        <main className="flex-1 overflow-y-auto bg-[#f9f9ff] pb-16 md:pb-0">
           {activeSection === 'dashboard' && (
             <Suspense fallback={<div className="p-10 text-center text-[#424754]">Cargando dashboard...</div>}>
               <Dashboard course={course} />
@@ -47,7 +53,10 @@ export default function Course() {
 
           {activeSection === 'calendar' && (
             <Suspense fallback={<div className="p-10 text-center text-[#424754]">Cargando calendario...</div>}>
-              <CalendarSection courseId={course.id} onToggleNotifications={() => setIsNotificationOpen(v => !v)} />
+              <CalendarSection
+                courseId={course.id}
+                onToggleNotifications={() => setIsNotificationOpen(v => !v)}
+              />
             </Suspense>
           )}
 

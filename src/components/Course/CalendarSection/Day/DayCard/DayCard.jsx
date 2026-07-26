@@ -39,10 +39,13 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId }) {
     const isToday = type === 'today';
     const cardDate = new Date(year, month, number);
 
+    const displayedTasks = tasks.slice(0, 3);
+    const hasMore = tasks.length > 3;
+
     return (
         <>
             <div
-                className={`relative rounded-xl border border-[#c2c6d6] p-3 flex flex-col gap-2 cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-[1.02] ${typeStyles[type] ?? typeStyles.future}`}
+                className={`relative rounded-xl border border-[#c2c6d6] p-3 flex flex-col gap-2 cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-[1.02] aspect-square md:aspect-auto ${typeStyles[type] ?? typeStyles.future}`}
                 onClick={() => setIsModalOpen(true)}
             >
                 {(isTomorrow || isToday) && <div className={`absolute top-0 left-0 right-0 h-1 rounded-t-xl ${isTomorrow ? 'bg-[#0058be]' : 'bg-amber-400'}`} />}
@@ -53,18 +56,21 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId }) {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                    {tasks.map((task) => {
+                    {displayedTasks.map((task) => {
                         const status = getTaskStatusConfig(new Date(task.dueDate ?? cardDate));
                         return (
                             <div key={task.id} className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${task.completed ? 'bg-gray-100 text-gray-400 line-through' : status.pillBg}`}>
                                 {status.icon && !task.completed && <span className="material-symbols-outlined text-[12px] leading-none">{status.icon}</span>}
-                                {task.title.length > 15 ? task.title.slice(0, 15) + '…' : task.title}
+                                {task.title.length > 20 ? task.title.slice(0, 20) + '…' : task.title}
                             </div>
                         );
                     })}
+                    {hasMore && (
+                        <div className="text-center text-[10px] font-semibold text-[#424754]">…</div>
+                    )}
                 </div>
 
-                <div className="text-[10px] text-[#424754] opacity-60 mt-auto">Click para ver detalles</div>
+                <div className="text-[10px] text-[#424754] opacity-60 mt-auto hidden md:block">Click para ver detalles</div>
             </div>
 
             {isModalOpen && (

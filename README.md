@@ -19,6 +19,10 @@ Aplicación web de gestión académica creada con React y Vite. Permite registra
 - Notificaciones dinámicas para tareas pendientes, próximas o vencidas.
 - Estado visual para tareas vencidas: fondo rojo y texto blanco.
 - Calendario mensual que muestra las tareas según su fecha de entrega. Al hacer clic en una tarea del día se cierra el modal del día y se abre el detalle.
+- Selector de mes del calendario con botón "Hoy", atajo para volver al mes actual, persistencia del último mes visto por curso entre recargas, y swipe horizontal en móvil.
+- Scroll infinito en el calendario móvil con carga perezosa de meses via IntersectionObserver, skeleton grid de aspect-square (sin saltos visuales), y ajuste automático del scroll al anteponer meses (forceVisible + useLayoutEffect).
+- Grid de 2 columnas en mobile (repeat 2, 1fr) y 4 en desktop.
+- DayCard con aspect-square en mobile, título truncado a 20 caracteres y máximo 3 tareas visibles.
 - Límites de texto por contexto (títulos truncados según la ubicación).
 - Diseño responsive: navegación completa en escritorio y menú compacto en pantallas pequeñas.
 
@@ -142,10 +146,22 @@ No se usan notificaciones estáticas para el dashboard.
 
 El calendario usa la misma información compartida de `taskStorage.js`; no tiene un store independiente. Antes de mostrar una tarea, combina su definición con el progreso del usuario actual.
 
-- `CalendarSection.jsx` administra el mes visible.
-- `Day.jsx` genera los días mediante `useMonthDay`.
-- `DayCard.jsx` filtra las tareas del curso por fecha.
+### Desktop
+- `CalendarSection.jsx` administra el mes visible con HeaderCalendar + flechas de navegación y persiste el último mes visto por curso en `sessionStorage` (clave `intellect.calendar.lastMonth.<courseId>`). Al recargar la pestaña se restaura; al cerrar el navegador vuelve al mes actual.
+- `Day.jsx` + `DayCard.jsx` filtran las tareas del curso por fecha.
+- Grid de 4 columnas.
+
+### Mobile (scroll infinito)
+- `CalendarSection.jsx` mantiene una lista `months` con los meses visibles. Dos centinelas (top/bottom) con `IntersectionObserver` cargan meses anteriores/siguientes sin límite.
+- `MonthGroup.jsx` renderiza cada mes con lazy loading via `IntersectionObserver` (rootMargin 600px). Mientras no está cerca del viewport, muestra un skeleton grid con celdas `aspect-square` vacías que ocupan la misma altura que el contenido real, evitando reflows al hacer la transición.
+- Al anteponer un mes (centinela superior), se activa `forceVisible` para que el nuevo mes renderice inmediatamente sus `DayCards`, y un `useLayoutEffect` ajusta el `scrollTop` para mantener la posición visual.
+- Grid de 2 columnas (`repeat(2, 1fr)`) en mobile.
+- `DayCard` usa `aspect-square md:aspect-auto`, trunca títulos a 20 caracteres y muestra máximo 3 tareas.
+
+### Componentes compartidos
 - `DayModal.jsx` muestra, crea y completa tareas del día seleccionado.
+- Al hacer clic en una tarea del `DayModal` se cierra el modal del día y se abre el detalle (`Common/DetailsModal`).
+- El `date-selector` del header expone un botón "Hoy" (deshabilitado cuando ya estás en el mes actual) y soporte de swipe horizontal en móvil (`Hooks/useSwipe.js`).
 
 ## Estructura relevante
 
@@ -158,7 +174,8 @@ src/
 ├── utils/
 │   ├── courseSections.js     # Constantes de las secciones de navegación
 │   ├── taskStatus.js         # Estados visuales de las tareas
-│   └── taskNotifications.js  # Notificaciones derivadas de tareas
+│   ├── taskNotifications.js  # Notificaciones derivadas de tareas
+│   └── dateNavigation.js     # Navegación de mes + persistencia del mes visto
 ├── data/
 │   └── data.jsx              # Datos fijos de los cursos
 ├── page/
@@ -190,7 +207,8 @@ src/
 │   └── notifications.json
 ├── Hooks/
 │   ├── useDaysInMonth.jsx
-│   └── useMonthDay.jsx
+│   ├── useMonthDay.jsx
+│   └── useSwipe.js              # Hook reutilizable para detectar swipe horizontal
 ├── page/
 │   ├── home.jsx
 │   ├── SelectCourse.jsx
@@ -251,6 +269,7 @@ src/
         │       └── TaskItem/TaskItem.jsx
         └── CalendarSection/
             ├── CalendarSection.jsx
+            ├── MonthGroup.jsx          # Grupo de mes con skeleton y lazy loading
             ├── Header/HeaderCalendar.jsx
             └── Day/
                 ├── Day.jsx

@@ -49,7 +49,7 @@ src/
 ├── index.css                     # Tailwind base + tokens
 ├── assets/                       # Imágenes y SVGs estáticos
 ├── data/                         # data.jsx (cursos), notifications.json
-├── Hooks/                        # useDaysInMonth, useMonthDay
+├── Hooks/                        # useDaysInMonth, useMonthDay, useSwipe
 ├── page/                         # Páginas (rutas)
 │   ├── home.jsx
 │   ├── SelectCourse.jsx          # Exporta { CoursePage }
@@ -64,7 +64,9 @@ src/
 ├── utils/
 │   ├── courseSections.js         # COURSE_SECTIONS: claves de navegación del curso
 │   ├── taskStatus.js             # overdue / tomorrow / dayAfterTomorrow / normal
-│   └── taskNotifications.js      # Notificaciones derivadas de tareas pendientes
+│   ├── taskNotifications.js      # Notificaciones derivadas de tareas pendientes
+│   └── dateNavigation.js         # Helpers de mes (anterior/siguiente/hoy) + persistencia
+                                   #   del último mes visto por curso en sessionStorage
 └── components/
     ├── Layout/Layout.jsx
     ├── Header/                   # header.jsx
@@ -226,12 +228,17 @@ Para mantener la UI ordenada, los títulos/descripciones se truncan o limitan se
 
 ## 10. Calendario
 
-- `CalendarSection.jsx` — controla el mes visible.
+- `CalendarSection.jsx` — controla el mes visible y persiste el último mes visto por curso en `sessionStorage` (clave `intellect.calendar.lastMonth.<courseId>`). Al recargar la pestaña se restaura; al cerrar el navegador vuelve a "hoy".
 - `Day.jsx` — genera días con `useMonthDay`.
 - `DayCard.jsx` — filtra tareas del curso por fecha.
 - `DayModal.jsx` — muestra, crea y completa tareas del día seleccionado (contiene `AddTask`, `FormTask`, `TaskList`).
   Al hacer clic en una tarea del listado del día, cierra el modal del día y abre el `DetailsModal` (`Common`).
 - Reusa la fuente única de `taskStorage` + estado individual de `AuthStore`; **no** mantener un store paralelo.
+- El `date-selector` del header (`HeaderCalendar.jsx`) ofrece:
+  - Botón "Hoy" entre las flechas (deshabilitado cuando el mes mostrado es el actual).
+  - `aria-label` en los tres botones para accesibilidad.
+  - Swipe horizontal en móvil (gesto vertical se ignora para no chocar con el scroll).
+- La navegación entre meses se delega al padre; el header solo recibe callbacks y estado.
 
 ## 11. Estilos y theming
 
@@ -268,6 +275,9 @@ Para mantener la UI ordenada, los títulos/descripciones se truncan o limitan se
 - **No** metas la lógica de notificaciones dentro de los componentes: vive en `utils/`.
 - **No** hardcodees las keys de sección (`'dashboard'`, `'calendar'`, `'Agregar Tareas'`) en
   componentes de navegación: usa `COURSE_SECTIONS` desde `utils/courseSections.js`.
+- **No** dupliques `monthNames` ni la lógica de mes en el header: vive en `utils/dateNavigation.js`.
+- **No** guardes el mes visto del calendario en `localStorage` ni en un store nuevo: usa
+  `sessionStorage` por curso con `loadSavedMonth` / `saveMonth` de `dateNavigation.js`.
 
 ## 15. Verificación antes de cerrar tarea
 
