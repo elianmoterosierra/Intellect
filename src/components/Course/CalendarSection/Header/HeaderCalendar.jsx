@@ -2,7 +2,6 @@ import { formatMonthLabel } from '../../../../utils/dateNavigation';
 import { useSwipe } from '../../../../Hooks/useSwipe';
 
 export function HeaderCalendar({
-    onToggleNotifications,
     handlePerfil,
     handlePreviousMonth,
     handleNextMonth,
@@ -59,14 +58,6 @@ export function HeaderCalendar({
                     <span className="material-symbols-outlined search-icon">search</span>
                     <input className="search-input" placeholder="Search tasks..." type="text" />
                 </div>
-                <button
-                    onClick={onToggleNotifications}
-                    className="icon-button relative-badge"
-                    aria-label="Notificaciones"
-                >
-                    <span className="material-symbols-outlined">notifications</span>
-                    <span className="notification-badge"></span>
-                </button>
                 <button
                     onClick={(e) => handlePerfil(e)}
                     className="icon-button"

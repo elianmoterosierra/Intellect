@@ -1,7 +1,31 @@
 import { ButtonPrincipal } from '../../Button/ButtonPrincipal'
 import { ButtonOutline } from '../../Button/ButtonSecondary'
+import { useNavigate } from 'react-router';
+import { useState } from 'react';
+import { useAuthStore } from '../../../store/AuthStore';
 
 export function Hero() {
+    const navigate = useNavigate();
+
+    const [showForm, setShowForm] = useState(false);
+    const { isLoggedIn } = useAuthStore();
+
+    const handleAuthSuccess = () => {
+        setShowForm(false);
+        navigate('/course');
+    };
+
+    const handleCoursesClick = (e) => {
+        if (!isLoggedIn) {
+            e.preventDefault();
+            setShowForm(true);
+        }
+        else if (isLoggedIn) {
+            navigate("/course");
+        }
+
+    };
+
     return (
         <section className="flex flex-col md:flex-row items-center justify-between gap-12 w-full max-w-[1280px] mx-auto px-10 py-20 md:py-12 rounded-2xl bg-gradient-to-br from-white via-blue-100 to-green-50/25 text-left box-border">
             {/* Text side */}
@@ -17,7 +41,7 @@ export function Hero() {
                     Reduce la carga cognitiva y optimiza tu rendimiento académico. Una plataforma diseñada para el orden estructural y el enfoque absoluto en tus metas educativas.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                    <ButtonPrincipal title="Seguir " href="/course" className="w-full sm:w-auto" />
+                    <ButtonPrincipal onClick={handleCoursesClick} title="Seguir " href="/" className="w-full sm:w-auto" />
                     <ButtonOutline title="Donarle dinero a elian" href="/" className="w-full sm:w-auto" />
                 </div>
             </div>
@@ -34,6 +58,14 @@ export function Hero() {
                 <div className="absolute w-64 h-64 rounded-full blur-3xl -z-10 -top-12 -right-12 bg-[rgba(0,88,190,0.1)]" />
                 <div className="absolute w-64 h-64 rounded-full blur-3xl -z-10 -bottom-12 -left-12 bg-[rgba(108,248,187,0.2)]" />
             </div>
+            {
+                showForm && (
+                    <FormSection
+                        onClose={() => setShowForm(false)}
+                        onSuccess={handleAuthSuccess}
+                    />
+                )
+            }
         </section>
     );
 }

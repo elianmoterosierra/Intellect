@@ -10,7 +10,7 @@ import {
     isCurrentMonth,
 } from '../../../utils/dateNavigation';
 
-export default function CalendarSection({ courseId, onToggleNotifications }) {
+export default function CalendarSection({ courseId }) {
 
     const today = new Date();
     const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -175,7 +175,6 @@ export default function CalendarSection({ courseId, onToggleNotifications }) {
             {/* ─── DESKTOP ────────────────────────────────────────────── */}
             <div className="hidden md:block">
                 <HeaderCalendar
-                    onToggleNotifications={onToggleNotifications}
                     handlePerfil={handlePerfil}
                     handlePreviousMonth={handlePreviousMonth}
                     handleNextMonth={handleNextMonth}

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuthStore } from "../../../store/AuthStore";
 
-export function Reguister({ onSwitch, onSuccess }) {
+export function Register({ onSwitch, onSuccess }) {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');

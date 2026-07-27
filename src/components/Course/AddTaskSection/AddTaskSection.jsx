@@ -1,4 +1,4 @@
-import { AddTaskButton } from "../DasboardSection/UpcomingTasks/AddTask/AddTaskButton";
+import { AddTaskButton } from "../DashboardSection/UpcomingTasks/AddTask/AddTaskButton";
 
 import { TaskList } from "./TaskList/TaskList";
 

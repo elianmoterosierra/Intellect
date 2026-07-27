@@ -1,4 +1,6 @@
 import { Link } from 'react-router';
+import { Perfil } from '../../../Perfil/Perfil';
+import { useUIStore } from '../../../../store/uiStore';
 
 const SECTION_LABELS = {
     dashboard: 'General',
@@ -6,13 +8,10 @@ const SECTION_LABELS = {
     'Agregar Tareas': 'Tareas',
 };
 
-export function AppBar({
-    activeSection,
-    onToggleNotifications,
-    onToggleSearch,
-    isSearchOpen,
-}) {
+export function AppBar({ activeSection, onToggleSearch, isSearchOpen, }) {
+    const { openPerfilModal, closePerfilModal, isPerfilModalOpen } = useUIStore();
     const sectionLabel = SECTION_LABELS[activeSection] ?? 'Intellect';
+
 
     return (
         <header className="md:hidden sticky top-0 z-50 flex flex-col bg-[#f9f9ff] border-b border-[#c2c6d6]">
@@ -42,16 +41,11 @@ export function AppBar({
                             {isSearchOpen ? 'close' : 'search'}
                         </span>
                     </button>
-                    <button
-                        type="button"
-                        onClick={onToggleNotifications}
-                        className="relative flex items-center justify-center p-2 rounded-full text-[#424754] bg-transparent border-none cursor-pointer transition-colors duration-200 hover:bg-[#f2f3fd]"
-                        aria-label="Notificaciones"
-                    >
-                        <span className="material-symbols-outlined">notifications</span>
-                        <span className="absolute top-1 right-1 w-2 h-2 bg-[#ba1a1a] rounded-full border-2 border-[#f9f9ff]" />
-                    </button>
-                    <button
+                    <button onClick={
+                        () => {
+                            openPerfilModal();
+                        }
+                    }
                         type="button"
                         className="flex items-center justify-center p-2 rounded-full text-[#424754] bg-transparent border-none cursor-pointer transition-colors duration-200 hover:bg-[#f2f3fd]"
                         aria-label="Perfil"
@@ -74,6 +68,8 @@ export function AppBar({
                     </div>
                 </div>
             )}
+            {isPerfilModalOpen && <Perfil onClose={closePerfilModal} />}
         </header>
+
     );
 }

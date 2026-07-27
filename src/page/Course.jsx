@@ -1,30 +1,28 @@
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
-import { BottomNav } from '../components/Course/DasboardSection/BottomNav(mobile)/BottomNav';
-import { SideNav } from '../components/Course/DasboardSection/SideNav/SideNav';
-import { AppBar } from '../components/Course/DasboardSection/AppBar(mobile)/AppBar';
-import { NotificationPanel } from '../components/Course/DasboardSection/NotificationPanel/NotificationPanel';
+import { BottomNav } from '../components/Course/DashboardSection/BottomNav(mobile)/BottomNav';
+import { SideNav } from '../components/Course/DashboardSection/SideNav/SideNav';
+import { AppBar } from '../components/Course/DashboardSection/AppBar(mobile)/AppBar';
 import { useParams, Link } from 'react-router';
 import { courseData } from '../data/data';
 import { COURSE_SECTIONS } from '../utils/courseSections';
 import { useTaskStore } from '../store/taskStorage';
 import { useUIStore } from '../store/uiStore';
-import { AddTaskModal } from '../components/Course/DasboardSection/UpcomingTasks/AddTaskModal/TaskModal';
+import { AddTaskModal } from '../components/Course/DashboardSection/UpcomingTasks/AddTaskModal/TaskModal';
 
 const CalendarSection = lazy(() => import('../components/Course/CalendarSection/CalendarSection'));
-const Dashboard = lazy(() => import('../components/Course/DasboardSection/Dashboard'));
+const Dashboard = lazy(() => import('../components/Course/DashboardSection/Dashboard'));
 const AddTaskSection = lazy(() => import('../components/Course/AddTaskSection/AddTaskSection'));
 
 function getTodayInputValue() {
-    const today = new Date();
-    const offset = today.getTimezoneOffset();
-    return new Date(today.getTime() - offset * 60_000).toISOString().slice(0, 10);
+  const today = new Date();
+  const offset = today.getTimezoneOffset();
+  return new Date(today.getTime() - offset * 60_000).toISOString().slice(0, 10);
 }
 
 export default function Course() {
   const { courseId } = useParams();
   const course = courseData.find(c => c.id === Number(courseId));
   const [activeSection, setActiveSection] = useState(COURSE_SECTIONS.DASHBOARD);
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const addTask = useTaskStore((state) => state.addTask);
@@ -105,7 +103,6 @@ export default function Course() {
         {/* TopAppBar (mobile only) */}
         <AppBar
           activeSection={activeSection}
-          onToggleNotifications={() => setIsNotificationOpen(v => !v)}
           onToggleSearch={() => setIsSearchOpen(v => !v)}
           isSearchOpen={isSearchOpen}
         />
@@ -122,7 +119,6 @@ export default function Course() {
             <Suspense fallback={<div className="p-10 text-center text-[#424754]">Cargando calendario...</div>}>
               <CalendarSection
                 courseId={course.id}
-                onToggleNotifications={() => setIsNotificationOpen(v => !v)}
               />
             </Suspense>
           )}
@@ -136,9 +132,6 @@ export default function Course() {
 
         </main>
       </div>
-
-      {/* ===== NOTIFICATION PANEL (global) ===== */}
-      {isNotificationOpen && <NotificationPanel courseId={course.id} onClose={() => setIsNotificationOpen(false)} />}
 
       {/* ===== BOTTOM NAV (mobile only) ===== */}
       <BottomNav activeSection={activeSection} onSectionChange={setActiveSection} />
