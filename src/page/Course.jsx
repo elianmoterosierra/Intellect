@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { BottomNav } from '../components/Course/DasboardSection/BottomNav(mobile)/BottomNav';
 import { SideNav } from '../components/Course/DasboardSection/SideNav/SideNav';
 import { AppBar } from '../components/Course/DasboardSection/AppBar(mobile)/AppBar';
@@ -6,10 +6,19 @@ import { NotificationPanel } from '../components/Course/DasboardSection/Notifica
 import { useParams, Link } from 'react-router';
 import { courseData } from '../data/data';
 import { COURSE_SECTIONS } from '../utils/courseSections';
+import { useTaskStore } from '../store/taskStorage';
+import { useUIStore } from '../store/uiStore';
+import { AddTaskModal } from '../components/Course/DasboardSection/UpcomingTasks/AddTaskModal/TaskModal';
 
 const CalendarSection = lazy(() => import('../components/Course/CalendarSection/CalendarSection'));
 const Dashboard = lazy(() => import('../components/Course/DasboardSection/Dashboard'));
 const AddTaskSection = lazy(() => import('../components/Course/AddTaskSection/AddTaskSection'));
+
+function getTodayInputValue() {
+    const today = new Date();
+    const offset = today.getTimezoneOffset();
+    return new Date(today.getTime() - offset * 60_000).toISOString().slice(0, 10);
+}
 
 export default function Course() {
   const { courseId } = useParams();
@@ -17,6 +26,64 @@ export default function Course() {
   const [activeSection, setActiveSection] = useState(COURSE_SECTIONS.DASHBOARD);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  const addTask = useTaskStore((state) => state.addTask);
+  const isAddTaskModalOpen = useUIStore(s => s.isAddTaskModalOpen);
+  const closeAddTaskModal = useUIStore(s => s.closeAddTaskModal);
+  const titleInputRef = useRef(null);
+  const [title, setTitle] = useState('');
+  const [subtitle, setSubtitle] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [error, setError] = useState('');
+  const today = getTodayInputValue();
+
+  const closeModal = () => {
+    closeAddTaskModal();
+    setError('');
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    if (subtitle.length > 2000) {
+      setError(`Te has excedido por ${subtitle.length - 2000} caracteres: ${subtitle.length}/2000`);
+      return;
+    }
+
+    if (!title.trim() || !dueDate) {
+      setError('Escribe un título y selecciona una fecha de entrega.');
+      return;
+    }
+
+    const date = new Date(`${dueDate}T23:59:00`);
+    addTask(course.id, {
+      id: crypto.randomUUID(),
+      title: title.trim(),
+      subtitle: subtitle.trim() || 'Sin descripción',
+      dueDate: date.toISOString(),
+      hour: date.toLocaleDateString('es-DO', { day: 'numeric', month: 'short' }),
+    });
+
+    setTitle('');
+    setSubtitle('');
+    setDueDate('');
+    closeModal();
+  };
+
+  useEffect(() => {
+    if (!isAddTaskModalOpen) return;
+
+    titleInputRef.current?.focus();
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        closeAddTaskModal();
+        setError('');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAddTaskModalOpen, closeAddTaskModal]);
 
   if (!course) return (
     <div className="flex flex-col items-center justify-center h-screen text-[#424754]">
@@ -75,6 +142,10 @@ export default function Course() {
 
       {/* ===== BOTTOM NAV (mobile only) ===== */}
       <BottomNav activeSection={activeSection} onSectionChange={setActiveSection} />
+
+      {isAddTaskModalOpen && (
+        <AddTaskModal closeModal={closeModal} handleSubmit={handleSubmit} titleInputRef={titleInputRef} title={title} setTitle={setTitle} subtitle={subtitle} setSubtitle={setSubtitle} dueDate={dueDate} setDueDate={setDueDate} today={today} error={error} />
+      )}
     </div>
   );
 }

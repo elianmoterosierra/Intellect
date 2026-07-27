@@ -1,3 +1,5 @@
+import { Link } from 'react-router';
+
 const SECTION_LABELS = {
     dashboard: 'General',
     calendar: 'Calendario',
@@ -14,10 +16,19 @@ export function AppBar({
 
     return (
         <header className="md:hidden sticky top-0 z-50 flex flex-col bg-[#f9f9ff] border-b border-[#c2c6d6]">
-            {/* Fila 1: título | acciones */}
-            <div className="flex justify-between items-center px-4 w-full h-16">
-                <div className="text-xl font-bold text-[#0058be] tracking-tight">
-                    {sectionLabel}
+            {/* Fila 1: home | título | acciones */}
+            <div className="flex items-center px-4 w-full h-16">
+                <div className="flex items-center gap-3 flex-1">
+                    <Link
+                        to="/"
+                        className="flex items-center justify-center p-1 rounded-full text-[#424754] hover:bg-[#f2f3fd] transition-colors"
+                        aria-label="Ir al inicio"
+                    >
+                        <span className="material-symbols-outlined text-2xl">home</span>
+                    </Link>
+                    <span className="text-xl font-bold text-[#0058be] tracking-tight">
+                        {sectionLabel}
+                    </span>
                 </div>
 
                 <div className="flex gap-2">

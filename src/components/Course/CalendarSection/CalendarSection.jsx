@@ -8,28 +8,21 @@ import {
     getNextMonth,
     getPreviousMonth,
     isCurrentMonth,
-    loadSavedMonth,
-    saveMonth,
 } from '../../../utils/dateNavigation';
 
 export default function CalendarSection({ courseId, onToggleNotifications }) {
 
     const today = new Date();
-    const initial = loadSavedMonth(courseId);
-    const [currentYear, setCurrentYear] = useState(initial?.year ?? today.getFullYear());
-    const [currentMonth, setCurrentMonth] = useState(initial?.month ?? today.getMonth());
+    const [currentYear, setCurrentYear] = useState(today.getFullYear());
+    const [currentMonth, setCurrentMonth] = useState(today.getMonth());
     const [showPerfil, setShowPerfil] = useState(false);
-
-    // Persistir el mes visto cada vez que cambia, por curso (desktop).
-    useEffect(() => {
-        saveMonth(courseId, currentYear, currentMonth);
-    }, [courseId, currentYear, currentMonth]);
+    const [showUpArrow, setShowUpArrow] = useState(false);
+    const [showDownArrow, setShowDownArrow] = useState(false);
 
     // ─── Mobile: scroll infinito ──────────────────────────────────
     const [months, setMonths] = useState(() => {
-        const saved = loadSavedMonth(courseId);
-        const baseYear = saved?.year ?? today.getFullYear();
-        const baseMonth = saved?.month ?? today.getMonth();
+        const baseYear = today.getFullYear();
+        const baseMonth = today.getMonth();
         const prev = getPreviousMonth(baseYear, baseMonth);
         const next = getNextMonth(baseYear, baseMonth);
         return [
@@ -103,6 +96,47 @@ export default function CalendarSection({ courseId, onToggleNotifications }) {
         }
     });
 
+    // Scroll al día actual al montar en móvil.
+    useLayoutEffect(() => {
+        const el = mobileScrollRef.current;
+        if (!el) return;
+        const todayEl = el.querySelector('[data-today]');
+        if (todayEl) {
+            todayEl.scrollIntoView({ block: 'center' });
+        }
+    }, []);
+
+    // Detectar si el día actual está visible en móvil y mostrar flechas.
+    useEffect(() => {
+        const el = mobileScrollRef.current;
+        if (!el) return;
+        const todayEl = el.querySelector('[data-today]');
+        if (!todayEl) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (!entry.isIntersecting) {
+                    const rb = entry.rootBounds;
+                    const bb = entry.boundingClientRect;
+                    if (bb.top < rb.top) {
+                        setShowUpArrow(true);
+                        setShowDownArrow(false);
+                    } else {
+                        setShowUpArrow(false);
+                        setShowDownArrow(true);
+                    }
+                } else {
+                    setShowUpArrow(false);
+                    setShowDownArrow(false);
+                }
+            },
+            { root: el, threshold: 0 }
+        );
+
+        observer.observe(todayEl);
+        return () => observer.disconnect();
+    }, []);
+
     // ─── Desktop: handlers ───────────────────────────────────────
     function handleNextMonth() {
         const { year, month } = getNextMonth(currentYear, currentMonth);
@@ -121,6 +155,15 @@ export default function CalendarSection({ courseId, onToggleNotifications }) {
         setCurrentYear(now.getFullYear());
         setCurrentMonth(now.getMonth());
     }
+
+    const scrollToToday = () => {
+        const el = mobileScrollRef.current;
+        if (!el) return;
+        const todayEl = el.querySelector('[data-today]');
+        if (todayEl) {
+            todayEl.scrollIntoView({ block: 'center' });
+        }
+    };
 
     const handlePerfil = (e) => {
         e.preventDefault();
@@ -160,11 +203,31 @@ export default function CalendarSection({ courseId, onToggleNotifications }) {
                         year={m.year}
                         month={m.month}
                         courseId={courseId}
-                        forceVisible={prependedKey === `${m.year}-${m.month}`}
+                        forceVisible={prependedKey === `${m.year}-${m.month}` || (m.year === today.getFullYear() && m.month === today.getMonth())}
                     />
                 ))}
                 <div ref={bottomSentinelRef} className="h-2" />
             </div>
+
+            {/* Flechas de navegación al día de hoy (mobile) */}
+            {showUpArrow && (
+                <button
+                    onClick={scrollToToday}
+                    className="md:hidden fixed top-36 left-1/2 -translate-x-1/2 -ml-4 z-[60] bg-[#0058be] text-white rounded-full p-2 shadow-lg hover:bg-[#0041a8] transition-all duration-200 animate-fadeIn"
+                    aria-label="Ir al día de hoy"
+                >
+                    <span className="material-symbols-outlined text-xl">expand_less</span>
+                </button>
+            )}
+            {showDownArrow && (
+                <button
+                    onClick={scrollToToday}
+                    className="md:hidden fixed bottom-20 left-1/2 -translate-x-1/2 -ml-4 z-[60] bg-[#0058be] text-white rounded-full p-2 shadow-lg hover:bg-[#0041a8] transition-all duration-200 animate-fadeIn"
+                    aria-label="Ir al día de hoy"
+                >
+                    <span className="material-symbols-outlined text-xl">expand_more</span>
+                </button>
+            )}
 
             {showPerfil && <Perfil onClose={() => setShowPerfil(false)} />}
         </>

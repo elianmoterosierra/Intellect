@@ -4,11 +4,15 @@ import { getTaskStatusConfig } from "../../../../utils/taskStatus";
 import { useState, useMemo } from "react";
 import { DeleteTask } from "../DeleteTaskButton/DeleteTask";
 import { DetailsModal } from "../../Common/DetailsModal/DetailsModal";
+import { useMediaQuery } from "../../../../Hooks/useMediaQuery";
 
 export function TaskList({ courseId }) {
     const tasksByCourse = useTaskStore((state) => state.tasksByCourse);
     const user = useAuthStore((state) => state.user);
     const [selectedTask, setSelectedTask] = useState(null);
+    const isMobile = useMediaQuery('(max-width: 767px)');
+    const maxTitle = isMobile ? 5 : 20;
+    const maxSubtitle = isMobile ? 10 : 30;
 
     const tasks = useMemo(() => {
         const rawTasks = tasksByCourse?.[courseId] ?? [];
@@ -49,7 +53,7 @@ export function TaskList({ courseId }) {
                                 onClick={() => setSelectedTask(task)}
                             >
                                 <p className={`absolute left-0 right-0 top-2.5 px-24 text-center text-lg leading-5 font-semibold overflow-hidden text-ellipsis whitespace-nowrap pointer-events-none ${isOverdue ? 'text-white' : 'text-[#191b23]'}`}>
-                                    {task.title.length > 20 ? task.title.slice(0, 20) + '…' : task.title}
+                                    {task.title.length > maxTitle ? task.title.slice(0, maxTitle) + '…' : task.title}
                                 </p>
                                 <div className="flex-1 min-w-0 pt-5">
                                     <div className="flex items-center gap-3 mt-0.5">
@@ -58,13 +62,16 @@ export function TaskList({ courseId }) {
                                             <span className="material-symbols-outlined" style={{ fontSize: '30px' }}>
                                                 school
                                             </span>
-                                            {task.subtitle.length > 30 ? task.subtitle.slice(0, 30) + '…' : task.subtitle}
+                                            {task.subtitle.length > maxSubtitle ? task.subtitle.slice(0, maxSubtitle) + '…' : task.subtitle}
                                         </span>
                                     </div>
                                 </div>
 
                                 <div className="flex-shrink-0">
-                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[14px] leading-4 tracking-wide font-semibold ${isOverdue
+                                    <span className={`inline-flex items-center rounded-full leading-4 tracking-wide font-semibold ${isMobile
+                                        ? 'px-1.5 py-0.5 text-[11px]'
+                                        : 'px-2 py-0.5 text-[14px]'
+                                        } ${isOverdue
                                         ? 'bg-white/15 text-white border border-white/30'
                                         : 'bg-[#e1e2ec] text-[#424754]'
                                         }`}>

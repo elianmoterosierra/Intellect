@@ -1,4 +1,10 @@
 import { COURSE_SECTIONS } from '../../../../utils/courseSections';
+import { ExitModal } from '../../Common/ExitModal/ExitModal';
+import { useAuthStore } from '../../../../store/AuthStore';
+import { useUIStore } from '../../../../store/uiStore';
+import { useState } from 'react';
+
+const btnClass = "flex flex-col items-center justify-center flex-1 h-full bg-transparent border-none cursor-pointer";
 
 const navItems = [
     { key: COURSE_SECTIONS.DASHBOARD, icon: 'dashboard' },
@@ -7,25 +13,38 @@ const navItems = [
 ];
 
 export function BottomNav({ activeSection, onSectionChange }) {
+    const courseId = useAuthStore(s => s.user?.selectedCourseId);
+    const openAddTaskModal = useUIStore(s => s.openAddTaskModal);
+    const [showModal, setShowModal] = useState(false);
+    const onClose = () => setShowModal(false);
+
     return (
-        <nav className="md:hidden flex fixed bottom-0 w-full bg-[#f9f9ff] border-t border-[#c2c6d6] justify-around items-center h-16 px-2 pb-2 z-50">
-            {navItems.map(({ key, icon }) => (
-                <button
-                    key={key}
-                    onClick={() => onSectionChange(key)}
-                    className={`flex flex-col items-center gap-1 w-16 bg-transparent border-none cursor-pointer ${
-                        activeSection === key ? 'text-[#0058be]' : 'text-[#424754]'
-                    }`}
-                >
-                    <span className="material-symbols-outlined">{icon}</span>
+        <>
+            <nav className="md:hidden flex fixed bottom-0 w-full bg-[#f9f9ff] border-t border-[#c2c6d6] items-center h-16 z-50">
+                {navItems.map(({ key, icon }) => (
+                    <button
+                        key={key}
+                        onClick={() => onSectionChange(key)}
+                        className={`${btnClass} ${activeSection === key ? 'text-[#0058be]' : 'text-[#424754]'}`}
+                    >
+                        <span className="material-symbols-outlined text-2xl">{icon}</span>
+                    </button>
+                ))}
+                <button className={`${btnClass} text-[#424754]`} onClick={openAddTaskModal}>
+                    <span className="material-symbols-outlined text-2xl">add</span>
                 </button>
-            ))}
-            <button className="flex flex-col items-center gap-1 w-16 text-[#424754] bg-transparent border-none cursor-pointer">
-                <span className="material-symbols-outlined">add</span>
-            </button>
-            <button className="flex flex-col items-center gap-1 w-16 text-[#424754] bg-transparent border-none cursor-pointer">
-                <span className="material-symbols-outlined">account_circle</span>
-            </button>
-        </nav>
+                <button
+                    className={`${btnClass} text-red-500`}
+                    onClick={() => setShowModal(true)}
+                >
+                    <span className="material-symbols-outlined text-2xl">logout</span>
+                </button>
+            </nav>
+            {
+                showModal && (
+                    <ExitModal courseId={courseId} onClose={onClose} />
+                )
+            }
+        </>
     )
 }

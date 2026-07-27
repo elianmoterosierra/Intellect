@@ -17,13 +17,13 @@ export function Hero() {
                     Reduce la carga cognitiva y optimiza tu rendimiento académico. Una plataforma diseñada para el orden estructural y el enfoque absoluto en tus metas educativas.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                    <ButtonPrincipal title="Seguir a elian" href="/course" />
-                    <ButtonOutline title="Donarle dinero a elian" href="/" />
+                    <ButtonPrincipal title="Seguir " href="/course" className="w-full sm:w-auto" />
+                    <ButtonOutline title="Donarle dinero a elian" href="/" className="w-full sm:w-auto" />
                 </div>
             </div>
 
             {/* Image side */}
-            <div className="flex-none w-full max-w-[320px] md:w-[420px] md:max-w-[420px] relative order-2">
+            <div className="hidden md:block flex-none w-full max-w-[320px] md:w-[420px] md:max-w-[420px] relative order-2">
                 <div className="relative z-10 rounded-xl overflow-hidden shadow-2xl border border-gray-200">
                     <img
                         alt="Software dashboard interface mockup"

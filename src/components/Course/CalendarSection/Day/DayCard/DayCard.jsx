@@ -7,11 +7,11 @@ import { useAuthStore } from '../../../../../store/AuthStore';
 import { DetailsModal } from '../../../Common/DetailsModal/DetailsModal';
 
 const typeStyles = {
-    past: 'opacity-50 bg-[#f2f3fd]',
-    today: 'bg-amber-50 border-2 border-amber-400 shadow-sm',
-    tomorrow: 'bg-white border-2 border-[#0058be] shadow-md',
-    future: 'bg-white',
-    weekend: 'bg-[#f2f3fd] opacity-70',
+    past: 'opacity-60 bg-[#f2f3fd] border-[#d1d5db]',
+    today: 'bg-gradient-to-b from-amber-50 to-white shadow-[0_2px_10px_-3px_rgba(251,191,36,0.35)]',
+    tomorrow: 'bg-gradient-to-b from-blue-50 to-white shadow-[0_2px_10px_-3px_rgba(0,88,190,0.2)]',
+    future: 'bg-white hover:border-[#0058be]/20',
+    weekend: 'bg-gradient-to-b from-green-50 to-white',
 };
 
 export const DayCard = memo(function DayCard({ day, year, month, courseId }) {
@@ -37,6 +37,7 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId }) {
 
     const isTomorrow = type === 'tomorrow';
     const isToday = type === 'today';
+    const isWeekend = type === 'weekend';
     const cardDate = new Date(year, month, number);
 
     const displayedTasks = tasks.slice(0, 3);
@@ -45,32 +46,31 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId }) {
     return (
         <>
             <div
-                className={`relative rounded-xl border border-[#c2c6d6] p-3 flex flex-col gap-2 cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-[1.02] aspect-square md:aspect-auto ${typeStyles[type] ?? typeStyles.future}`}
+                className={`relative rounded-xl border p-3 flex flex-col gap-1.5 cursor-pointer transition-all duration-200 ease-out hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 aspect-square md:aspect-auto ${typeStyles[type] ?? typeStyles.future} ${type === 'past' || type === 'future' ? 'border-[#c2c6d6]' : ''}`}
                 onClick={() => setIsModalOpen(true)}
+                data-today={isToday ? '' : undefined}
             >
-                {(isTomorrow || isToday) && <div className={`absolute top-0 left-0 right-0 h-1 rounded-t-xl ${isTomorrow ? 'bg-[#0058be]' : 'bg-amber-400'}`} />}
-
-                <div className="flex justify-between items-center">
-                    <span className={`text-xs font-semibold ${isTomorrow ? 'text-[#0058be]' : isToday ? 'text-amber-600' : 'text-[#424754]'}`}>{name}</span>
-                    <span className={`text-sm font-semibold ${isTomorrow ? 'text-[#0058be]' : isToday ? 'text-amber-600' : 'text-[#191b23]'}`}>{number}</span>
+                <div className={`flex justify-between items-center rounded-t-[10px] -mx-3 -mt-3 px-3 pt-3 pb-1.5 ${isToday ? 'bg-gradient-to-br from-amber-500 to-amber-600' : isTomorrow ? 'bg-gradient-to-br from-[#0058be] to-[#0041a8]' : isWeekend ? 'bg-gradient-to-br from-green-500 to-green-600' : ''}`}>
+                    <span className={`text-[11px] font-medium tracking-wide uppercase ${isToday || isTomorrow || isWeekend ? 'text-white' : 'text-[#6b7280]'}`}>{name}</span>
+                    <span className={`text-lg font-bold leading-tight ${isToday || isTomorrow || isWeekend ? 'text-white' : type === 'past' ? 'text-[#9ca3af]' : 'text-[#191b23]'}`}>{number}</span>
                 </div>
 
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1 mt-0.5">
                     {displayedTasks.map((task) => {
                         const status = getTaskStatusConfig(new Date(task.dueDate ?? cardDate));
                         return (
-                            <div key={task.id} className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${task.completed ? 'bg-gray-100 text-gray-400 line-through' : status.pillBg}`}>
+                            <div key={task.id} className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold leading-tight transition-colors duration-150 group-hover:shadow-sm ${task.completed ? 'bg-gray-100 text-gray-400 line-through' : status.pillBg}`}>
                                 {status.icon && !task.completed && <span className="material-symbols-outlined text-[12px] leading-none">{status.icon}</span>}
                                 {task.title.length > 20 ? task.title.slice(0, 20) + '…' : task.title}
                             </div>
                         );
                     })}
                     {hasMore && (
-                        <div className="text-center text-[10px] font-semibold text-[#424754]">…</div>
+                        <div className="text-center text-[10px] font-semibold text-[#424754] tracking-wider">···</div>
                     )}
                 </div>
 
-                <div className="text-[10px] text-[#424754] opacity-60 mt-auto hidden md:block">Click para ver detalles</div>
+                <div className="text-[10px] text-[#6b7280] mt-auto hidden md:block">Click para ver detalles</div>
             </div>
 
             {isModalOpen && (

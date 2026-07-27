@@ -1,7 +1,7 @@
 export const courseData = [
     {
         id: 1,
-        title: "Ingeniería de Software - 5to Curso",
+        title: "Desarrollo y administracion de sistemas informaticos- 5to Curso",
         description: "Avanza en el desarrollo de sistemas complejos, patrones de arquitectura y gestión de ciclo de vida del software.",
         icon: "code",
         notification: [
@@ -46,7 +46,7 @@ export const courseData = [
     {
         id: 2,
         title: "Electricidad - 5to Curso",
-        description: "Avanza en el mundo de la electricidad y la automatizacion industrial, aprendiendo sobre sistemas complejos, patrones de arquitectura y gestión de ciclo de vida del software.",
+        description: "Avanza en el mundo de la electricidad y la automatizacion industrial.",
         icon: "bolt",
         notification: [
             {
@@ -90,7 +90,7 @@ export const courseData = [
     {
         id: 3,
         title: "Refrigeracion - 5to Curso",
-        description: "Avanza en el mundo de los sistemas de refrigeracion y aire acondicionado, aprendiendo sobre ciclo de vida del software.",
+        description: "Avanza en el mundo de los sistemas de refrigeracion y aire acondicionado.",
         icon: "snowflake",
         notification: [
             {
@@ -133,8 +133,8 @@ export const courseData = [
     },
     {
         id: 4,
-        title: "Comercio Internacional - 5to Curso",
-        description: "Avanza en el mundo de los negocios y el comercio internacional, aprendiendo sobre ciclo de vida del software.",
+        title: "Comercio- 5to Curso",
+        description: "Avanza en el mundo de los negocios y el comercio internacional.",
         icon: "money",
         notification: [
             {
@@ -167,7 +167,51 @@ export const courseData = [
                 "subtitle": "Revisa tu calificación del parcial",
                 "urgent": false
             },
-                {
+            {
+                "id": 6,
+                "title": "Tarea vencida: Ejercicios de aranceles",
+                "subtitle": "Se descontará puntualidad",
+                "urgent": true
+            }
+        ]
+    },
+    {
+        id: 5,
+        title: "Artes Visuales - 5to Curso",
+        description: "Explora el mundo de las artes y la creatividad.",
+        icon: " palette",
+        notification: [
+            {
+                "id": 1,
+                "title": "Entrega próxima: Análisis de mercado",
+                "subtitle": "2h restantes",
+                "urgent": true
+            },
+            {
+                "id": 2,
+                "title": "Conferencia virtual disponible",
+                "subtitle": "Comercio bilateral",
+                "urgent": false
+            },
+            {
+                "id": 3,
+                "title": "Recordatorio: Simulación aduanera",
+                "subtitle": "Preparar documentos",
+                "urgent": false
+            },
+            {
+                "id": 4,
+                "title": "Nueva lectura recomendada",
+                "subtitle": "Logística internacional",
+                "urgent": false
+            },
+            {
+                "id": 5,
+                "title": "Calificación publicada: Proyecto trimestral",
+                "subtitle": "Revisa tu calificación del parcial",
+                "urgent": false
+            },
+            {
                 "id": 6,
                 "title": "Tarea vencida: Ejercicios de aranceles",
                 "subtitle": "Se descontará puntualidad",

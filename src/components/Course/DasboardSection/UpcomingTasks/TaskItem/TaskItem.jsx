@@ -2,6 +2,7 @@ import { useAuthStore } from '../../../../../store/AuthStore';
 import { getDaysDifference } from '../../../../../utils/taskStatus';
 import { useState } from 'react';
 import { DetailsModal } from '../../../Common/DetailsModal/DetailsModal';
+import { useMediaQuery } from '../../../../../Hooks/useMediaQuery';
 
 const badgeStyles = {
     danger: 'bg-red-600 text-white',
@@ -21,6 +22,9 @@ function getBadgeClass(dueDate) {
 export function TaskItem({ task, courseId }) {
     const toggleTaskStatus = useAuthStore((state) => state.toggleTaskStatus);
     const [showDetails, setShowDetails] = useState(false);
+    const isMobile = useMediaQuery('(max-width: 767px)');
+    const maxTitle = isMobile ? 15 : 20;
+    const maxSubtitle = isMobile ? 10 : 30;
     const done = task.completed;
     const isOverdue = !done && getDaysDifference(task.dueDate) < 0;
 
@@ -60,11 +64,11 @@ export function TaskItem({ task, courseId }) {
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                    <p className={`text-base leading-6 font-semibold overflow-hidden text-ellipsis whitespace-nowrap ${done ? 'text-[#9496a8] line-through' : isOverdue ? 'text-white' : 'text-[#191b23]'}`}>{task.title.length > 20 ? task.title.slice(0, 20) + '…' : task.title}</p>
+                    <p className={`text-base leading-6 font-semibold overflow-hidden text-ellipsis whitespace-nowrap ${done ? 'text-[#9496a8] line-through' : isOverdue ? 'text-white' : 'text-[#191b23]'}`}>{task.title.length > maxTitle ? task.title.slice(0, maxTitle) + '…' : task.title}</p>
                     <div className="flex items-center gap-4 mt-1">
                         <span className={`flex items-center gap-1 text-xs leading-4 tracking-wide font-semibold ${isOverdue ? 'text-white/85' : 'text-[#424754]'}`}>
                             <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>school</span>
-                            {task.subtitle.length > 30 ? task.subtitle.slice(0, 30) + '…' : task.subtitle}
+                            {task.subtitle.length > maxSubtitle ? task.subtitle.slice(0, maxSubtitle) + '…' : task.subtitle}
                         </span>
                     </div>
                 </div>

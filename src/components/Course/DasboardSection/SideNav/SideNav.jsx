@@ -1,7 +1,7 @@
-import { Link, useNavigate } from 'react-router';
+import { Link } from 'react-router';
 import { useState } from 'react';
-import { useCourseStore } from '../../../../store/courseStore';
 import { COURSE_SECTIONS } from '../../../../utils/courseSections';
+import { ExitModal } from '../../Common/ExitModal/ExitModal';
 
 const navLink = "flex items-center gap-4 px-4 py-2 rounded-xl transition-colors duration-200 text-[#424754] no-underline text-sm leading-5 hover:bg-blue-500 cursor-pointer border-none w-full text-left font-[inherit]";
 const navLinkActive = "bg-blue-500 text-white font-semibold";
@@ -13,17 +13,9 @@ const sections = [
 ];
 
 export function SideNav({ courseId, activeSection, onSectionChange }) {
-    const navigate = useNavigate();
     const [showModal, setShowModal] = useState(false);
-    const handleLeave = useCourseStore(s => s.handleLeave);
+    const onClose = () => setShowModal(false);
 
-    const confirmLeave = () => {
-        const didLeave = handleLeave(courseId);
-        if (!didLeave) return;
-
-        setShowModal(false);
-        navigate('/course', { replace: true });
-    };
 
     return (
         <>
@@ -73,32 +65,7 @@ export function SideNav({ courseId, activeSection, onSectionChange }) {
             </nav>
 
             {showModal && (
-                <div
-                    className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100]"
-                    onClick={() => setShowModal(false)}
-                >
-                    <div
-                        className="bg-[#f2f3fd] border border-[#c2c6d6] rounded-xl p-6 max-w-[380px] w-[90%]"
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <h3 className="text-lg font-semibold text-[#191b23] mb-2">¿Salir del curso?</h3>
-                        <p className="text-sm text-[#424754] mb-6 leading-[1.5]">Deberás volver a seleccionar el curso para acceder.</p>
-                        <div className="flex gap-3 justify-end">
-                            <button
-                                className="px-5 py-2.5 rounded-lg text-sm font-medium cursor-pointer border-none bg-[#e1e2ec] text-[#191b23] hover:bg-[#d0d1e0] transition-colors"
-                                onClick={() => setShowModal(false)}
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                className="px-5 py-2.5 rounded-lg text-sm font-medium cursor-pointer border-none bg-red-500 text-white hover:bg-red-600 transition-colors"
-                                onClick={confirmLeave}
-                            >
-                                Salir
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <ExitModal courseId={courseId} onClose={onClose} />
             )}
         </>
     )

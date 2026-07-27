@@ -1,9 +1,9 @@
 
 
-export function ButtonPrincipal({ title, onClick }) {
+export function ButtonPrincipal({ title, onClick, className = '' }) {
     return (
         <button
-            className="inline-flex items-center gap-2 bg-[#0058be] text-white px-8 py-4 rounded-lg font-semibold text-xl transition-all duration-300 shadow-md hover:-translate-y-0.5 hover:shadow-lg"
+            className={`inline-flex items-center justify-center gap-2 bg-[#0058be] text-white px-8 py-4 rounded-lg font-semibold text-xl transition-all duration-300 shadow-md hover:-translate-y-0.5 hover:shadow-lg ${className}`}
             onClick={onClick}
         >{title}</button>
     )

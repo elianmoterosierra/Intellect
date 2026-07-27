@@ -22,10 +22,10 @@ export function useMonthDay(year, month) {
             const dayOfWeek = dateObj.getDay();
 
             let type = 'future';
-            if (dayOfWeek === 0 || dayOfWeek === 6)                      type = 'weekend';
+            if (dateObj.toDateString() === today.toDateString())         type = 'today';
             else if (dateObj.toDateString() === tomorrow.toDateString()) type = 'tomorrow';
-            else if (dateObj.toDateString() === today.toDateString())    type = 'today';
             else if (dateObj < today)                                     type = 'past';
+            else if (dayOfWeek === 0 || dayOfWeek === 6)                 type = 'weekend';
 
             const dataKey = `${year}-${month}-${dayNumber}`;
             // ?? EMPTY_TASKS: referencia estable para días sin tareas

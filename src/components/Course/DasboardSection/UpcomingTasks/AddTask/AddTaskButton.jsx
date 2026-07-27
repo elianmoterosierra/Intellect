@@ -63,6 +63,8 @@ export function AddTaskButton({ courseId }) {
         closeModal();
     };
 
+
+
     return (
         <>
             <button

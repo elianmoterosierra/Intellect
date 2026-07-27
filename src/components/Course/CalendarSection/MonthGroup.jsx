@@ -27,7 +27,7 @@ export function MonthGroup({ year, month, courseId, forceVisible }) {
     }, [isNear]);
 
     return (
-        <div ref={ref} data-month-group>
+        <div ref={ref} data-month-group data-year={year} data-month={month}>
             <div className="sticky top-0 z-10 bg-[#f9f9ff] px-4 py-3 text-lg font-bold text-[#0058be] border-b border-[#c2c6d6]">
                 {MONTH_NAMES[month]} {year}
             </div>
