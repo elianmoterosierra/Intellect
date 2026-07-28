@@ -3,7 +3,7 @@ import { ButtonOutline } from '../../Button/ButtonSecondary'
 import { useNavigate } from 'react-router';
 import { useState } from 'react';
 import { useAuthStore } from '../../../store/AuthStore';
-
+import { FormSection } from '../../Form/FormSection';
 export function Hero() {
     const navigate = useNavigate();
 

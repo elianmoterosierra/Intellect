@@ -29,7 +29,7 @@ export function Register({ onSwitch, onSuccess }) {
     };
 
     return (
-        <form className="flex flex-col items-center gap-4 w-full" onSubmit={handleSubmit}>
+        <form className="flex flex-col items-center gap-4 w-full md:mt-8" onSubmit={handleSubmit}>
             <input
                 type="text"
                 placeholder="Nombre"

@@ -1,5 +1,7 @@
+import { useState, useRef, useEffect } from 'react';
 import { formatMonthLabel } from '../../../../utils/dateNavigation';
 import { useSwipe } from '../../../../Hooks/useSwipe';
+import { SearchDropdown } from '../../DashboardSection/AppBar(mobile)/SearchDropdown';
 
 export function HeaderCalendar({
     handlePerfil,
@@ -9,11 +11,28 @@ export function HeaderCalendar({
     currentMonth,
     currentYear,
     isCurrentMonth,
+    searchQuery,
+    setSearchQuery,
+    courseId,
+    setSelectedTask,
 }) {
     const swipe = useSwipe({
         onSwipeLeft: handleNextMonth,
         onSwipeRight: handlePreviousMonth,
     });
+
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const searchContainerRef = useRef(null);
+
+    useEffect(() => {
+        function handleClickOutside(e) {
+            if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
+                setIsDropdownOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     return (
         <header className="desktop-header">
@@ -54,9 +73,22 @@ export function HeaderCalendar({
             </div>
 
             <div className="header-right">
-                <div className="search-box">
+                <div className="search-box relative" ref={searchContainerRef}>
                     <span className="material-symbols-outlined search-icon">search</span>
-                    <input className="search-input" placeholder="Search tasks..." type="text" />
+                    <input
+                        className="search-input"
+                        placeholder="Buscar tareas..."
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => { setSearchQuery(e.target.value); setIsDropdownOpen(true); }}
+                        onFocus={() => setIsDropdownOpen(true)}
+                    />
+                    <SearchDropdown
+                        courseId={courseId}
+                        isOpen={isDropdownOpen}
+                        searchQuery={searchQuery}
+                        setSelectedTask={setSelectedTask}
+                    />
                 </div>
                 <button
                     onClick={(e) => handlePerfil(e)}

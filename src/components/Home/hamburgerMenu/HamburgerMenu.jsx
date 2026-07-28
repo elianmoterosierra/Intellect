@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router"
 import { useCourseStore } from "../../../store/courseStore";
 import { useAuthStore } from "../../../store/AuthStore";
 
-export function HamburgerMenu({ onClose, onOpenForm, onOpenPerfil }) {
+export function HamburgerMenu({ onClose, onOpenForm, onOpenPerfil, onOpenSettings }) {
     const location = useLocation();
     const { isLoggedIn } = useAuthStore();
     const { buttonStatus } = useCourseStore();
@@ -79,6 +79,13 @@ export function HamburgerMenu({ onClose, onOpenForm, onOpenPerfil }) {
                 </nav>
 
                 <div className="border-t border-gray-200 px-3 py-4 flex flex-col gap-1">
+                    <button
+                        onClick={() => { onClose(); onOpenSettings(); }}
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-gray-600 hover:bg-[#f2f3fd] hover:text-[#0058be] transition-colors cursor-pointer border-none bg-transparent w-full text-left"
+                    >
+                        <span className="material-symbols-outlined text-xl">settings</span>
+                        Ajustes
+                    </button>
                     <button
                         onClick={handlePerfilClick}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-gray-600 hover:bg-[#f2f3fd] hover:text-[#0058be] transition-colors cursor-pointer border-none bg-transparent w-full text-left"

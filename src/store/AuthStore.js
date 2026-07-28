@@ -86,6 +86,20 @@ export const useAuthStore = create((set, get) => ({
         set({ ...auth, users });
     },
 
+    updateUser: (field, value) => {
+        const currentUser = get().user;
+        if (!currentUser) return;
+
+        const updatedUser = { ...currentUser, [field]: value };
+        const users = get().users.map((candidate) =>
+            candidate.email === currentUser.email ? updatedUser : candidate
+        );
+
+        localStorage.setItem(USERS_KEY, JSON.stringify(users));
+        const auth = saveAuth(updatedUser);
+        set({ ...auth, users });
+    },
+
     toggleTaskStatus: (courseId, taskId) => {
         const currentUser = get().user;
         if (!currentUser) return;

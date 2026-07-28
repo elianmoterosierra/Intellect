@@ -24,6 +24,10 @@ Aplicación web de gestión académica creada con React y Vite. Permite registra
 - Grid de 2 columnas en mobile (repeat 2, 1fr) y 4 en desktop.
 - DayCard con aspect-square en mobile, título truncado a 20 caracteres y máximo 3 tareas visibles.
 - Límites de texto por contexto (títulos truncados según la ubicación).
+- Guard de autenticación con `DashBoardProtected` que redirige a `/` si no hay sesión.
+- Menú hamburguesa para navegación mobile con enlaces y auth-gating.
+- Perfil de usuario editable: nombre, email y contraseña con flujo de confirmación en 2 pasos.
+- Modal de ajustes (`SettingsModal`) con vista "Acerca de" mostrando versión y tecnologías.
 - Diseño responsive: navegación completa en escritorio y menú compacto en pantallas pequeñas.
 
 ## Tecnologías
@@ -87,6 +91,15 @@ Es la única fuente de las definiciones de tareas. Las guarda bajo la clave `tas
 
 - `addTask(courseId, task)` crea una tarea.
 - `deleteTask(courseId, taskId)` elimina una tarea.
+
+### UI — `src/store/uiStore.js`
+
+Controla el estado de apertura y cierre de modales de interfaz:
+
+- `isAddTaskModalOpen` / `openAddTaskModal()` / `closeAddTaskModal()`
+- `isPerfilOpen` / `openPerfil()` / `closePerfil()`
+
+Los modales se abren mediante acciones globales desde cualquier componente (Header, BottomNav, AppBar).
 
 El estado `completed` no se guarda en la tarea compartida: se deriva desde el perfil del usuario autenticado.
 
@@ -170,7 +183,8 @@ src/
 ├── store/
 │   ├── AuthStore.js          # Sesión, curso seleccionado y progreso individual
 │   ├── courseStore.js        # Estado de selección del curso
-│   └── taskStorage.js        # Tareas compartidas y persistentes por curso
+│   ├── taskStorage.js        # Tareas compartidas y persistentes por curso
+│   └── uiStore.js            # Apertura/cierre de modales (addTask, perfil)
 ├── utils/
 │   ├── courseSections.js     # Constantes de las secciones de navegación
 │   ├── taskStatus.js         # Estados visuales de las tareas
@@ -178,6 +192,8 @@ src/
 │   └── dateNavigation.js     # Navegación de mes + persistencia del mes visto
 ├── data/
 │   └── data.jsx              # Datos fijos de los cursos
+├── ProtectedRoutes/
+│   └── DashBoardProtected.jsx # Guard de rutas protegidas
 ├── page/
 │   ├── home.jsx
 │   ├── SelectCourse.jsx
@@ -185,7 +201,10 @@ src/
 └── components/
     ├── Header/               # Navegación principal y autenticación
     ├── Form/                 # Login y registro
+    ├── Perfil/               # Perfil editable + modales de edición y confirmación
+    ├── SettingsModal/        # Ajustes con vista "Acerca de"
     └── Course/
+        ├── Common/           # DetailsModal (detalle de tarea) + ExitModal (salir del curso)
         ├── AddTaskSection/   # Sección "Agregar Tareas" (TaskList + ConfirmDelete + AddTaskButton)
         ├── DasboardSection/  # Dashboard, tareas, notificaciones y modal único de creación
         └── CalendarSection/  # Calendario y modal de día
@@ -207,6 +226,7 @@ src/
 │   └── notifications.json
 ├── Hooks/
 │   ├── useDaysInMonth.jsx
+│   ├── useMediaQuery.js         # Hook para detectar media queries
 │   ├── useMonthDay.jsx
 │   └── useSwipe.js              # Hook reutilizable para detectar swipe horizontal
 ├── page/
@@ -214,43 +234,58 @@ src/
 │   ├── SelectCourse.jsx
 │   ├── Course.jsx
 │   └── css/Calendar.css
+├── ProtectedRoutes/
+│   └── DashBoardProtected.jsx   # Guard de rutas protegidas (redirige a / si no hay sesión)
 ├── store/
 │   ├── AuthStore.js
 │   ├── courseStore.js
-│   └── taskStorage.js
+│   ├── taskStorage.js
+│   └── uiStore.js               # Control de apertura/cierre de modales
 ├── utils/
 │   ├── courseSections.js
+│   ├── dateNavigation.js        # Navegación de mes + persistencia en sessionStorage
 │   ├── taskNotifications.js
 │   └── taskStatus.js
 └── components/
     ├── Layout/Layout.jsx
     ├── Header/header.jsx
     ├── Footer/Footer.jsx
-    ├── Form/
-    │   ├── FormSection.jsx
-    │   └── modales/{Login.jsx, Reguister.jsx}
-    ├── Perfil/
-    │   ├── Perfil.jsx
-    │   └── ButtonLogout/ButtonLogout.jsx
     ├── Button/{ButtonPrincipal.jsx, ButtonSecondary.jsx}
     ├── CardRol/RoleCard.jsx
+    ├── Form/
+    │   ├── FormSection.jsx
+    │   └── modales/
+    │       ├── Login.jsx
+    │       └── Reguister.jsx
     ├── Home/
     │   ├── hero/hero.jsx
     │   ├── Role/RoleSection.jsx
     │   ├── CallToAction/CallToAction.jsx
+    │   ├── hamburgerMenu/HamburgerMenu.jsx  # Menú mobile slide-in
     │   └── features/
     │       ├── featuresSection.jsx
     │       ├── CalendarCard/Calendar.jsx
     │       ├── ManagementCard/ManagementCard.jsx
     │       └── Progress/Progress.jsx
+    ├── Perfil/
+    │   ├── Perfil.jsx
+    │   ├── ButtonLogout/ButtonLogout.jsx
+    │   ├── FieldEditModal.jsx            # Edición de campo del perfil
+    │   └── PasswordConfirmModal.jsx      # Confirmación de contraseña previa
     ├── SelectCourse/
     │   ├── Hero/Hero.jsx
     │   └── Course-card/
     │       ├── Course-Card.jsx
     │       └── Card/CourseCard.jsx
+    ├── SettingsModal/
+    │   └── SettingsModal.jsx             # Ajustes + vista "Acerca de"
     └── Course/
+        ├── Common/
+        │   ├── DetailsModal/DetailsModal.jsx  # Detalle de tarea (reusado en toda la app)
+        │   └── ExitModal/ExitModal.jsx        # Confirmación al salir del curso
         ├── AddTaskSection/
         │   ├── AddTaskSection.jsx
+        │   ├── ConfirnDelete/ConfirmDelete.jsx
         │   ├── DeleteTaskButton/DeleteTask.jsx
         │   └── TaskList/TaskList.jsx
         ├── DasboardSection/
@@ -269,7 +304,7 @@ src/
         │       └── TaskItem/TaskItem.jsx
         └── CalendarSection/
             ├── CalendarSection.jsx
-            ├── MonthGroup.jsx          # Grupo de mes con skeleton y lazy loading
+            ├── MonthGroup.jsx            # Grupo de mes con skeleton y lazy loading
             ├── Header/HeaderCalendar.jsx
             └── Day/
                 ├── Day.jsx

@@ -2,12 +2,14 @@ import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { BottomNav } from '../components/Course/DashboardSection/BottomNav(mobile)/BottomNav';
 import { SideNav } from '../components/Course/DashboardSection/SideNav/SideNav';
 import { AppBar } from '../components/Course/DashboardSection/AppBar(mobile)/AppBar';
-import { useParams, Link } from 'react-router';
+import { useParams, Link, Navigate } from 'react-router';
+import { useAuthStore } from '../store/AuthStore';
 import { courseData } from '../data/data';
 import { COURSE_SECTIONS } from '../utils/courseSections';
 import { useTaskStore } from '../store/taskStorage';
 import { useUIStore } from '../store/uiStore';
 import { AddTaskModal } from '../components/Course/DashboardSection/UpcomingTasks/AddTaskModal/TaskModal';
+import { DetailsModal } from '../components/Course/Common/DetailsModal/DetailsModal';
 
 const CalendarSection = lazy(() => import('../components/Course/CalendarSection/CalendarSection'));
 const Dashboard = lazy(() => import('../components/Course/DashboardSection/Dashboard'));
@@ -21,9 +23,12 @@ function getTodayInputValue() {
 
 export default function Course() {
   const { courseId } = useParams();
+  const { user } = useAuthStore();
   const course = courseData.find(c => c.id === Number(courseId));
   const [activeSection, setActiveSection] = useState(COURSE_SECTIONS.DASHBOARD);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTask, setSelectedTask] = useState(null);
 
   const addTask = useTaskStore((state) => state.addTask);
   const isAddTaskModalOpen = useUIStore(s => s.isAddTaskModalOpen);
@@ -83,6 +88,10 @@ export default function Course() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isAddTaskModalOpen, closeAddTaskModal]);
 
+  if (String(user?.selectedCourseId) !== courseId) {
+    return <Navigate to="/course" replace />;
+  }
+
   if (!course) return (
     <div className="flex flex-col items-center justify-center h-screen text-[#424754]">
       Curso no encontrado
@@ -105,6 +114,10 @@ export default function Course() {
           activeSection={activeSection}
           onToggleSearch={() => setIsSearchOpen(v => !v)}
           isSearchOpen={isSearchOpen}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          courseId={course.id}
+          setSelectedTask={setSelectedTask}
         />
 
         {/* Content Area */}
@@ -119,6 +132,9 @@ export default function Course() {
             <Suspense fallback={<div className="p-10 text-center text-[#424754]">Cargando calendario...</div>}>
               <CalendarSection
                 courseId={course.id}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                setSelectedTask={setSelectedTask}
               />
             </Suspense>
           )}
@@ -138,6 +154,14 @@ export default function Course() {
 
       {isAddTaskModalOpen && (
         <AddTaskModal closeModal={closeModal} handleSubmit={handleSubmit} titleInputRef={titleInputRef} title={title} setTitle={setTitle} subtitle={subtitle} setSubtitle={setSubtitle} dueDate={dueDate} setDueDate={setDueDate} today={today} error={error} />
+      )}
+
+      {selectedTask && (
+        <DetailsModal
+          task={selectedTask}
+          courseId={course.id}
+          onClose={() => setSelectedTask(null)}
+        />
       )}
     </div>
   );

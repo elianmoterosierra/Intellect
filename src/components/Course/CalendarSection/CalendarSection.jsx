@@ -10,7 +10,7 @@ import {
     isCurrentMonth,
 } from '../../../utils/dateNavigation';
 
-export default function CalendarSection({ courseId }) {
+export default function CalendarSection({ courseId, searchQuery, setSearchQuery, setSelectedTask }) {
 
     const today = new Date();
     const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -182,6 +182,10 @@ export default function CalendarSection({ courseId }) {
                     currentMonth={currentMonth}
                     currentYear={currentYear}
                     isCurrentMonth={isCurrentMonth(currentYear, currentMonth)}
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    courseId={courseId}
+                    setSelectedTask={setSelectedTask}
                 />
                 <div className="calendar-container" style={{ overflowY: 'visible' }}>
                     <div className="calendar-grid">

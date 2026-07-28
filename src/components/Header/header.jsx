@@ -5,6 +5,7 @@ import { useAuthStore } from "../../store/AuthStore";
 import { FormSection } from "../Form/FormSection";
 import { Perfil } from "../Perfil/Perfil";
 import { HamburgerMenu } from "../Home/hamburgerMenu/HamburgerMenu";
+import { SettingsModal } from "../SettingsModal/SettingsModal";
 
 export function Header() {
     const navigate = useNavigate();
@@ -14,6 +15,7 @@ export function Header() {
     const [showForm, setShowForm] = useState(false);
     const [showPerfil, setShowPerfil] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
 
     const handleCoursesClick = (e) => {
         if (!isLoggedIn) {
@@ -59,7 +61,7 @@ export function Header() {
                     <Link className={linkClass('/')} to="/">Inicio</Link>
                     <Link className={linkClass('/course')} to="/course" onClick={handleCoursesClick}>Cursos</Link>
                     {selectedCourseID ? (
-                        <Link className={linkClass(`/ course - dashboard / ${selectedCourseID}`)} to={` / course - dashboard / ${selectedCourseID} `}>Ver mi Curso</Link>
+                        <Link className={linkClass(`/course-dashboard/${selectedCourseID}`)} to={`/course-dashboard/${selectedCourseID}`}>Ver mi Curso</Link>
                     ) : (
                         <span className="no-underline px-4 py-2 rounded text-sm font-medium text-gray-300 cursor-not-allowed">Ver mi Curso</span>
                     )}
@@ -67,8 +69,8 @@ export function Header() {
 
                 {/* Íconos — derecha */}
                 <div className="hidden lg:flex flex-1 items-center justify-end gap-2">
-                    <button className="material-symbols-outlined border-none bg-transparent cursor-pointer p-2 text-gray-500 rounded-full transition-all duration-200 hover:bg-[rgba(33,112,228,0.08)] hover:text-[#0058be] active:scale-95">
-                        notifications
+                    <button onClick={() => setShowSettings(true)} className="material-symbols-outlined border-none bg-transparent cursor-pointer p-2 text-gray-500 rounded-full transition-all duration-200 hover:bg-[rgba(33,112,228,0.08)] hover:text-[#0058be] active:scale-95">
+                        settings
                     </button>
                     <button onClick={handlePerfil} className="material-symbols-outlined border-none bg-transparent cursor-pointer p-2 text-gray-500 rounded-full transition-all duration-200 hover:bg-[rgba(33,112,228,0.08)] hover:text-[#0058be] active:scale-95">
                         account_circle
@@ -99,9 +101,19 @@ export function Header() {
             }
 
             {showMenu && (
-                <HamburgerMenu
-                    onClose={() => setShowMenu(false)}
-                    onOpenForm={() => setShowForm(true)}
+                <div className="lg:hidden">
+                    <HamburgerMenu
+                        onClose={() => setShowMenu(false)}
+                        onOpenForm={() => setShowForm(true)}
+                        onOpenPerfil={handlePerfil}
+                        onOpenSettings={() => setShowSettings(true)}
+                    />
+                </div>
+            )}
+
+            {showSettings && (
+                <SettingsModal
+                    onClose={() => setShowSettings(false)}
                     onOpenPerfil={handlePerfil}
                 />
             )}
