@@ -975,35 +975,3 @@ body {
     white-space: nowrap;
 }
 
-.mobile-search-row {
-    background-color: var(--surface-container-low);
-    border-top: 1px solid var(--outline-variant);
-}
-
-.search-box-mobile {
-    position: relative;
-}
-
-.search-box-mobile .search-icon {
-    position: absolute;
-    left: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--outline);
-    font-size: 18px;
-}
-
-.search-input-mobile {
-    width: 100%;
-    padding: 8px 12px 8px 32px;
-    background-color: var(--surface-container-lowest);
-    border: 1px solid var(--outline-variant);
-    border-radius: 8px;
-    font-size: 14px;
-    outline: none;
-    color: var(--on-surface);
-}
-
-.search-input-mobile:focus {
-    box-shadow: 0 0 0 2px var(--primary);
-}

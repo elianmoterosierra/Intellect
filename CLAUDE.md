@@ -49,7 +49,7 @@ src/
 ├── index.css                     # Tailwind base + tokens
 ├── assets/                       # Imágenes y SVGs estáticos
 ├── data/                         # data.jsx (cursos), notifications.json
-├── Hooks/                        # useDaysInMonth, useMonthDay, useSwipe
+├── Hooks/                        # useDaysInMonth, useMonthDay, useSwipe, useSearchFilter, useMediaQuery
 ├── page/                         # Páginas (rutas)
 │   ├── home.jsx
 │   ├── SelectCourse.jsx          # Exporta { CoursePage }
@@ -60,7 +60,8 @@ src/
 ├── store/
 │   ├── AuthStore.js              # Sesión + usuarios + progreso individual
 │   ├── courseStore.js            # Estado de selección del curso
-│   └── taskStorage.js            # Tareas compartidas por curso
+│   ├── taskStorage.js            # Tareas compartidas por curso
+│   └── uiStore.js                # Apertura/cierre de modales (AddTask, Perfil)
 ├── utils/
 │   ├── courseSections.js         # COURSE_SECTIONS: claves de navegación del curso
 │   ├── taskStatus.js             # overdue / tomorrow / dayAfterTomorrow / normal
@@ -72,13 +73,14 @@ src/
     ├── Header/                   # header.jsx
     ├── Footer/Footer.jsx
     ├── Form/                     # FormSection + modales (Login.jsx, Reguister.jsx)
-    ├── Perfil/                   # Perfil + ButtonLogout
+    ├── Perfil/                   # Perfil + ButtonLogout + FieldEditModal + PasswordConfirmModal
     ├── Button/                   # ButtonPrincipal, ButtonSecondary
     ├── CardRol/RoleCard.jsx
-    ├── Home/                     # hero, Role, CallToAction, features/{featuresSection,
+    ├── Home/                     # hero, Role, CallToAction, hamburgerMenu, features/{featuresSection,
     │                             #   CalendarCard, ManagementCard, Progress}
     ├── SelectCourse/             # Hero, Course-card/{Course-Card, Card/CourseCard}
     ├── Perfil/                   # Perfil + ButtonLogout
+    ├── SettingsModal/            # SettingsModal: ajustes + vista "Acerca de"
     └── Course/
         ├── AddTaskSection/       # Sección "Agregar Tareas" (AddTaskSection,
         │                         #   DeleteTaskButton, TaskList,
@@ -86,11 +88,13 @@ src/
         ├── Common/               # DetailsModal: modal de detalle reusado
         │                         #   desde Dashboard, AddTaskSection, Calendar y
         │                         #   Notificaciones. Lee `completed` en vivo.
+        │                         # ExitModal: confirmación al abandonar curso.
         ├── DasboardSection/      # Dashboard, Header, Notification/,
         │                         # NotificationPanel/, SideNav, TaskSummary,
-        │                         # AppBar (mobile) + BottomNav (mobile),
+        │                         # AppBar (mobile) + SearchDropdown,
+        │                         # BottomNav (mobile),
         │                         # UpcomingTasks/{AddTask, AddTaskModal, TaskItem}
-        └── CalendarSection/      # CalendarSection, Header,
+        └── CalendarSection/      # CalendarSection, MonthGroup, Header,
                                   #   Day/{Day, DayCard,
                                   #   DayModal/{DayModal,
                                   #   DayModalComponents/{AddTask, FormTask, TaskList}}}
@@ -163,6 +167,12 @@ src/
 ### `useCourseStore` — `src/store/courseStore.js`
 
 - Wrapper de UI para seleccionar/abandonar curso. Sincroniza con `user.selectedCourseId` de `useAuthStore`.
+
+### `useUIStore` — `src/store/uiStore.js`
+
+- Estado visual de modales globales (`isAddTaskModalOpen`, `isPerfilModalOpen`).
+- Acciones: `openAddTaskModal()` / `closeAddTaskModal()` / `openPerfilModal()` / `closePerfilModal()`.
+- Permite abrir modales desde Header, BottomNav o AppBar sin prop drilling.
 
 ## 7. Rutas y protecciones
 
@@ -240,6 +250,14 @@ Para mantener la UI ordenada, los títulos/descripciones se truncan o limitan se
   - Swipe horizontal en móvil (gesto vertical se ignora para no chocar con el scroll).
 - La navegación entre meses se delega al padre; el header solo recibe callbacks y estado.
 
+### 10.1 Calendario móvil (scroll infinito)
+
+- `CalendarSection.jsx` mantiene una lista `months` con los meses visibles. Dos centinelas (top/bottom) con `IntersectionObserver` cargan meses anteriores/siguientes sin límite.
+- `MonthGroup.jsx` renderiza cada mes con lazy loading vía `IntersectionObserver` (`rootMargin: 600px`). Mientras el mes no entra cerca del viewport, muestra un **skeleton grid** con celdas `aspect-square` vacías que reservan la misma altura que el contenido real, evitando reflows en la transición.
+- Al anteponer un mes (centinela superior), se activa `forceVisible` para que el nuevo mes renderice inmediatamente sus `DayCards`, y un `useLayoutEffect` ajusta el `scrollTop` del contenedor para mantener la posición visual del usuario.
+- Grid mobile: `repeat(2, 1fr)`; desktop: 4 columnas.
+- `DayCard` usa `aspect-square md:aspect-auto`, trunca títulos a 20 caracteres y muestra máximo 3 tareas visibles.
+
 ## 11. Estilos y theming
 
 - Tailwind 3 + tokens propios en `src/index.css`.
@@ -278,6 +296,10 @@ Para mantener la UI ordenada, los títulos/descripciones se truncan o limitan se
 - **No** dupliques `monthNames` ni la lógica de mes en el header: vive en `utils/dateNavigation.js`.
 - **No** guardes el mes visto del calendario en `localStorage` ni en un store nuevo: usa
   `sessionStorage` por curso con `loadSavedMonth` / `saveMonth` de `dateNavigation.js`.
+- **No** abras un modal propio de creación o de detalle de tarea: reusa
+  `DasboardSection/UpcomingTasks/AddTaskModal/TaskModal.jsx` y `Course/Common/DetailsModal/`.
+- **No** dupliques la confirmación de borrado: usa `AddTaskSection/ConfirnDelete/ConfirmDelete.jsx`.
+- **No** metas lógica de UI/modal en stores de dominio: la apertura de modales va en `useUIStore`.
 
 ## 15. Verificación antes de cerrar tarea
 
@@ -295,6 +317,9 @@ Si modificas stores, limpia `localStorage` del navegador o considera versionar l
 - **Progreso individual** — `user.taskStatusByCourse[courseId][taskId].completed`; no afecta a otros usuarios.
 - **Notificación** — derivado en runtime desde tareas pendientes; nunca se persiste.
 - **Vencida** — `dueDate < now && !completed`.
+- **Modal compartido** — `TaskModal`, `DetailsModal` y `ConfirmDelete` se reutilizan desde múltiples secciones; no abrir variantes paralelas.
+- **Centinela** — elemento invisible con `IntersectionObserver` usado para cargar meses adyacentes en el calendario móvil.
+- **Skeleton grid** — grilla de celdas vacías con `aspect-square` que reserva espacio antes de cargar un mes, evita saltos visuales.
 
 ---
 Mantenlo breve: si añades una sección, borra la que quede obsoleta. La memoria del proyecto vive en el código; este archivo apunta a ella.
