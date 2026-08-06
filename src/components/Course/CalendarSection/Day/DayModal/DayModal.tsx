@@ -77,7 +77,7 @@ export function DayModal({ day, tasks, courseId, year, month, onClose, onAddTask
         >
             <div
                 className={`relative w-full max-w-md rounded-2xl shadow-2xl overflow-hidden
-                            bg-white border border-[#e2e3f0]
+                            bg-surface border border-line-soft
                             ${closing ? 'animate-modalOut' : 'animate-fadeIn'}`}
                 style={{ animationDuration: closing ? '0.26s' : '0.32s' }}
                 onClick={(e) => e.stopPropagation()}
@@ -89,7 +89,7 @@ export function DayModal({ day, tasks, courseId, year, month, onClose, onAddTask
                         ? 'bg-gradient-to-br from-amber-500 to-amber-700'
                         : isWeekend
                             ? 'bg-gradient-to-br from-green-500 to-green-600'
-                            : 'bg-gradient-to-br from-[#f4f5fd] to-[#eaebf8]'
+                            : 'bg-gradient-to-br from-muted to-muted-strong'
                     }`}>
                     {isHighlighted && (
                         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_80%_20%,#fff,transparent)]" />
@@ -100,23 +100,23 @@ export function DayModal({ day, tasks, courseId, year, month, onClose, onAddTask
                         onTouchEnd={(e) => { e.preventDefault(); handleClose(); }}
                         className={`absolute top-4 right-4 rounded-full p-1.5 cursor-pointer transition-colors ${isHighlighted
                             ? 'text-white/70 hover:text-white hover:bg-white/20'
-                            : 'text-[#424754] hover:bg-[#e2e3f0]'
+                            : 'text-ink-soft hover:bg-muted-strong'
                             }`}
                     >
                         <span className="material-symbols-outlined text-xl leading-none">close</span>
                     </button>
 
                     <div className="flex items-end gap-3">
-                        <span className={`text-6xl font-black leading-none ${isHighlighted ? 'text-white' : 'text-[#191b23]'
+                        <span className={`text-6xl font-black leading-none ${isHighlighted ? 'text-white' : 'text-ink'
                             }`}>
                             {day.number}
                         </span>
                         <div className="flex flex-col mb-1">
-                            <span className={`text-sm font-semibold tracking-wide ${isHighlighted ? 'text-white/90' : 'text-[#424754]'
+                            <span className={`text-sm font-semibold tracking-wide ${isHighlighted ? 'text-white/90' : 'text-ink-soft'
                                 }`}>
                                 {day.name}
                             </span>
-                            <span className={`text-xs ${isHighlighted ? 'text-white/70' : 'text-[#9496a8]'
+                            <span className={`text-xs ${isHighlighted ? 'text-white/70' : 'text-ink-faint'
                                 }`}>
                                 {getMonthName(year, month)} {year}
                             </span>
@@ -137,14 +137,14 @@ export function DayModal({ day, tasks, courseId, year, month, onClose, onAddTask
                             </span>
                         )}
                         {isPast && (
-                            <span className="ml-auto mb-1 text-[10px] font-bold tracking-widest uppercase bg-[#e2e3f0] text-[#9496a8] px-2 py-0.5 rounded-full">
+                            <span className="ml-auto mb-1 text-[10px] font-bold tracking-widest uppercase bg-muted-strong text-ink-faint px-2 py-0.5 rounded-full">
                                 Pasado
                             </span>
                         )}
                     </div>
 
                     {/* Task count pill */}
-                    <div className={`mt-3 inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full ${isHighlighted ? 'bg-white/20 text-white' : 'bg-[#dde0f5] text-[#424754]'
+                    <div className={`mt-3 inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full ${isHighlighted ? 'bg-white/20 text-white' : 'bg-muted-strong text-ink-soft'
                         }`}>
                         <span className="material-symbols-outlined text-sm leading-none">task_alt</span>
                         {tasks.length === 0
@@ -159,7 +159,7 @@ export function DayModal({ day, tasks, courseId, year, month, onClose, onAddTask
                 </div>
 
                 {/* ── Add task form ── */}
-                <div className="px-6 pb-6 border-t border-[#f0f1fb] pt-4">
+                <div className="px-6 pb-6 border-t border-line-soft pt-4">
                     <AddTask
                         showForm={showForm}
                         setShowForm={setShowForm}

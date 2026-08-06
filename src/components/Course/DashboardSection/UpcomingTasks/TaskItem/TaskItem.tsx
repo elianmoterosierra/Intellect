@@ -9,7 +9,7 @@ import type { TaskWithCompleted } from '../../../../../types';
 const badgeStyles = {
     danger: 'bg-red-600 text-white',
     warning: 'bg-yellow-200 text-yellow-900',
-    neutral: 'bg-[#e1e2ec] text-[#424754]',
+    neutral: 'bg-muted-strong text-ink-soft',
     success: 'bg-green-100 text-green-700',
 };
 function getBadgeClass(dueDate: string): 'danger' | 'warning' | 'neutral' {
@@ -48,8 +48,8 @@ export function TaskItem({ task, courseId }: TaskItemProps) {
             <li
                 className={`px-6 py-4 flex items-center gap-6 border-t first:border-t-0 transition-colors duration-200 group cursor-pointer ${
                     isOverdue
-                        ? 'bg-[#ba1a1a] border-[#ba1a1a] hover:bg-[#991313] text-white'
-                        : 'border-[#c2c6d6] hover:bg-[#f2f3fd]'
+                        ? 'bg-danger border-danger hover:bg-danger text-white'
+                        : 'border-line hover:bg-muted'
                 }`}
                 onClick={() => setShowDetails(true)}
             >
@@ -61,19 +61,19 @@ export function TaskItem({ task, courseId }: TaskItemProps) {
                             ? 'border-green-600 bg-green-600'
                             : isOverdue
                                 ? 'border-white bg-white/10'
-                                : 'border-[#c2c6d6] group-hover:border-[#0058be]'
+                                : 'border-line group-hover:border-brand'
                         }`}
                 >
-                    <span className={`material-symbols-outlined flex items-center justify-center text-m transition-colors duration-200 ${done ? 'text-green-600' : isOverdue ? 'text-white' : 'text-transparent group-hover:text-[#0058be]'}`}>
+                    <span className={`material-symbols-outlined flex items-center justify-center text-m transition-colors duration-200 ${done ? 'text-green-600' : isOverdue ? 'text-white' : 'text-transparent group-hover:text-brand'}`}>
                         check
                     </span>
                 </button>
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                    <p className={`text-base leading-6 font-semibold overflow-hidden text-ellipsis whitespace-nowrap ${done ? 'text-[#9496a8] line-through' : isOverdue ? 'text-white' : 'text-[#191b23]'}`}>{task.title.length > maxTitle ? task.title.slice(0, maxTitle) + '…' : task.title}</p>
+                    <p className={`text-base leading-6 font-semibold overflow-hidden text-ellipsis whitespace-nowrap ${done ? 'text-ink-faint line-through' : isOverdue ? 'text-white' : 'text-ink'}`}>{task.title.length > maxTitle ? task.title.slice(0, maxTitle) + '…' : task.title}</p>
                     <div className="flex items-center gap-4 mt-1">
-                        <span className={`flex items-center gap-1 text-xs leading-4 tracking-wide font-semibold ${isOverdue ? 'text-white/85' : 'text-[#424754]'}`}>
+                        <span className={`flex items-center gap-1 text-xs leading-4 tracking-wide font-semibold ${isOverdue ? 'text-white/85' : 'text-ink-soft'}`}>
                             <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>school</span>
                             {task.subtitle.length > maxSubtitle ? task.subtitle.slice(0, maxSubtitle) + '…' : task.subtitle}
                         </span>

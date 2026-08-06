@@ -9,7 +9,7 @@ type ButtonOutlineProps = {
 export function ButtonOutline({ title, onClick, className = '' }: ButtonOutlineProps) {
     return (
         <button
-            className={`inline-flex items-center justify-center gap-2 border-2 border-[rgba(0,88,190,0.2)] text-[#0058be] px-8 py-4 rounded-lg font-semibold text-xl transition-all duration-300 hover:bg-[rgba(0,88,190,0.05)] ${className}`}
+            className={`inline-flex items-center justify-center gap-2 border-2 border-brand-ring text-brand px-8 py-4 rounded-lg font-semibold text-xl transition-all duration-300 hover:bg-brand-tint ${className}`}
             onClick={onClick}
         >{title}</button>
     )

@@ -7,6 +7,7 @@ import { FormSection } from "../Form/FormSection";
 import { Perfil } from "../Perfil/Perfil";
 import { HamburgerMenu } from "../Home/hamburgerMenu/HamburgerMenu";
 import { SettingsModal } from "../SettingsModal/SettingsModal";
+import { ThemeToggle } from "../ThemeToggle/ThemeToggle";
 
 export function Header() {
     const navigate = useNavigate();
@@ -43,16 +44,16 @@ export function Header() {
     const linkClass = (path: string) =>
         `no-underline px-4 py-2 rounded text-sm font-medium transition-all duration-200
         ${location.pathname === path
-            ? 'text-[#0058be] bg-[rgba(33,112,228,0.12)] font-semibold border-b-2 border-[#0058be]'
-            : 'text-gray-500 hover:bg-[rgba(33,112,228,0.08)] hover:text-[#0058be]'
+            ? 'text-brand bg-brand-soft font-semibold border-b-2 border-brand'
+            : 'text-ink-soft hover:bg-brand-tint hover:text-brand'
         }`
 
     return (
         <>
-            <header className="sticky top-0 z-50 flex items-center px-4 md:px-6 w-full h-16 bg-white/85 backdrop-blur-md border-b border-gray-200">
+            <header className="sticky top-0 z-50 flex items-center px-4 md:px-6 w-full h-16 bg-surface/90 backdrop-blur-md border-b border-line-soft">
                 {/* Logo — izquierda */}
                 <div className="flex flex-1 items-center gap-4">
-                    <Link to="/" className="text-[28px] leading-9 font-bold text-[#0058be] tracking-tight no-underline">
+                    <Link to="/" className="text-[28px] leading-9 font-bold text-brand tracking-tight no-underline">
                         Intellect
                     </Link>
                 </div>
@@ -70,10 +71,11 @@ export function Header() {
 
                 {/* Íconos — derecha */}
                 <div className="hidden lg:flex flex-1 items-center justify-end gap-2">
-                    <button onClick={() => setShowSettings(true)} className="material-symbols-outlined border-none bg-transparent cursor-pointer p-2 text-gray-500 rounded-full transition-all duration-200 hover:bg-[rgba(33,112,228,0.08)] hover:text-[#0058be] active:scale-95">
+                    <ThemeToggle />
+                    <button onClick={() => setShowSettings(true)} className="material-symbols-outlined border-none bg-transparent cursor-pointer p-2 text-ink-soft rounded-full transition-all duration-200 hover:bg-brand-tint hover:text-brand active:scale-95">
                         settings
                     </button>
-                    <button onClick={handlePerfil} className="material-symbols-outlined border-none bg-transparent cursor-pointer p-2 text-gray-500 rounded-full transition-all duration-200 hover:bg-[rgba(33,112,228,0.08)] hover:text-[#0058be] active:scale-95">
+                    <button onClick={handlePerfil} className="material-symbols-outlined border-none bg-transparent cursor-pointer p-2 text-ink-soft rounded-full transition-all duration-200 hover:bg-brand-tint hover:text-brand active:scale-95">
                         account_circle
                     </button>
                 </div>
@@ -81,7 +83,7 @@ export function Header() {
                 {/* Hamburguesa — solo en móvil */}
                 <button
                     onClick={() => setShowMenu(true)}
-                    className="material-symbols-outlined lg:hidden ml-auto border-none bg-transparent cursor-pointer p-2 text-gray-500"
+                    className="material-symbols-outlined lg:hidden ml-auto border-none bg-transparent cursor-pointer p-2 text-ink-soft"
                 >
                     menu
                 </button>

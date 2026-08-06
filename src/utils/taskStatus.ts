@@ -47,8 +47,8 @@ export function getTaskStatusConfig(
         return {
             diff,
             status: 'overdue',
-            bgColor: 'bg-[#ba1a1a]',
-            borderColor: 'border-[#ba1a1a]',
+            bgColor: 'bg-danger',
+            borderColor: 'border-danger',
             textColor: 'text-white',
             pillBg: 'bg-white/15 text-white border border-white/30 font-bold',
             icon: 'error',
@@ -80,9 +80,9 @@ export function getTaskStatusConfig(
         return {
             diff,
             status: 'normal',
-            bgColor: 'bg-[#f8f9ff]',
-            borderColor: 'border-[#e8eaf6]',
-            textColor: 'text-[#191b23]',
+            bgColor: 'bg-muted',
+            borderColor: 'border-line-soft',
+            textColor: 'text-ink',
             pillBg: 'bg-gray-100 text-gray-700 border-gray-200',
             icon: null,
             badgeText: null,

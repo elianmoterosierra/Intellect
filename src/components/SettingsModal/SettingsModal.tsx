@@ -20,7 +20,7 @@ export function SettingsModal({ onClose, onOpenPerfil }: SettingsModalProps) {
             role="presentation"
         >
             <div
-                className="w-full max-w-[500px] max-h-[90vh] overflow-hidden rounded-2xl bg-white shadow-2xl border border-[#e2e3f0] animate-fadeIn"
+                className="w-full max-w-[500px] max-h-[90vh] overflow-hidden rounded-2xl bg-surface shadow-2xl border border-line-soft animate-fadeIn"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div
@@ -47,43 +47,43 @@ export function SettingsModal({ onClose, onOpenPerfil }: SettingsModalProps) {
                         <button
                             type="button"
                             onClick={handleEditProfile}
-                            className="flex items-center gap-4 w-full rounded-xl border border-[#cdd3e9] bg-[#f9faff] px-5 py-4 text-left transition-all hover:bg-[#f3f5fc] active:scale-[0.98]"
+                            className="flex items-center gap-4 w-full rounded-xl border border-line bg-muted px-5 py-4 text-left transition-all hover:bg-muted-hover active:scale-[0.98]"
                         >
-                            <span className="material-symbols-outlined text-[28px] text-[#0058be]">account_circle</span>
+                            <span className="material-symbols-outlined text-[28px] text-brand">account_circle</span>
                             <div className="flex-1">
-                                <h4 className="text-[15px] font-semibold text-[#191b23]">Editar Perfil</h4>
-                                <p className="text-sm text-[#9298af]">Nombre, email y contraseña</p>
+                                <h4 className="text-[15px] font-semibold text-ink">Editar Perfil</h4>
+                                <p className="text-sm text-ink-faint">Nombre, email y contraseña</p>
                             </div>
-                            <span className="material-symbols-outlined text-[#9298af]">chevron_right</span>
+                            <span className="material-symbols-outlined text-ink-faint">chevron_right</span>
                         </button>
 
                         <button
                             type="button"
                             onClick={() => setView('about')}
-                            className="flex items-center gap-4 w-full rounded-xl border border-[#cdd3e9] bg-[#f9faff] px-5 py-4 text-left transition-all hover:bg-[#f3f5fc] active:scale-[0.98] mt-3"
+                            className="flex items-center gap-4 w-full rounded-xl border border-line bg-muted px-5 py-4 text-left transition-all hover:bg-muted-hover active:scale-[0.98] mt-3"
                         >
-                            <span className="material-symbols-outlined text-[28px] text-[#0058be]">info</span>
+                            <span className="material-symbols-outlined text-[28px] text-brand">info</span>
                             <div className="flex-1">
-                                <h4 className="text-[15px] font-semibold text-[#191b23]">Acerca de</h4>
-                                <p className="text-sm text-[#9298af]">Información de la aplicación</p>
+                                <h4 className="text-[15px] font-semibold text-ink">Acerca de</h4>
+                                <p className="text-sm text-ink-faint">Información de la aplicación</p>
                             </div>
-                            <span className="material-symbols-outlined text-[#9298af]">chevron_right</span>
+                            <span className="material-symbols-outlined text-ink-faint">chevron_right</span>
                         </button>
                     </div>
                 ) : (
                     <div className="flex-1 overflow-y-auto px-7 py-8">
                         <div className="text-center">
-                            <span className="material-symbols-outlined text-6xl text-[#0058be]">info</span>
-                            <h3 className="text-2xl font-bold text-[#191b23] mt-4">Intellect</h3>
-                            <p className="text-sm font-semibold text-[#9298af] uppercase tracking-widest mt-1">v0.0.0</p>
-                            <p className="text-[15px] text-[#424754] mt-4 max-w-sm mx-auto leading-6">
+                            <span className="material-symbols-outlined text-6xl text-brand">info</span>
+                            <h3 className="text-2xl font-bold text-ink mt-4">Intellect</h3>
+                            <p className="text-sm font-semibold text-ink-faint uppercase tracking-widest mt-1">v0.0.0</p>
+                            <p className="text-[15px] text-ink-soft mt-4 max-w-sm mx-auto leading-6">
                                 Plataforma de gestión académica para organizar tareas, cursos y progreso personal.
                             </p>
                             <div className="flex flex-wrap justify-center gap-2 mt-6">
-                                <span className="px-3 py-1 rounded-full bg-[#f2f3fd] text-xs font-medium text-[#424754]">React 19</span>
-                                <span className="px-3 py-1 rounded-full bg-[#f2f3fd] text-xs font-medium text-[#424754]">Tailwind 3</span>
-                                <span className="px-3 py-1 rounded-full bg-[#f2f3fd] text-xs font-medium text-[#424754]">Zustand</span>
-                                <span className="px-3 py-1 rounded-full bg-[#f2f3fd] text-xs font-medium text-[#424754]">Vite 8</span>
+                                <span className="px-3 py-1 rounded-full bg-muted text-xs font-medium text-ink-soft">React 19</span>
+                                <span className="px-3 py-1 rounded-full bg-muted text-xs font-medium text-ink-soft">Tailwind 3</span>
+                                <span className="px-3 py-1 rounded-full bg-muted text-xs font-medium text-ink-soft">Zustand</span>
+                                <span className="px-3 py-1 rounded-full bg-muted text-xs font-medium text-ink-soft">Vite 8</span>
                             </div>
                         </div>
                     </div>
@@ -94,7 +94,7 @@ export function SettingsModal({ onClose, onOpenPerfil }: SettingsModalProps) {
                         <button
                             type="button"
                             onClick={() => setView('menu')}
-                            className="flex-1 rounded-xl border border-[#cdd3e9] py-3 text-[15px] font-medium text-[#424754] transition-colors hover:bg-[#f3f5fc]"
+                            className="flex-1 rounded-xl border border-line py-3 text-[15px] font-medium text-ink-soft transition-colors hover:bg-muted-hover"
                         >
                             Volver
                         </button>
@@ -102,7 +102,7 @@ export function SettingsModal({ onClose, onOpenPerfil }: SettingsModalProps) {
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 rounded-xl border border-[#cdd3e9] py-3 text-[15px] font-medium text-[#424754] transition-colors hover:bg-[#f3f5fc]"
+                        className="flex-1 rounded-xl border border-line py-3 text-[15px] font-medium text-ink-soft transition-colors hover:bg-muted-hover"
                     >
                         Cerrar
                     </button>

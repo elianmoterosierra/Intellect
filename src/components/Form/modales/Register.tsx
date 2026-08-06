@@ -69,7 +69,7 @@ export function Register({ onSwitch, onSuccess }: RegisterProps) {
             </button>
             <span className="text-sm text-red-500 animate-inputIn" style={{ animationDelay: '0.5s', animationFillMode: 'both' }}>{error}</span>
 
-            <p className="text-sm text-gray-500 animate-inputIn" style={{ animationDelay: '0.5s', animationFillMode: 'both' }}>
+            <p className="text-sm text-ink-soft animate-inputIn" style={{ animationDelay: '0.5s', animationFillMode: 'both' }}>
                 ¿Ya tienes una cuenta?{' '}
                 <span
                     onClick={onSwitch}

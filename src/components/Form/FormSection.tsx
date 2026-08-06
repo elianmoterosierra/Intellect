@@ -13,7 +13,7 @@ export function FormSection({ onClose, onSuccess }: FormSectionProps) {
     return (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 animate-overlayIn" onClick={onClose}>
             <div
-                className="relative bg-white rounded-2xl shadow-2xl w-[400px] overflow-hidden border border-gray-100 animate-fadeIn"
+                className="relative bg-surface rounded-2xl shadow-2xl w-[400px] overflow-hidden border border-gray-100 animate-fadeIn"
                 onClick={e => e.stopPropagation()}
             >
                 <button
@@ -27,7 +27,7 @@ export function FormSection({ onClose, onSuccess }: FormSectionProps) {
                     {/* Header Tabs */}
                     <div className="flex w-full mb-6 bg-gray-100 rounded-xl p-1 relative">
                         <div
-                            className={`absolute top-1 bottom-1 w-[calc(50%-2px)] rounded-lg bg-white shadow-md transition-all duration-300 ease-out ${loginIsVisible ? 'left-1' : 'left-[calc(50%+1px)]'
+                            className={`absolute top-1 bottom-1 w-[calc(50%-2px)] rounded-lg bg-surface shadow-md transition-all duration-300 ease-out ${loginIsVisible ? 'left-1' : 'left-[calc(50%+1px)]'
                                 }`}
                         />
                         <button

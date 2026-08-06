@@ -50,12 +50,12 @@ export function FieldEditModal({ field, onCancel }: FieldEditModalProps) {
             onClick={onCancel}
         >
             <div
-                className="w-full max-w-[380px] rounded-2xl bg-white shadow-2xl border border-[#e2e3f0] animate-fadeIn overflow-hidden"
+                className="w-full max-w-[380px] rounded-2xl bg-surface shadow-2xl border border-line-soft animate-fadeIn overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="px-6 pt-6 pb-2">
-                    <h3 className="text-lg font-bold text-[#191b23]">Editar {config.label}</h3>
-                    <p className="text-sm text-[#9298af] mt-1">
+                    <h3 className="text-lg font-bold text-ink">Editar {config.label}</h3>
+                    <p className="text-sm text-ink-faint mt-1">
                         {field === 'password'
                             ? 'Ingresa tu nueva contraseña'
                             : `Nuevo valor para ${config.label.toLowerCase()}`
@@ -70,7 +70,7 @@ export function FieldEditModal({ field, onCancel }: FieldEditModalProps) {
                         onChange={(e) => { setValue(e.target.value); setError('') }}
                         onKeyDown={(e) => e.key === 'Enter' && handleSave()}
                         placeholder={config.placeholder}
-                        className="w-full rounded-xl border border-[#cdd3e9] bg-[#f9faff] px-4 py-3 text-sm text-[#191b23] outline-none transition-all duration-200 focus:border-[#0058be] focus:ring-2 focus:ring-[rgba(0,88,190,0.15)]"
+                        className="w-full rounded-xl border border-line bg-muted px-4 py-3 text-sm text-ink outline-none transition-all duration-200 focus:border-brand focus:ring-2 focus:ring-brand-ring"
                         autoFocus
                     />
                     {error && (
@@ -84,13 +84,13 @@ export function FieldEditModal({ field, onCancel }: FieldEditModalProps) {
                 <div className="flex gap-2 px-6 pb-6">
                     <button
                         onClick={onCancel}
-                        className="flex-1 rounded-xl border border-[#cdd3e9] py-3 text-sm font-medium text-[#424754] transition-colors hover:bg-[#f3f5fc] cursor-pointer"
+                        className="flex-1 rounded-xl border border-line py-3 text-sm font-medium text-ink-soft transition-colors hover:bg-muted-hover cursor-pointer"
                     >
                         Cancelar
                     </button>
                     <button
                         onClick={handleSave}
-                        className="flex-1 rounded-xl bg-[#0058be] py-3 text-sm font-medium text-white transition-colors hover:bg-[#004a9e] cursor-pointer border-none"
+                        className="flex-1 rounded-xl bg-brand-strong py-3 text-sm font-medium text-white transition-colors hover:bg-brand-hover cursor-pointer border-none"
                     >
                         Guardar
                     </button>

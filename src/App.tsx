@@ -1,7 +1,8 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router'
 import { Layout } from './components/Layout/Layout'
 import DashBoardProtected from './ProtectedRoutes/DashBoardProtected'
+import { useThemeStore } from './store/themeStore'
 // Lazy imports: cada página se descarga solo cuando el usuario la visita
 const HomePage = lazy(() => import('./page/home'))
 const CoursePage = lazy(() => import('./page/SelectCourse').then(m => ({ default: m.CoursePage })))
@@ -30,6 +31,10 @@ function PageLoader() {
 }
 
 function App() {
+  useEffect(() => {
+    useThemeStore.getState().initTheme()
+  }, [])
+
   return (
     <BrowserRouter>
       <Suspense fallback={<PageLoader />}>

@@ -11,7 +11,7 @@ export function Layout() {
 
     return (
         <>
-            <div className="min-h-screen bg-[#F8FAFC]">
+            <div className="min-h-screen bg-page">
                 <Header />
                 <Outlet />
             </div>

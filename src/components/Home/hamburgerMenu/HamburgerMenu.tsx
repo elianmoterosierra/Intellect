@@ -1,6 +1,8 @@
 import { Link, useLocation } from "react-router"
 import { useCourseStore } from "../../../store/courseStore";
 import { useAuthStore } from "../../../store/AuthStore";
+import { ThemeToggle } from "../../ThemeToggle/ThemeToggle";
+import { useThemeStore } from "../../../store/themeStore";
 
 type HamburgerMenuProps = {
     onClose: () => void;
@@ -14,12 +16,12 @@ export function HamburgerMenu({ onClose, onOpenForm, onOpenPerfil, onOpenSetting
     const { isLoggedIn } = useAuthStore();
     const { buttonStatus } = useCourseStore();
     const selectedCourseID = Object.keys(buttonStatus).find(id => buttonStatus[id] === 'selected');
-
+    const { isDark } = useThemeStore();
     const linkClass = (path: string) =>
         `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium no-underline transition-colors cursor-pointer
         ${location.pathname === path
-            ? 'text-[#0058be] bg-[rgba(33,112,228,0.12)] font-semibold'
-            : 'text-gray-600 hover:bg-[#f2f3fd] hover:text-[#0058be]'
+            ? 'text-brand bg-brand-soft font-semibold'
+            : 'text-ink-soft hover:bg-muted-hover hover:text-brand'
         }`
 
     const handleCoursesClick = () => {
@@ -40,14 +42,14 @@ export function HamburgerMenu({ onClose, onOpenForm, onOpenPerfil, onOpenSetting
             onClick={onClose}
         >
             <div
-                className="w-72 h-full bg-white shadow-2xl animate-slideInRight flex flex-col"
+                className="w-72 h-full bg-surface shadow-2xl animate-slideInRight flex flex-col"
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between px-5 py-6 border-b border-gray-200">
-                    <span className="text-xl font-bold text-[#0058be]">Intellect</span>
+                    <span className="text-xl font-bold text-brand">Intellect</span>
                     <button
                         onClick={onClose}
-                        className="material-symbols-outlined border-none bg-transparent cursor-pointer p-1 text-gray-500 hover:text-[#0058be]"
+                        className="material-symbols-outlined border-none bg-transparent cursor-pointer p-1 text-ink-soft hover:text-brand"
                     >
                         close
                     </button>
@@ -85,17 +87,22 @@ export function HamburgerMenu({ onClose, onOpenForm, onOpenPerfil, onOpenSetting
                     )}
                 </nav>
 
-                <div className="border-t border-gray-200 px-3 py-4 flex flex-col gap-1">
+                <div className="border-t border-gray-200 flex flex-col gap-1">
+                    <div className="flex items-center gap-1 px-2 py-2 rounded-xl">
+                        <ThemeToggle />
+                        <span className=" text-base font-medium text-ink-soft">Modo {isDark ? 'Claro' : 'Oscuro'}</span>
+
+                    </div>
                     <button
                         onClick={() => { onClose(); onOpenSettings(); }}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-gray-600 hover:bg-[#f2f3fd] hover:text-[#0058be] transition-colors cursor-pointer border-none bg-transparent w-full text-left"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-ink-soft hover:bg-muted-hover hover:text-brand transition-colors cursor-pointer border-none bg-transparent w-full text-left"
                     >
                         <span className="material-symbols-outlined text-xl">settings</span>
                         Ajustes
                     </button>
                     <button
                         onClick={handlePerfilClick}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-gray-600 hover:bg-[#f2f3fd] hover:text-[#0058be] transition-colors cursor-pointer border-none bg-transparent w-full text-left"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-ink-soft hover:bg-muted-hover hover:text-brand transition-colors cursor-pointer border-none bg-transparent w-full text-left"
                     >
                         <span className="material-symbols-outlined text-xl">account_circle</span>
                         {isLoggedIn ? 'Perfil' : 'Iniciar sesión'}

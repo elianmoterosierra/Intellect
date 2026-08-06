@@ -34,7 +34,7 @@ export function TaskList({ courseId }: TaskListProps) {
         <>
             <ul className="list-none p-0 m-0">
                 {tasks.length === 0 ? (
-                    <li className="px-4 py-6 text-center text-sm text-[#424754]">
+                    <li className="px-4 py-6 text-center text-sm text-ink-soft">
                         Todavía no hay tareas en este curso.
                     </li>
                 ) : (
@@ -52,17 +52,17 @@ export function TaskList({ courseId }: TaskListProps) {
                             <li
                                 key={task.id}
                                 className={`relative pl-4 pr-4 py-2.5 flex items-center gap-3 border-t first:border-t-0 transition-colors duration-200 group cursor-pointer ${isOverdue
-                                    ? 'bg-[#ba1a1a] border-[#ba1a1a] text-white hover:bg-[#991313]'
-                                    : 'border-[#c2c6d6] hover:bg-[#f2f3fd]'
+                                    ? 'bg-danger border-danger text-white hover:bg-danger'
+                                    : 'border-line hover:bg-muted'
                                     }`}
                                 onClick={() => setSelectedTask(task)}
                             >
-                                <p className={`absolute left-0 right-0 top-2.5 px-24 text-center text-lg leading-5 font-semibold overflow-hidden text-ellipsis whitespace-nowrap pointer-events-none ${isOverdue ? 'text-white' : 'text-[#191b23]'}`}>
+                                <p className={`absolute left-0 right-0 top-2.5 px-24 text-center text-lg leading-5 font-semibold overflow-hidden text-ellipsis whitespace-nowrap pointer-events-none ${isOverdue ? 'text-white' : 'text-ink'}`}>
                                     {task.title.length > maxTitle ? task.title.slice(0, maxTitle) + '…' : task.title}
                                 </p>
                                 <div className="flex-1 min-w-0 pt-5">
                                     <div className="flex items-center gap-3 mt-0.5">
-                                        <span className={`flex items-center gap-1 text-[11px] leading-4 tracking-wide font-semibold ${isOverdue ? 'text-white/85' : 'text-[#424754]'
+                                        <span className={`flex items-center gap-1 text-[11px] leading-4 tracking-wide font-semibold ${isOverdue ? 'text-white/85' : 'text-ink-soft'
                                             }`}>
                                             <span className="material-symbols-outlined" style={{ fontSize: '30px' }}>
                                                 school
@@ -78,7 +78,7 @@ export function TaskList({ courseId }: TaskListProps) {
                                         : 'px-2 py-0.5 text-[14px]'
                                         } ${isOverdue
                                         ? 'bg-white/15 text-white border border-white/30'
-                                        : 'bg-[#e1e2ec] text-[#424754]'
+                                        : 'bg-muted-strong text-ink-soft'
                                         }`}>
                                         {isOverdue ? 'Vencida' : dateLabel}
                                     </span>

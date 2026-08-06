@@ -26,17 +26,17 @@ export function BottomNav({ activeSection, onSectionChange }: BottomNavProps) {
 
     return (
         <>
-            <nav className="md:hidden flex fixed bottom-0 w-full bg-[#f9f9ff] border-t border-[#c2c6d6] items-center h-16 z-50">
+            <nav className="md:hidden flex fixed bottom-0 w-full bg-page border-line items-center h-16 z-50">
                 {navItems.map(({ key, icon }) => (
                     <button
                         key={key}
                         onClick={() => onSectionChange(key)}
-                        className={`${btnClass} ${activeSection === key ? 'text-[#0058be]' : 'text-[#424754]'}`}
+                        className={`${btnClass} ${activeSection === key ? 'text-brand' : 'text-ink-soft'}`}
                     >
                         <span className="material-symbols-outlined text-2xl">{icon}</span>
                     </button>
                 ))}
-                <button className={`${btnClass} text-[#424754]`} onClick={openAddTaskModal}>
+                <button className={`${btnClass} text-ink-soft`} onClick={openAddTaskModal}>
                     <span className="material-symbols-outlined text-2xl">add</span>
                 </button>
                 <button

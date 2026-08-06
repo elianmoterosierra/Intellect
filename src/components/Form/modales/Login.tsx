@@ -53,7 +53,7 @@ export function Login({ onSwitch, onSuccess }: LoginProps) {
 
             {error && <span className="text-sm text-red-500">{error}</span>}
 
-            <p className="text-sm text-gray-500 animate-inputIn" style={{ animationDelay: '0.4s', animationFillMode: 'both' }}>
+            <p className="text-sm text-ink-soft animate-inputIn" style={{ animationDelay: '0.4s', animationFillMode: 'both' }}>
                 ¿No tienes una cuenta?{' '}
                 <span
                     onClick={onSwitch}

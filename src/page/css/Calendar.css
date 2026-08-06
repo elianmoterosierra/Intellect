@@ -17,7 +17,7 @@
     --on-tertiary-fixed: #2a1700;
     --background: #f9f9ff;
     --on-background: #191b23;
-    --surface: #f9f9ff;
+    --cal-surface: #f9f9ff;
     --on-surface: #191b23;
     --surface-container-low: #f2f3fd;
     --surface-container-lowest: #ffffff;
@@ -773,7 +773,7 @@ body {
 .modal-footer {
     padding: 16px;
     border-top: 1px solid var(--outline-variant);
-    background-color: var(--surface);
+    background-color: var(--cal-surface);
     display: flex;
     justify-content: flex-end;
     gap: 8px;
@@ -973,5 +973,73 @@ body {
     min-width: 90px;
     text-align: center;
     white-space: nowrap;
+}
+
+/* 
+  ========================================================================
+  TEMA OSCURO: sobreescribe variables corporativas del calendario
+  ========================================================================
+*/
+.dark {
+    --primary: #5B8DEF;
+    --on-primary: #0e1320;
+    --primary-container: #3A6FE0;
+    --on-primary-container: #f1f3f8;
+    --secondary: #6cf8bb;
+    --on-secondary: #002113;
+    --secondary-container: #1f4a38;
+    --on-secondary-fixed: #d1faec;
+    --tertiary: #ffb95c;
+    --tertiary-container: #a36700;
+    --on-tertiary-fixed: #ffe8c2;
+    --background: #0e1320;
+    --on-background: #f1f3f8;
+    --cal-surface: #0e1320;
+    --on-surface: #f1f3f8;
+    --surface-container-low: #232b3f;
+    --surface-container-lowest: #1a2032;
+    --surface-container: #2a3247;
+    --surface-variant: #323b52;
+    --outline: #9aa4bc;
+    --outline-variant: #2a3247;
+    --error: #ff7d7d;
+    --inverse-surface: #f1f3f8;
+}
+
+.dark .day-card.today {
+    background-color: #182642;
+    outline-color: var(--primary);
+}
+
+.dark .day-card.today:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.dark .modal-task-item:hover {
+    background-color: #232b3f;
+}
+
+.dark .status-success {
+    background-color: rgba(108, 248, 187, 0.12);
+    color: var(--secondary);
+    border-color: rgba(108, 248, 187, 0.25);
+}
+
+.dark .status-pending {
+    background-color: rgba(255, 185, 92, 0.1);
+    color: var(--tertiary);
+    border-color: rgba(255, 185, 92, 0.25);
+}
+
+.dark .task-pill.green {
+    background-color: rgba(108, 248, 187, 0.12);
+    border-color: rgba(108, 248, 187, 0.3);
+    color: #d1faec;
+}
+
+.dark .task-pill.orange {
+    background-color: rgba(255, 185, 92, 0.12);
+    border-color: rgba(255, 185, 92, 0.3);
+    color: #ffe8c2;
 }
 

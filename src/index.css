@@ -31,8 +31,130 @@
   animation: spin 1s linear infinite;
 }
 
+/* ─── Theme ripple (View Transitions API) ─────────────────────────────────── */
+/* Desactiva la animación cruzada por defecto para usar la nuestra */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* La snapshot "antigua" queda estática por debajo */
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+/* La snapshot "nueva" se revela encima con clip-path animado via JS */
+::view-transition-new(root) {
+  z-index: 2;
+}
+
 
 :root {
+  /* --- Escalas de color (tripletes RGB) --- */
+  --gray-50: 249 250 251;
+  --gray-100: 243 244 246;
+  --gray-200: 229 231 235;
+  --gray-300: 209 213 219;
+  --gray-400: 156 163 175;
+  --gray-500: 107 114 128;
+  --gray-600: 75 85 99;
+  --gray-700: 55 65 81;
+  --gray-800: 31 41 55;
+  --gray-900: 17 24 39;
+  --gray-950: 3 7 18;
+
+  --blue-50: 239 246 255;
+  --blue-100: 219 234 254;
+  --blue-200: 191 219 254;
+  --blue-300: 147 197 253;
+  --blue-400: 96 165 250;
+  --blue-500: 59 130 246;
+  --blue-600: 37 99 235;
+  --blue-700: 29 78 216;
+  --blue-800: 30 64 175;
+  --blue-900: 30 58 138;
+  --blue-950: 23 37 84;
+
+  --green-50: 240 253 244;
+  --green-100: 220 252 231;
+  --green-200: 187 247 208;
+  --green-300: 134 239 172;
+  --green-400: 74 222 128;
+  --green-500: 34 197 94;
+  --green-600: 22 163 74;
+  --green-700: 21 128 61;
+  --green-800: 22 101 52;
+  --green-900: 20 83 45;
+  --green-950: 5 46 22;
+
+  --red-50: 254 242 242;
+  --red-100: 254 226 226;
+  --red-200: 254 202 202;
+  --red-300: 252 165 165;
+  --red-400: 248 113 113;
+  --red-500: 239 68 68;
+  --red-600: 220 38 38;
+  --red-700: 185 28 28;
+  --red-800: 153 27 27;
+  --red-900: 127 29 29;
+  --red-950: 69 10 10;
+
+  --amber-50: 255 251 235;
+  --amber-100: 254 243 199;
+  --amber-200: 253 230 138;
+  --amber-300: 252 211 77;
+  --amber-400: 251 191 36;
+  --amber-500: 245 158 11;
+  --amber-600: 217 119 6;
+  --amber-700: 180 83 9;
+  --amber-800: 146 64 14;
+  --amber-900: 120 53 15;
+  --amber-950: 69 26 3;
+
+  --yellow-50: 254 252 232;
+  --yellow-100: 254 249 195;
+  --yellow-200: 254 240 138;
+  --yellow-300: 253 224 71;
+  --yellow-400: 250 204 21;
+  --yellow-500: 234 179 8;
+  --yellow-600: 202 138 4;
+  --yellow-700: 161 98 7;
+  --yellow-800: 133 77 14;
+  --yellow-900: 113 63 18;
+  --yellow-950: 66 32 6;
+
+  --emerald-50: 236 253 245;
+  --emerald-100: 209 250 229;
+  --emerald-200: 167 243 208;
+  --emerald-300: 110 231 183;
+  --emerald-400: 52 211 153;
+  --emerald-500: 16 185 129;
+  --emerald-600: 5 150 105;
+  --emerald-700: 4 120 87;
+  --emerald-800: 6 95 70;
+  --emerald-900: 6 78 59;
+  --emerald-950: 2 44 34;
+
+  /* --- Tokens semánticos (claro) --- */
+  --page: 248 250 252;
+  --surface: 255 255 255;
+  --muted: 242 243 253;
+  --muted-hover: 243 245 252;
+  --muted-strong: 225 226 236;
+  --muted-strong-hover: 208 209 224;
+  --line: 194 198 214;
+  --line-soft: 226 227 240;
+  --ink: 25 27 35;
+  --ink-soft: 66 71 84;
+  --ink-faint: 148 150 168;
+  --brand: 0 88 190;
+  --brand-strong: 0 88 190;
+  --brand-hover: 0 74 158;
+  --on-brand: 255 255 255;
+  --danger: 186 26 26;
+
+  /* --- Variables de diseño heredadas --- */
   --text: #6b6375;
   --text-h: #08060d;
   --bg: #fff;
@@ -64,24 +186,128 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
+.dark {
+  /* --- Escalas de color oscuras --- */
+  --gray-50: 20 24 36;
+  --gray-100: 26 31 46;
+  --gray-200: 35 41 61;
+  --gray-300: 47 55 80;
+  --gray-400: 70 80 110;
+  --gray-500: 96 108 143;
+  --gray-600: 125 137 173;
+  --gray-700: 159 170 200;
+  --gray-800: 197 206 229;
+  --gray-900: 229 234 244;
+  --gray-950: 248 249 252;
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+  --blue-50: 18 28 52;
+  --blue-100: 26 42 78;
+  --blue-200: 36 60 108;
+  --blue-300: 48 82 148;
+  --blue-400: 62 108 185;
+  --blue-500: 84 136 220;
+  --blue-600: 110 163 240;
+  --blue-700: 150 190 250;
+  --blue-800: 190 215 255;
+  --blue-900: 222 236 255;
+  --blue-950: 240 247 255;
+
+  --green-50: 16 32 26;
+  --green-100: 22 46 36;
+  --green-200: 30 64 50;
+  --green-300: 42 88 70;
+  --green-400: 58 120 96;
+  --green-500: 80 155 125;
+  --green-600: 110 190 155;
+  --green-700: 150 220 185;
+  --green-800: 190 240 212;
+  --green-900: 220 248 232;
+  --green-950: 240 252 246;
+
+  --red-50: 42 16 22;
+  --red-100: 60 24 32;
+  --red-200: 90 34 44;
+  --red-300: 130 46 58;
+  --red-400: 178 64 78;
+  --red-500: 226 88 104;
+  --red-600: 243 122 134;
+  --red-700: 250 160 168;
+  --red-800: 254 195 199;
+  --red-900: 255 224 226;
+  --red-950: 255 242 243;
+
+  --amber-50: 38 26 10;
+  --amber-100: 54 38 16;
+  --amber-200: 74 54 24;
+  --amber-300: 106 80 40;
+  --amber-400: 148 112 58;
+  --amber-500: 198 152 78;
+  --amber-600: 235 188 110;
+  --amber-700: 252 212 150;
+  --amber-800: 255 230 185;
+  --amber-900: 255 240 216;
+  --amber-950: 255 248 238;
+
+  --yellow-50: 36 30 10;
+  --yellow-100: 52 44 14;
+  --yellow-200: 72 60 22;
+  --yellow-300: 102 88 38;
+  --yellow-400: 146 122 56;
+  --yellow-500: 192 162 74;
+  --yellow-600: 228 198 104;
+  --yellow-700: 248 222 148;
+  --yellow-800: 252 236 185;
+  --yellow-900: 255 244 218;
+  --yellow-950: 255 250 240;
+
+  --emerald-50: 14 34 26;
+  --emerald-100: 20 48 36;
+  --emerald-200: 30 68 52;
+  --emerald-300: 42 94 72;
+  --emerald-400: 56 128 98;
+  --emerald-500: 76 168 128;
+  --emerald-600: 104 205 165;
+  --emerald-700: 150 235 198;
+  --emerald-800: 190 248 222;
+  --emerald-900: 220 252 238;
+  --emerald-950: 240 254 247;
+
+  /* --- Tokens semánticos (oscuro) --- */
+  --page: 14 19 32;
+  --surface: 26 32 50;
+  --muted: 35 43 63;
+  --muted-hover: 40 49 72;
+  --muted-strong: 50 60 87;
+  --muted-strong-hover: 58 69 99;
+  --line: 42 50 71;
+  --line-soft: 36 44 64;
+  --ink: 241 243 248;
+  --ink-soft: 154 164 188;
+  --ink-faint: 115 122 143;
+  --brand: 91 141 239;
+  --brand-strong: 58 111 224;
+  --brand-hover: 74 110 214;
+  --on-brand: 241 243 248;
+  --danger: 255 125 125;
+
+  /* --- Variables heredadas (oscuro) --- */
+  --text: #9ca3af;
+  --text-h: #f3f4f6;
+  --bg: #16171d;
+  --border: #2e303a;
+  --code-bg: #1f2028;
+  --accent: #c084fc;
+  --accent-bg: rgba(192, 132, 252, 0.15);
+  --accent-border: rgba(192, 132, 252, 0.5);
+  --social-bg: rgba(47, 48, 58, 0.5);
+  --shadow:
+    rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+
+  color-scheme: dark;
+}
+
+.dark #social .button-icon {
+  filter: invert(1) brightness(2);
 }
 
 body {

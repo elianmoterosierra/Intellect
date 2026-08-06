@@ -3,8 +3,10 @@ import { useState } from 'react';
 import { COURSE_SECTIONS } from '../../../../utils/courseSections';
 import type { SectionKey } from '../../../../utils/courseSections';
 import { ExitModal } from '../../Common/ExitModal/ExitModal';
+import { ThemeToggle } from '../../../ThemeToggle/ThemeToggle';
+import { useThemeStore } from '../../../../store/themeStore';
 
-const navLink = "flex items-center gap-4 px-4 py-2 rounded-xl transition-colors duration-200 text-[#424754] no-underline text-sm leading-5 hover:bg-blue-500 cursor-pointer border-none w-full text-left font-[inherit]";
+const navLink = "flex items-center gap-4 px-4 py-2 rounded-xl transition-colors duration-200 text-ink-soft no-underline text-sm leading-5 hover:bg-blue-500 cursor-pointer border-none w-full text-left font-[inherit]";
 const navLinkActive = "bg-blue-500 text-white font-semibold";
 
 const sections = [
@@ -22,14 +24,15 @@ type SideNavProps = {
 export function SideNav({ courseId, activeSection, onSectionChange }: SideNavProps) {
     const [showModal, setShowModal] = useState(false);
     const onClose = () => setShowModal(false);
+    const { isDark } = useThemeStore();
 
 
     return (
         <>
-            <nav className=" hidden md:flex flex-col fixed left-0 top-0 h-full p-4 bg-[#f2f3fd] text-[#0058be] text-sm leading-5 border-r border-[#c2c6d6] w-64 z-40 transition-all duration-200">
+            <nav className=" hidden md:flex flex-col fixed left-0 top-0 h-full p-4 bg-muted text-brand text-sm leading-5 border-r border-line w-64 z-40 transition-all duration-200">
                 <div className="mb-8">
-                    <Link to="/" className="text-xl leading-7 font-semibold text-[#191b23] no-underline">Intellect </Link>
-                    <p className="text-[#424754] text-xs leading-4 tracking-widest font-semibold uppercase mt-0.5">Task manager</p>
+                    <Link to="/" className="text-xl leading-7 font-semibold text-ink no-underline">Intellect </Link>
+                    <p className="text-ink-soft text-xs leading-4 tracking-widest font-semibold uppercase mt-0.5">Task manager</p>
                 </div>
 
                 <ul className="flex-1 flex flex-col gap-2 list-none p-0 m-0">
@@ -51,7 +54,15 @@ export function SideNav({ courseId, activeSection, onSectionChange }: SideNavPro
                     ))}
                 </ul>
 
-                <ul className="mt-auto flex flex-col gap-2 border-t border-[#c2c6d6] pt-4 list-none p-0 m-0">
+                <ul className="mt-auto flex flex-col gap-2 border-t border-line pt-4 list-none p-0 m-0">
+                    <li>
+                        <div className="flex items-center gap-3 px-2 py-2">
+                            <ThemeToggle />
+                            <span className=" text-sm text-ink-soft">Modo {isDark ? 'Claro' : 'Oscuro'}</span>
+
+                        </div>
+                    </li>
+
                     <li>
                         <button className={navLink}>
                             <span className="material-symbols-outlined">settings</span>

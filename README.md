@@ -319,3 +319,83 @@ npm run lint
 npm run typecheck
 npm run build
 ```
+
+---
+
+# Tarea en curso: Dark Mode (no finalizada)
+
+> ⚠️ **IMPORTANTE**: Esta funcionalidad quedó **a medias**. Antes de continuar, revisa las secciones de abajo y termina los pasos pendientes.
+
+## Objetivo
+
+Añadir un **switch para modo oscuro** que cambie **toda la página** (no solo un componente) en las páginas **home**, **selectcourse** y **course** (dashboard completo: sidebar, calendario, modales, bottom nav, etc.), con un estado global **Zustand** compartido.
+
+### Paleta oscura elegida (variables que deben aplicarse cuando está activo el tema oscuro)
+
+| Rol | Valor |
+|---|---|
+| Fondo | `#0E1320` (azul-negro profundo) |
+| Superficie/tarjetas | `#1A2032` |
+| Bordes | `#2A3247` |
+| Acento (texto/links) | `#5B8DEF` |
+| Acento fuerte (botón primario) | `#3A6FE0` |
+| Texto principal | `#F1F3F8` |
+| Texto secundario | `#9AA4BC` |
+
+### Decisiones de diseño (acordadas con el usuario)
+
+- **Alcance:** refactorizar TODOS los componentes de Home, SelectCourse y Course.
+- **Mecanismo:** Variables CSS + clase `.dark` (no variantes `dark:` de Tailwind).
+- **Persistencia:** guardar en `localStorage` (`theme`); la primera carga usa `prefers-color-scheme`.
+- **Switch:** toggle con track + thumb e iconos sol/luna (Material Symbols), igual al estilo de la app.
+
+### Ubicación del switch
+
+- **Header** (desktop, se renderiza en home y selectcourse): a la **izquierda** del span con el icono de ajustes.
+- **HamburgerMenu** (mobile): **arriba** del icono de ajustes.
+- **SideNav** (sidebar del Course): **arriba** del icono de ajustes.
+
+## Avance (lo ya hecho) — Dark mode completo ✅
+
+- [x] **`themeStore.ts`** (`src/store/themeStore.ts`, Zustand): `isDark`, `toggleTheme()`, `setTheme(dark)`, `initTheme()`. Persiste en `localStorage` (`theme`); `initTheme()` sigue `prefers-color-scheme` la primera vez y aplica/quita `.dark` en `document.documentElement`.
+- [x] **`tailwind.config.ts`:** escalas vars (`gray/blue/green/red/amber/yellow/emerald`) + tokens semánticos (`page`, `surface`, `muted`, `muted-hover`, `muted-strong`, `muted-strong-hover`, `line`, `line-soft`, `ink`, `ink-soft`, `ink-faint`, `brand`, `brand-strong`, `brand-hover`, `brand-soft` 12%, `brand-tint` 8%, `brand-ring` 20%, `brand-faint` 6%, `on-brand`, `danger`), todo vía `rgb(var(--x) / <alpha-value>)`.
+
+> Estas clases semánticas se usan así: `bg-page`, `bg-surface`, `text-ink`, `text-ink-soft`, `text-brand`, `bg-brand-strong`, `hover:bg-brand-hover`, `border-line`, `border-line-soft`, `bg-muted`, `bg-muted-strong`, etc.
+
+- [x] **`src/index.css`:** variables de **todas** las escalas (`gray/blue/green/red/amber/yellow/emerald` 50-950) y tokens semánticos en bloques `:root` (claro) y `.dark` (oscuro), usando tripletes `N N N` (Tailwind los consume como `rgb(var(--x) / <alpha-value>)`). Se reemplazó la media query `@media (prefers-color-scheme: dark)` por el bloque `.dark` para no pelear con la elección explícita del usuario.
+- [x] **`src/page/css/Calendar.css`:** bloque `.dark { ... }` al final que sobreescribe sus propias variables (`--primary`, `--background`, `--surface-container-low`, `--outline`, etc.) + estilos extra (`.day-card.today`, `.modal-task-item:hover`, `.status-success`, `.status-pending`, `.task-pill.green/.orange`).
+- [x] **`src/page/css/Calendar.css`:** la variable de superficie se renombró a **`--cal-surface`**. Antes se llamaba `--surface` (igual que el token semántico global de Tailwind) y, al cargarse este CSS, `bg-surface` compilaba `rgb(#f9f9ff / 1)` (inválido) y todas las modales quedaban transparentes en dark y al volver a light.
+- [x] **`.vscode/settings.json`:** `tailwindCSS.experimental.configFile` ahora apunta a `./tailwind.config.ts` (antes apuntaba a un `.js` inexistente y el IntelliSense no cargaba ningún config).
+- [x] **`src/components/ThemeToggle/ThemeToggle.tsx`:** switch sol/luna que lee `useThemeStore` (clases `text-ink-soft hover:bg-brand-tint hover:text-brand active:scale-95`).
+- [x] **`src/App.tsx`:** `useEffect` llama `useThemeStore.getState().initTheme()`.
+- [x] **Switch colocado** en Header (desktop, antes de ajustes), HamburgerMenu (fila "Modo oscuro") y SideNav (fila "Modo oscuro").
+- [x] **Refactor de ~30 componentes** (`Header`, `Hero`, `SelectCourse`, `Perfil`, `Dashboard`, `SideNav`, `CalendarSection`, `TaskModal`, `DayModal`, `AddTaskSection`, `FormTask`, `SearchDropdown`, `Notification`, `FormSection`, `Register`, `Login`, etc.) reemplazando colores hardcodeados por los tokens semánticos.
+- [x] **`vite.config.ts`:** se añadió `build: { cssMinify: false }`. Era una mitigación para el CSS inválido que generaba `daisyui` 5.7.16 (`.dropdown-content: [object Object]`); queda inerte tras quitar el plugin. ⚠️ Problema **preexistente**, no del dark mode.
+- [x] **`tailwind.config.ts`:** se **eliminó** `plugins: [require('daisyui')]`. No se usa ninguna clase daisyUI y el plugin rompía el build (`lightningcss`) **y** el Tailwind IntelliSense (su `require` en scope ESM hacía fallar la carga del config en la extensión). Con el plugin fuera, el autocompletado de tokens semánticos (`bg-surface`, `text-ink`, etc.) funciona.
+
+## Pendiente ⚠️ (continuar aquí)
+
+1. **Revisar visualmente** el dark mode completado en las vistas del curso (Dashboard, Calendario, Agregar Tareas) y cerrar los detalles finos de color que queden.
+2. **Ajuste fino del diseño** en curso: header desktop de Home/SelectCourse ya usa `bg-surface/90` (#1A2032 en dark + blur) en vez de `bg-white/85`. Verificar el resto de componentes con fondo que aún use opacidades/tonos no deseados.
+3. **Nota:** NUNCA renombrar typos históricos (`AddTaskSection`, `ConfirnDelete`). Mantener capitalización.
+
+## Verificación (causa raíz del error de build)
+
+Al terminar, ejecutar en orden: `npm run lint` → `npm run typecheck` → `npm run build`.
+
+> `npm run build` ya no falla: se eliminó `plugins: [require('daisyui')]` de `tailwind.config.ts` (era la causa del `Error: ... [object Object]` con `lightningcss`). `vite.config.ts` mantiene `build: { cssMinify: false }`, hoy innecesario.
+
+## Estados clave
+
+| Token | Claro | Oscuro |
+|---|---|---|
+| `page` | `248 250 252` | `14 19 32` (`#0E1320`) |
+| `surface` | `255 255 255` | `26 32 50` (`#1A2032`) |
+| `muted` | `242 243 253` | `35 43 63` |
+| `line` | `194 198 214` | `42 50 71` (`#2A3247`) |
+| `ink` | `25 27 35` | `241 243 248` (`#F1F3F8`) |
+| `ink-soft` | `66 71 84` | `154 164 188` (`#9AA4BC`) |
+| `brand` | `0 88 190` (`#0058be`) | `91 141 239` (`#5B8DEF`) |
+| `brand-strong` | `0 88 190` | `58 111 224` (`#3A6FE0`) |
+
+> Los tokens se guardan como tripleta RGB (`0 88 190`) porque el config las consume como `rgb(var(--x) / <alpha-value>)`. Si un token es `rgba` fijo (e.g. `brand-soft` = `rgb(var(--brand) / 0.12)`), mejorar el nombre en el config.

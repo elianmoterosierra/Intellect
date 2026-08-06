@@ -9,11 +9,11 @@ import { DetailsModal } from '../../../Common/DetailsModal/DetailsModal';
 import type { CalendarDay, TaskWithCompleted } from '../../../../../types';
 
 const typeStyles: Record<CalendarDay['type'], string> = {
-    past: 'opacity-60 bg-[#f2f3fd] border-[#d1d5db]',
-    today: 'bg-gradient-to-b from-amber-50 to-white shadow-[0_2px_10px_-3px_rgba(251,191,36,0.35)]',
-    tomorrow: 'bg-gradient-to-b from-blue-50 to-white shadow-[0_2px_10px_-3px_rgba(0,88,190,0.2)]',
-    future: 'bg-white hover:border-[#0058be]/20',
-    weekend: 'bg-gradient-to-b from-green-50 to-white',
+    past: 'opacity-60 bg-muted border-line',
+    today: 'bg-gradient-to-b from-amber-50 to-surface shadow-[0_2px_10px_-3px_rgba(251,191,36,0.35)]',
+    tomorrow: 'bg-gradient-to-b from-blue-50 to-surface shadow-[0_2px_10px_-3px_rgba(0,88,190,0.2)]',
+    future: 'bg-surface hover:border-brand-ring',
+    weekend: 'bg-gradient-to-b from-green-50 to-surface',
 };
 
 type DayCardProps = {
@@ -55,13 +55,13 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId }: Day
     return (
         <>
             <div
-                className={`relative rounded-xl border p-3 flex flex-col gap-1.5 cursor-pointer transition-all duration-200 ease-out hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 aspect-square md:aspect-auto ${typeStyles[type] ?? typeStyles.future} ${type === 'past' || type === 'future' ? 'border-[#c2c6d6]' : ''}`}
+                className={`relative rounded-xl border p-3 flex flex-col gap-1.5 cursor-pointer transition-all duration-200 ease-out hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 aspect-square md:aspect-auto ${typeStyles[type] ?? typeStyles.future} ${type === 'past' || type === 'future' ? 'border-line' : ''}`}
                 onClick={() => setIsModalOpen(true)}
                 data-today={isToday ? '' : undefined}
             >
                 <div className={`flex justify-between items-center rounded-t-[10px] -mx-3 -mt-3 px-3 pt-3 pb-1.5 ${isToday ? 'bg-gradient-to-br from-amber-500 to-amber-600' : isTomorrow ? 'bg-gradient-to-br from-[#0058be] to-[#0041a8]' : isWeekend ? 'bg-gradient-to-br from-green-500 to-green-600' : ''}`}>
-                    <span className={`text-[11px] font-medium tracking-wide uppercase ${isToday || isTomorrow || isWeekend ? 'text-white' : 'text-[#6b7280]'}`}>{name}</span>
-                    <span className={`text-lg font-bold leading-tight ${isToday || isTomorrow || isWeekend ? 'text-white' : type === 'past' ? 'text-[#9ca3af]' : 'text-[#191b23]'}`}>{number}</span>
+                    <span className={`text-[11px] font-medium tracking-wide uppercase ${isToday || isTomorrow || isWeekend ? 'text-white' : 'text-ink-faint'}`}>{name}</span>
+                    <span className={`text-lg font-bold leading-tight ${isToday || isTomorrow || isWeekend ? 'text-white' : type === 'past' ? 'text-ink-faint' : 'text-ink'}`}>{number}</span>
                 </div>
 
                 <div className="flex flex-col gap-1 mt-0.5">
@@ -75,11 +75,11 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId }: Day
                         );
                     })}
                     {hasMore && (
-                        <div className="text-center text-[10px] font-semibold text-[#424754] tracking-wider">···</div>
+                        <div className="text-center text-[10px] font-semibold text-ink-soft tracking-wider">···</div>
                     )}
                 </div>
 
-                <div className="text-[10px] text-[#6b7280] mt-auto hidden md:block">Click para ver detalles</div>
+                <div className="text-[10px] text-ink-faint mt-auto hidden md:block">Click para ver detalles</div>
             </div>
 
             {isModalOpen && (

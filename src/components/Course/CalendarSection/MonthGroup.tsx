@@ -36,7 +36,7 @@ export function MonthGroup({ year, month, courseId, forceVisible }: MonthGroupPr
 
     return (
         <div ref={ref} data-month-group data-year={year} data-month={month}>
-            <div className="sticky top-0 z-10 bg-[#f9f9ff] px-4 py-3 text-lg font-bold text-[#0058be] border-b border-[#c2c6d6]">
+            <div className="sticky top-0 z-10 bg-page px-4 py-3 text-lg font-bold text-brand border-b border-line">
                 {MONTH_NAMES[month]} {year}
             </div>
             {isNear ? (
@@ -46,7 +46,7 @@ export function MonthGroup({ year, month, courseId, forceVisible }: MonthGroupPr
             ) : (
                 <div className="calendar-grid opacity-40">
                     {Array.from({ length: getDaysInMonth(year, month) }, (_, i) => (
-                        <div key={i} className="aspect-square rounded-xl border border-[#c2c6d6] bg-[#f9f9ff]" />
+                        <div key={i} className="aspect-square rounded-xl border border-line bg-page" />
                     ))}
                 </div>
             )}

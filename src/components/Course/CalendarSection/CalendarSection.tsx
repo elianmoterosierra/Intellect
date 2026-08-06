@@ -211,7 +211,7 @@ export default function CalendarSection({ courseId, searchQuery, setSearchQuery,
             {/* ─── MOBILE: scroll infinito ───────────────────────────── */}
             <div
                 ref={mobileScrollRef}
-                className="md:hidden h-full overflow-y-auto bg-[#f9f9ff] pb-20"
+                className="md:hidden h-full overflow-y-auto bg-page pb-20"
             >
                 <div ref={topSentinelRef} className="h-2" />
                 {months.map((m) => (
@@ -230,7 +230,7 @@ export default function CalendarSection({ courseId, searchQuery, setSearchQuery,
             {showUpArrow && (
                 <button
                     onClick={scrollToToday}
-                    className="md:hidden fixed top-36 left-1/2 -translate-x-1/2 -ml-4 z-[60] bg-[#0058be] text-white rounded-full p-2 shadow-lg hover:bg-[#0041a8] transition-all duration-200 animate-fadeIn"
+                    className="md:hidden fixed top-36 left-1/2 -translate-x-1/2 -ml-4 z-[60] bg-brand-strong text-white rounded-full p-2 shadow-lg hover:bg-brand-hover transition-all duration-200 animate-fadeIn"
                     aria-label="Ir al día de hoy"
                 >
                     <span className="material-symbols-outlined text-xl">expand_less</span>
@@ -239,7 +239,7 @@ export default function CalendarSection({ courseId, searchQuery, setSearchQuery,
             {showDownArrow && (
                 <button
                     onClick={scrollToToday}
-                    className="md:hidden fixed bottom-20 left-1/2 -translate-x-1/2 -ml-4 z-[60] bg-[#0058be] text-white rounded-full p-2 shadow-lg hover:bg-[#0041a8] transition-all duration-200 animate-fadeIn"
+                    className="md:hidden fixed bottom-20 left-1/2 -translate-x-1/2 -ml-4 z-[60] bg-brand-strong text-white rounded-full p-2 shadow-lg hover:bg-brand-hover transition-all duration-200 animate-fadeIn"
                     aria-label="Ir al día de hoy"
                 >
                     <span className="material-symbols-outlined text-xl">expand_more</span>

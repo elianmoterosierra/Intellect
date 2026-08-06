@@ -25,7 +25,7 @@ export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, s
             role="presentation"
         >
             <form
-                className="flex flex-col w-full max-w-[500px] max-h-[90vh] overflow-hidden rounded-2xl bg-white shadow-2xl border border-[#e2e3f0] animate-fadeIn"
+                className="flex flex-col w-full max-w-[500px] max-h-[90vh] overflow-hidden rounded-2xl bg-surface shadow-2xl border border-line-soft animate-fadeIn"
                 onSubmit={handleSubmit}
                 onClick={(event) => event.stopPropagation()}
             >
@@ -49,8 +49,8 @@ export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, s
                     </button>
                 </div>
 
-                <div className="shrink-0 px-7 py-5 border-b border-[#edf0fa]">
-                    <p className="text-center text-[15px] text-[#9298af]">Completa los datos para guardar tu tarea</p>
+                <div className="shrink-0 px-7 py-5 border-b border-line-soft">
+                    <p className="text-center text-[15px] text-ink-faint">Completa los datos para guardar tu tarea</p>
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-7 py-5">
@@ -60,7 +60,7 @@ export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, s
                             value={title}
                             onChange={(event) => setTitle(event.target.value)}
                             placeholder="material o titulo de la clase..."
-                            className="w-full rounded-xl border border-[#cdd3e9] bg-[#f9faff] px-5 py-3 text-[15px] text-[#191b23] outline-none transition-all placeholder:text-[#989db1] focus:border-[#536fdb] focus:ring-2 focus:ring-[#536fdb]/25"
+                            className="w-full rounded-xl border border-line bg-muted px-5 py-3 text-[15px] text-ink outline-none transition-all placeholder:text-ink-faint focus:border-brand focus:ring-2 focus:ring-brand/25"
                             maxLength={30}
                         />
 
@@ -73,7 +73,7 @@ export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, s
                                 e.target.style.height = Math.min(e.target.scrollHeight, 160) + 'px';
                             }}
                             placeholder="contenido de la clase..."
-                            className="w-full rounded-xl border border-[#cdd3e9] bg-[#f9faff] px-5 py-3 text-[15px] text-[#191b23] outline-none transition-all placeholder:text-[#989db1] focus:border-[#536fdb] focus:ring-2 focus:ring-[#536fdb]/25 resize-none max-h-[160px] overflow-y-auto"
+                            className="w-full rounded-xl border border-line bg-muted px-5 py-3 text-[15px] text-ink outline-none transition-all placeholder:text-ink-faint focus:border-brand focus:ring-2 focus:ring-brand/25 resize-none max-h-[160px] overflow-y-auto"
                             rows={2}
                         />
 
@@ -81,7 +81,7 @@ export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, s
                             <div className="flex justify-between items-center">
                                 <span className={`text-xs transition-all ${subtitle.length > 2000
                                         ? 'text-red-500 font-semibold'
-                                        : 'text-[#989db1]'
+                                        : 'text-ink-faint'
                                     }`}>
                                     {subtitle.length}/2000 caracteres
                                 </span>
@@ -94,13 +94,13 @@ export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, s
                         )}
 
                         <div className="relative">
-                            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#67708d]">calendar_month</span>
+                            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-ink-faint">calendar_month</span>
                             <input
                                 type="date"
                                 value={dueDate}
                                 min={today}
                                 onChange={(event) => setDueDate(event.target.value)}
-                                className="w-full rounded-xl border border-[#cdd3e9] bg-[#f9faff] py-3 pl-11 pr-4 text-[15px] text-[#424754] outline-none transition-all focus:border-[#536fdb] focus:ring-2 focus:ring-[#536fdb]/25"
+                                className="w-full rounded-xl border border-line bg-muted py-3 pl-11 pr-4 text-[15px] text-ink-soft outline-none transition-all focus:border-brand focus:ring-2 focus:ring-brand/25"
                             />
                         </div>
 
@@ -109,7 +109,7 @@ export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, s
                 </div>
 
                 <div className="shrink-0 flex gap-2 px-7 pb-7">
-                    <button type="button" onClick={closeModal} className="flex-1 rounded-xl border border-[#cdd3e9] py-3 text-[15px] font-medium text-[#424754] transition-colors hover:bg-[#f3f5fc]">
+                    <button type="button" onClick={closeModal} className="flex-1 rounded-xl border border-line py-3 text-[15px] font-medium text-ink-soft transition-colors hover:bg-muted-hover">
                         Cancelar
                     </button>
                     <button
@@ -119,7 +119,7 @@ export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, s
                                 ? 'opacity-40 cursor-not-allowed'
                                 : 'hover:opacity-90'
                             }`}
-                        style={{ backgroundColor: '#0960ca' }}
+                        style={{ backgroundColor: 'rgb(var(--brand-strong))' }}
                     >
                         Guardar
                     </button>

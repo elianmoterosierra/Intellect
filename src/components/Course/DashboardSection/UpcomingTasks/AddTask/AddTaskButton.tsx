@@ -74,7 +74,7 @@ export function AddTaskButton({ courseId }: AddTaskButtonProps) {
         <>
             <button
                 type="button"
-                className="flex items-center justify-center gap-2 py-4 bg-transparent  border-[2px] border-[#0058be] rounded-lg w-48 h-12 text-[#0058be] text-sm font-semibold cursor-pointer transition-all duration-200 hover:scale-110 hover:border-[3px] "
+                className="flex items-center justify-center gap-2 py-4 bg-transparent  border-[2px] border-brand rounded-lg w-48 h-12 text-brand text-sm font-semibold cursor-pointer transition-all duration-200 hover:scale-110 hover:border-[3px] "
                 onClick={() => setShowForm(true)}
             >
                 <span className="material-symbols-outlined text-lg">add</span>

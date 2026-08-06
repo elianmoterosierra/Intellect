@@ -14,7 +14,7 @@ export function TaskList({ tasks, handleToggle, dayDate, onTaskClick }: TaskList
     return (
         <div className="flex flex-col gap-3">
             {tasks.length === 0 && (
-                <p className="text-sm text-[#9496a8] text-center py-2">
+                <p className="text-sm text-ink-faint text-center py-2">
                     Sin tareas para este día
                 </p>
             )}
@@ -50,7 +50,7 @@ export function TaskList({ tasks, handleToggle, dayDate, onTaskClick }: TaskList
                             className={`shrink-0 px-2.5 py-1 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
                                 task.completed
                                     ? 'bg-gray-200 text-gray-500 line-through cursor-default'
-                                    : 'bg-[#0058be] text-white hover:bg-[#0041a8]'
+                                    : 'bg-brand-strong text-white hover:bg-brand-hover'
                             }`}
                         >
                             {task.completed ? 'Hecho ✓' : 'Completar'}

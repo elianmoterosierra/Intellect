@@ -47,7 +47,7 @@ export function Perfil({ onClose, compact = false }: PerfilProps) {
                 onClick={onClose}
             >
                 <div
-                    className="relative bg-white rounded-2xl shadow-2xl w-[90vw] max-w-[400px] overflow-hidden border border-gray-100 animate-fadeIn"
+                    className="relative bg-surface rounded-2xl shadow-2xl w-[90vw] max-w-[400px] overflow-hidden border border-gray-100 animate-fadeIn"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header band */}
@@ -91,7 +91,7 @@ export function Perfil({ onClose, compact = false }: PerfilProps) {
                             >
                                 {user?.name ?? "Usuario"}
                             </h2>
-                            <p className="text-sm mt-1" style={{ color: "#0058be" }}>
+                            <p className="text-sm mt-1 text-brand">
                                 Miembro activo
                             </p>
                         </div>
@@ -105,24 +105,23 @@ export function Perfil({ onClose, compact = false }: PerfilProps) {
                                 <div
                                     key={label}
                                     className={`flex items-center gap-3 rounded-xl transition-all duration-200 group cursor-pointer ${compact ? 'px-2.5 md:px-3 py-2 md:py-2.5' : 'px-3 md:px-4 py-2.5 md:py-3'}`}
-                                    style={{ background: "#f8faff", border: "1px solid #e8eef8" }}
+                                    style={{ background: "rgb(var(--muted))", border: "1px solid rgb(var(--line-soft))" }}
                                     onClick={() => handleFieldClick(field)}
                                     onMouseEnter={e => {
-                                        e.currentTarget.style.background = "rgba(0,88,190,0.06)";
-                                        e.currentTarget.style.border = "1px solid rgba(0,88,190,0.2)";
+                                        e.currentTarget.style.background = "rgb(var(--brand) / 0.06)";
+                                        e.currentTarget.style.border = "1px solid rgb(var(--brand) / 0.2)";
                                     }}
                                     onMouseLeave={e => {
-                                        e.currentTarget.style.background = "#f8faff";
-                                        e.currentTarget.style.border = "1px solid #e8eef8";
+                                        e.currentTarget.style.background = "rgb(var(--muted))";
+                                        e.currentTarget.style.border = "1px solid rgb(var(--line-soft))";
                                     }}
                                 >
                                     <div
-                                        className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                                        style={{ background: "rgba(0,88,190,0.1)" }}
+                                        className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-brand-soft"
                                     >
                                         <span
-                                            className="material-symbols-outlined"
-                                            style={{ fontSize: "18px", color: "#0058be" }}
+                                            className="material-symbols-outlined text-brand"
+                                            style={{ fontSize: "18px" }}
                                         >
                                             {icon}
                                         </span>
@@ -130,7 +129,7 @@ export function Perfil({ onClose, compact = false }: PerfilProps) {
                                     <div className="flex flex-col items-start flex-1">
                                         <span
                                             style={{
-                                                color: "#9ca3af",
+                                                color: "rgb(var(--ink-faint))",
                                                 fontSize: "10px",
                                                 fontWeight: 600,
                                                 textTransform: "uppercase",
@@ -139,11 +138,11 @@ export function Perfil({ onClose, compact = false }: PerfilProps) {
                                         >
                                             {label}
                                         </span>
-                                        <span style={{ color: "#1f2937", fontSize: "14px", fontWeight: 500 }}>
+                                        <span style={{ color: "rgb(var(--ink))", fontSize: "14px", fontWeight: 500 }}>
                                             {value}
                                         </span>
                                     </div>
-                                    <span className="material-symbols-outlined text-[#cdd3e9] text-base opacity-0 group-hover:opacity-100 transition-opacity duration-200">edit</span>
+                                    <span className="material-symbols-outlined text-ink-faint text-base opacity-0 group-hover:opacity-100 transition-opacity duration-200">edit</span>
                                 </div>
                             ))}
                         </div>

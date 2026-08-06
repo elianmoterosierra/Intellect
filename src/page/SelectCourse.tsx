@@ -39,7 +39,7 @@ export function CourseButton({ courseId }: { courseId: number }) {
     }
 
     return (
-        <button onClick={() => handleSelect(courseId)} className={`${btnBase} bg-[#0058be] text-white hover:bg-[#004a9e]`}>
+        <button onClick={() => handleSelect(courseId)} className={`${btnBase} bg-brand-strong text-white hover:bg-brand-hover`}>
             Seleccionar Curso
         </button>
     );
@@ -47,7 +47,7 @@ export function CourseButton({ courseId }: { courseId: number }) {
 
 export function CoursePage() {
     return (
-        <div className="min-h-screen relative text-base leading-6 overflow-hidden bg-[#f9f9ff]">
+        <div className="min-h-screen relative text-base leading-6 overflow-hidden bg-page">
             {/* Decorative blobs */}
             <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-400 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-72 h-72 bg-emerald-700 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
@@ -62,12 +62,12 @@ export function CoursePage() {
 
                 {/* Support section */}
                 <section className="mt-8">
-                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white border border-gray-200 rounded-2xl p-5">
-                        <div className="flex items-center gap-3 text-gray-500 text-sm">
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-surface border border-gray-200 rounded-2xl p-5">
+                        <div className="flex items-center gap-3 text-ink-soft text-sm">
                             <span className="material-symbols-outlined">help_outline</span>
                             <span>¿No encuentras tu curso? Contacta con el equipo de admisiones.</span>
                         </div>
-                        <button className="border border-[rgba(0,88,190,0.2)] text-[#0058be] px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-[rgba(0,88,190,0.05)] transition-colors cursor-pointer bg-transparent">
+                        <button className="border border-brand-ring text-brand px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-brand-tint transition-colors cursor-pointer bg-transparent">
                             Solicitar Soporte
                         </button>
                     </div>

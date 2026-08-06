@@ -31,8 +31,8 @@ export function CTASection() {
 
     return (
         <section className="flex flex-col items-center justify-center min-h-[400px] px-10 py-[120px] text-center max-w-[1280px] mx-auto">
-            <h2 className="text-4xl text-gray-900 mb-4">Lleva tu organización al siguiente nivel</h2>
-            <p className="text-gray-500 mb-8 max-w-[600px]">
+            <h2 className="text-4xl text-ink mb-4">Lleva tu organización al siguiente nivel</h2>
+            <p className="text-ink-soft mb-8 max-w-[600px]">
                 Únete a miles de estudiantes y educadores que ya optimizan su tiempo con Intellect.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">

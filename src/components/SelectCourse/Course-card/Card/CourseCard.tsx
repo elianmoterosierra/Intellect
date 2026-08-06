@@ -47,7 +47,7 @@ export function CourseCard({ title, description, icon, courseId }: CourseCardPro
         button = (
             <button
                 onClick={() => handleSelect(courseId)}
-                className={`${btnBase} bg-[#0058be] text-white hover:bg-[#004a9e]`}
+                className={`${btnBase} bg-brand-strong text-white hover:bg-brand-hover`}
             >
                 Seleccionar Curso
             </button>
@@ -55,12 +55,12 @@ export function CourseCard({ title, description, icon, courseId }: CourseCardPro
     }
 
     return (
-        <div className="bg-white border border-gray-200 rounded-2xl p-7 flex flex-col h-full shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:border-[rgba(33,112,228,0.2)] focus-within:outline focus-within:outline-2 focus-within:outline-[#0058be] focus-within:outline-offset-2">
-            <div className="w-[52px] h-[52px] rounded-xl flex items-center justify-center mb-5 bg-[rgba(33,112,228,0.1)] text-[#0058be] transition-transform duration-300 group-hover:scale-105">
+        <div className="bg-surface border border-gray-200 rounded-2xl p-7 flex flex-col h-full shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:border-brand-ring focus-within:outline focus-within:outline-2 focus-within:outline-brand focus-within:outline-offset-2">
+            <div className="w-[52px] h-[52px] rounded-xl flex items-center justify-center mb-5 bg-brand-soft text-brand transition-transform duration-300 group-hover:scale-105">
                 <span className="material-symbols-outlined" style={{ fontSize: '30px' }}>{icon}</span>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">{title}</h3>
-            <p className="text-sm text-gray-500 mb-6 flex-grow leading-[22px]">{description}</p>
+            <h3 className="text-xl font-semibold text-ink mb-2">{title}</h3>
+            <p className="text-sm text-ink-soft mb-6 flex-grow leading-[22px]">{description}</p>
             {button}
         </div>
     );

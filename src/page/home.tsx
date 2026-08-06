@@ -26,7 +26,7 @@ export default function AcademiaFlow() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] text-[#191b23] font-[Inter,sans-serif]">
+        <div className="min-h-screen bg-page text-ink font-[Inter,sans-serif]">
             <main className="max-w-[1440px] mx-auto">
                 <Hero />
                 {/* --- FIN <HeroSection /> --- */}

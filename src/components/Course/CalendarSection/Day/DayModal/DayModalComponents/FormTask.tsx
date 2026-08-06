@@ -20,8 +20,8 @@ export function FormAddTask({ form, setForm, handleSubmit, setShowForm }: FormAd
                 placeholder="Título de la tarea…"
                 value={form.title}
                 onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))}
-                className="w-full px-4 py-2.5 rounded-xl border border-[#d0d2e8] text-sm text-[#191b23] bg-[#f8f9ff]
-                           placeholder-[#9496a8] focus:outline-none focus:ring-2 focus:ring-[#5c6bc0]/30 focus:border-[#5c6bc0] transition-all"
+                className="w-full px-4 py-2.5 rounded-xl border border-line-soft text-sm text-ink bg-muted
+                           placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all"
             />
             <textarea
                 ref={descriptionRef}
@@ -32,8 +32,8 @@ export function FormAddTask({ form, setForm, handleSubmit, setShowForm }: FormAd
                     e.target.style.height = 'auto';
                     e.target.style.height = Math.min(e.target.scrollHeight, 160) + 'px';
                 }}
-                className="w-full px-4 py-2.5 rounded-xl border border-[#d0d2e8] text-sm text-[#191b23] bg-[#f8f9ff]
-                           placeholder-[#9496a8] focus:outline-none focus:ring-2 focus:ring-[#5c6bc0]/30 focus:border-[#5c6bc0]
+                className="w-full px-4 py-2.5 rounded-xl border border-line-soft text-sm text-ink bg-muted
+                           placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand
                            transition-all resize-none max-h-[160px] overflow-y-auto"
                 rows={2}
             />
@@ -43,7 +43,7 @@ export function FormAddTask({ form, setForm, handleSubmit, setShowForm }: FormAd
                     <span className={`text-xs transition-all ${
                         form.description.length > 2000
                             ? 'text-red-500 font-semibold'
-                            : 'text-[#9496a8]'
+                            : 'text-ink-faint'
                     }`}>
                         {form.description.length}/2000 caracteres
                     </span>
@@ -59,8 +59,8 @@ export function FormAddTask({ form, setForm, handleSubmit, setShowForm }: FormAd
                 <button
                     type="button"
                     onClick={() => setShowForm(false)}
-                    className="flex-1 py-2 rounded-xl border border-[#d0d2e8] text-sm text-[#424754]
-                               hover:bg-[#f0f1fb] transition-colors"
+                    className="flex-1 py-2 rounded-xl border border-line-soft text-sm text-ink-soft
+                               hover:bg-muted-hover transition-colors"
                 >
                     Cancelar
                 </button>
@@ -70,7 +70,7 @@ export function FormAddTask({ form, setForm, handleSubmit, setShowForm }: FormAd
                     className={`flex-1 py-2 rounded-xl text-sm text-white font-semibold transition-all ${
                         form.description.length > 2000
                             ? 'bg-gray-400 opacity-50 cursor-not-allowed'
-                            : 'bg-[#0058be] hover:bg-[#0041a8] active:scale-95'
+                            : 'bg-brand-strong hover:bg-brand-hover active:scale-95'
                     }`}
                 >
                     Guardar

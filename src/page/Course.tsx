@@ -103,16 +103,16 @@ export default function Course() {
   }
 
   if (!course) return (
-    <div className="flex flex-col items-center justify-center h-screen text-[#424754]">
+    <div className="flex flex-col items-center justify-center h-screen text-ink-soft">
       Curso no encontrado
-      <Link to="/course" className="bg-transparent border-none text-[#0058be] text-md leading-4 tracking-widest font-semibold cursor-pointer hover:underline mt-4">
+      <Link to="/course" className="bg-transparent border-none text-brand text-md leading-4 tracking-widest font-semibold cursor-pointer hover:underline mt-4">
         Volver a Cursos
       </Link>
     </div>
   );
 
   return (
-    <div className="flex h-screen overflow-hidden font-[Inter,sans-serif] bg-[#f9f9ff] text-[#191b23] antialiased">
+    <div className="flex h-screen overflow-hidden font-[Inter,sans-serif] bg-page text-ink antialiased">
       {/* ===== SIDENAV (desktop) ===== */}
       <SideNav courseId={courseId} activeSection={activeSection} onSectionChange={handleSectionChange} />
 
@@ -131,15 +131,15 @@ export default function Course() {
         />
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto bg-[#f9f9ff] pb-16 md:pb-0">
+        <main className="flex-1 overflow-y-auto bg-page pb-16 md:pb-0">
           {activeSection === 'dashboard' && (
-            <Suspense fallback={<div className="p-10 text-center text-[#424754]">Cargando dashboard...</div>}>
+            <Suspense fallback={<div className="p-10 text-center text-ink-soft">Cargando dashboard...</div>}>
               <Dashboard course={course} />
             </Suspense>
           )}
 
           {activeSection === 'calendar' && (
-            <Suspense fallback={<div className="p-10 text-center text-[#424754]">Cargando calendario...</div>}>
+            <Suspense fallback={<div className="p-10 text-center text-ink-soft">Cargando calendario...</div>}>
               <CalendarSection
                 courseId={course.id}
                 searchQuery={searchQuery}
@@ -150,7 +150,7 @@ export default function Course() {
           )}
 
           {activeSection === 'Agregar Tareas' && (
-            <Suspense fallback={<div className="p-10 text-center text-[#424754]">Cargando tareas...</div>}>
+            <Suspense fallback={<div className="p-10 text-center text-ink-soft">Cargando tareas...</div>}>
               <AddTaskSection courseId={course.id} />
             </Suspense>
           )}
