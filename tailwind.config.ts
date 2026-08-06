@@ -33,11 +33,11 @@ export default {
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         overlayOut: {
-          '0%':   { opacity: '1' },
+          '0%': { opacity: '1' },
           '100%': { opacity: '0' },
         },
         modalOut: {
-          '0%':   { opacity: '1', transform: 'scale(1) translateY(0)' },
+          '0%': { opacity: '1', transform: 'scale(1) translateY(0)' },
           '100%': { opacity: '0', transform: 'scale(0.92) translateY(16px)' },
         },
       },
@@ -53,5 +53,5 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [require('daisyui')],
 } satisfies Config
