@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuthStore } from '../../store/AuthStore'
+import { useModalAnimation } from '../../Hooks/useModalAnimation'
 
 type EditableField = 'name' | 'email' | 'password';
 
@@ -16,6 +17,7 @@ type FieldEditModalProps = {
 
 export function FieldEditModal({ field, onCancel }: FieldEditModalProps) {
     const { user, updateUser } = useAuthStore()
+    const { handleClose, overlayClass, modalClass, animationStyle } = useModalAnimation({ onClose: onCancel })
     const config = INPUT_CONFIG[field]
     const [value, setValue] = useState('')
     const [error, setError] = useState('')
@@ -46,11 +48,13 @@ export function FieldEditModal({ field, onCancel }: FieldEditModalProps) {
 
     return (
         <div
-            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/30 backdrop-blur-[2px] animate-overlayIn"
-            onClick={onCancel}
+            className={`fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/30 backdrop-blur-[2px] ${overlayClass}`}
+            style={animationStyle}
+            onClick={handleClose}
         >
             <div
-                className="w-full max-w-[380px] rounded-2xl bg-surface shadow-2xl border border-line-soft animate-fadeIn overflow-hidden"
+                className={`w-full max-w-[380px] rounded-2xl bg-surface shadow-2xl border border-line-soft ${modalClass} overflow-hidden`}
+                style={animationStyle}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="px-6 pt-6 pb-2">
@@ -83,7 +87,7 @@ export function FieldEditModal({ field, onCancel }: FieldEditModalProps) {
 
                 <div className="flex gap-2 px-6 pb-6">
                     <button
-                        onClick={onCancel}
+                        onClick={handleClose}
                         className="flex-1 rounded-xl border border-line py-3 text-sm font-medium text-ink-soft transition-colors hover:bg-muted-hover cursor-pointer"
                     >
                         Cancelar

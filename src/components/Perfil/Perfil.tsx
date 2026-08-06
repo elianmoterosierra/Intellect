@@ -3,6 +3,7 @@ import { useAuthStore } from "../../store/AuthStore";
 import { ButtonLogout } from "./ButtonLogout/ButtonLogout";
 import { PasswordConfirmModal } from "./PasswordConfirmModal";
 import { FieldEditModal } from "./FieldEditModal";
+import { useModalAnimation } from "../../Hooks/useModalAnimation";
 
 type EditableField = 'name' | 'email' | 'password';
 
@@ -17,6 +18,8 @@ export function Perfil({ onClose, compact = false }: PerfilProps) {
     const { user } = useAuthStore();
     const [editingField, setEditingField] = useState<EditableField | null>(null)
     const [step, setStep] = useState<'password' | 'edit' | null>(null)
+
+    const { handleClose, overlayClass, modalClass, animationStyle } = useModalAnimation({ onClose });
 
     const initial = user?.name ? user.name.charAt(0).toUpperCase() : "?";
 
@@ -43,11 +46,13 @@ export function Perfil({ onClose, compact = false }: PerfilProps) {
     return (
         <>
             <div
-                className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 animate-overlayIn"
-                onClick={onClose}
+                className={`fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 ${overlayClass}`}
+                style={animationStyle}
+                onClick={handleClose}
             >
                 <div
-                    className="relative bg-surface rounded-2xl shadow-2xl w-[90vw] max-w-[400px] overflow-hidden border border-gray-100 animate-fadeIn"
+                    className={`relative bg-surface rounded-2xl shadow-2xl w-[90vw] max-w-[400px] overflow-hidden border border-gray-100 ${modalClass}`}
+                    style={animationStyle}
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header band */}
@@ -73,7 +78,7 @@ export function Perfil({ onClose, compact = false }: PerfilProps) {
 
                         {/* Close button */}
                         <button
-                            onClick={onClose}
+                            onClick={handleClose}
                             className="absolute top-3 right-3 bg-white/20 hover:bg-white/35 rounded-full p-1.5 border-none cursor-pointer transition-all duration-200"
                             style={{ color: "white" }}
                         >
@@ -151,7 +156,7 @@ export function Perfil({ onClose, compact = false }: PerfilProps) {
                         <div className="w-full border-t border-gray-100" />
 
                         {/* Logout button */}
-                        <ButtonLogout onClose={onClose} />
+                        <ButtonLogout onClose={handleClose} />
                     </div>
                 </div>
             </div>
