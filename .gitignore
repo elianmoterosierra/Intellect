@@ -29,3 +29,6 @@ dist-ssr
 AGENTS.md
 
 CLAUDE.md
+
+.vercel
+.env*

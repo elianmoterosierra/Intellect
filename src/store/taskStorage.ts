@@ -57,8 +57,6 @@ export const useTaskStore = create<TaskStore>((set) => ({
 
 
         set({ tasksByCourse: grouped });
-        // y en App.tsx (mismo useEffect que restoreSession):
-        useTaskStore.getState().fetchTasks()
         return grouped;
     },
     addTask: async (courseId, task) => {
