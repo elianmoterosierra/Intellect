@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../store/AuthStore'
 import { useModalAnimation } from '../../Hooks/useModalAnimation'
 
@@ -22,7 +23,7 @@ export function FieldEditModal({ field, onCancel }: FieldEditModalProps) {
     const [value, setValue] = useState('')
     const [error, setError] = useState('')
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const trimmed = value.trim()
         if (!trimmed) {
             setError('Este campo no puede estar vacío')
@@ -31,16 +32,18 @@ export function FieldEditModal({ field, onCancel }: FieldEditModalProps) {
 
         if (field === 'email') {
             const normalized = trimmed.toLowerCase()
-            const exists = useAuthStore.getState().users.some(
-                (u) => u.email === normalized && u.email !== user?.email
-            )
-            if (exists) {
+            const { data: duplicate } = await supabase
+                .from('usuarios')
+                .select('id')
+                .eq('gmail', normalized)
+                .maybeSingle()
+            if (duplicate && duplicate.id !== user?.id) {
                 setError('Este email ya está registrado')
                 return
             }
-            updateUser('email', normalized)
+            await updateUser('email', normalized)
         } else {
-            updateUser(field, trimmed)
+            await updateUser(field, trimmed)
         }
 
         onCancel()

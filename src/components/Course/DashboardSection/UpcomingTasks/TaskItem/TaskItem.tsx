@@ -1,10 +1,11 @@
 import { useAuthStore } from '../../../../../store/AuthStore';
-import { getDaysDifference } from '../../../../../utils/taskStatus';
+import { getTaskStatusConfig } from '../../../../../utils/taskStatus';
 import { useState } from 'react';
 import type { MouseEvent } from 'react';
 import { DetailsModal } from '../../../Common/DetailsModal/DetailsModal';
 import { useMediaQuery } from '../../../../../Hooks/useMediaQuery';
 import type { TaskWithCompleted } from '../../../../../types';
+import type { TaskStatusConfig } from '../../../../../types';
 
 const badgeStyles = {
     danger: 'bg-red-600 text-white',
@@ -12,11 +13,10 @@ const badgeStyles = {
     neutral: 'bg-muted-strong text-ink-soft',
     success: 'bg-green-100 text-green-700',
 };
-function getBadgeClass(dueDate: string): 'danger' | 'warning' | 'neutral' {
-    if (!dueDate) return 'neutral';
-    const diffHours = (new Date(dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60);
-    if (diffHours < 24) return 'danger';
-    if (diffHours < 48) return 'warning';
+
+function getBadgeVariant(statusCfg: TaskStatusConfig): 'danger' | 'warning' | 'neutral' {
+    if (statusCfg.status === 'overdue' || statusCfg.diff === 0) return 'danger';
+    if (statusCfg.status === 'tomorrow') return 'warning';
     return 'neutral';
 }
 
@@ -32,14 +32,14 @@ export function TaskItem({ task, courseId }: TaskItemProps) {
     const maxTitle = isMobile ? 15 : 20;
     const maxSubtitle = isMobile ? 10 : 30;
     const done = task.completed;
-    const daysDiff = getDaysDifference(task.dueDate);
-    const isOverdue = !done && daysDiff !== null && daysDiff < 0;
+    const statusCfg = getTaskStatusConfig(task.dueDate);
+    const isOverdue = !done && statusCfg.status === 'overdue';
 
     const handleToggle = (e: MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
         toggleTaskStatus(courseId, task.id);
     };
-    const badgeVariant = done ? 'success' : getBadgeClass(task.dueDate);
+    const badgeVariant = done ? 'success' : getBadgeVariant(statusCfg);
 
 
 

@@ -5,6 +5,9 @@ import type { SectionKey } from '../../../../utils/courseSections';
 import { ExitModal } from '../../Common/ExitModal/ExitModal';
 import { ThemeToggle } from '../../../ThemeToggle/ThemeToggle';
 import { useThemeStore } from '../../../../store/themeStore';
+import { SettingsModal } from '../../../SettingsModal/SettingsModal';
+import { Perfil } from '../../../Perfil/Perfil';
+import { useUIStore } from '../../../../store/uiStore';
 
 const navLink = "flex items-center gap-4 px-4 py-2 rounded-xl transition-colors duration-200 text-ink-soft no-underline text-sm leading-5 hover:bg-blue-500 cursor-pointer border-none w-full text-left font-[inherit]";
 const navLinkActive = "bg-blue-500 text-white font-semibold";
@@ -23,8 +26,10 @@ type SideNavProps = {
 
 export function SideNav({ courseId, activeSection, onSectionChange }: SideNavProps) {
     const [showModal, setShowModal] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
     const onClose = () => setShowModal(false);
     const { isDark } = useThemeStore();
+    const { openPerfilModal, closePerfilModal, isPerfilModalOpen } = useUIStore();
 
 
     return (
@@ -64,7 +69,7 @@ export function SideNav({ courseId, activeSection, onSectionChange }: SideNavPro
                     </li>
 
                     <li>
-                        <button className={navLink}>
+                        <button className={navLink} onClick={() => setShowSettings(true)}>
                             <span className="material-symbols-outlined">settings</span>
                             Ajustes
                         </button>
@@ -85,6 +90,15 @@ export function SideNav({ courseId, activeSection, onSectionChange }: SideNavPro
             {showModal && (
                 <ExitModal courseId={courseId} onClose={onClose} />
             )}
+
+            {showSettings && (
+                <SettingsModal
+                    onClose={() => setShowSettings(false)}
+                    onOpenPerfil={openPerfilModal}
+                />
+            )}
+
+            {isPerfilModalOpen && <Perfil onClose={closePerfilModal} compact />}
         </>
     )
 }

@@ -1,5 +1,7 @@
 import { TaskItem } from './TaskItem/TaskItem';
 import { AddTaskButton } from './AddTask/AddTaskButton';
+import { useMemo } from 'react';
+import { getDaysDifference } from '../../../../utils/taskStatus';
 import type { TaskWithCompleted } from '../../../../types';
 
 type UpcomingTasksProps = {
@@ -8,6 +10,23 @@ type UpcomingTasksProps = {
 };
 
 export function UpcomingTasks({ tasks, courseId }: UpcomingTasksProps) {
+    const orderedTasks = useMemo(() => {
+        const byDueDate = (a: TaskWithCompleted, b: TaskWithCompleted) =>
+            new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+
+        const pending = tasks
+            .filter((task) => {
+                if (task.completed) return false;
+                const diff = getDaysDifference(task.dueDate);
+                return diff !== null && diff >= 0;
+            })
+            .sort(byDueDate);
+
+        const completed = tasks.filter((task) => task.completed).sort(byDueDate);
+
+        return [...pending, ...completed];
+    }, [tasks]);
+
     return (
         <div className=" md:col-span-12 bg-surface rounded-xl border border-line shadow-sm overflow-hidden mt-2">
             {/* Header */}
@@ -20,12 +39,12 @@ export function UpcomingTasks({ tasks, courseId }: UpcomingTasksProps) {
 
             {/* Task list */}
             <ul className="list-none p-0 m-0">
-                {tasks.length === 0 ? (
+                {orderedTasks.length === 0 ? (
                     <li className="px-6 py-8 text-center text-ink-soft">
                         Todavía no tienes tareas.
                     </li>
                 ) : (
-                    tasks.map((task) => (
+                    orderedTasks.map((task) => (
                         <TaskItem
                             key={task.id}
                             task={task}

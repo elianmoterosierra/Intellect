@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { useAuthStore } from './AuthStore';
+import { supabase } from '../lib/supabase';
 
 type ButtonStatus = 'selected' | 'processing';
 
@@ -20,13 +21,22 @@ export const useCourseStore = create<CourseStore>((set) => ({
 
     syncFromAuth: () => set({ buttonStatus: selectedCourseStatus() }),
 
-    handleSelect: (courseId) => {
+    handleSelect: async (courseId) => {
         set({ buttonStatus: { [courseId]: 'processing' } });
-
-        setTimeout(() => {
-            useAuthStore.getState().setSelectedCourse(courseId);
-            set({ buttonStatus: { [courseId]: 'selected' } });
-        }, 800);
+        const user = useAuthStore.getState().user;
+        if (!user) return;
+        const { data, error } = await supabase
+            .from('usuarios')
+            .update({ selected_course_id: courseId })
+            .eq('id', user.id)
+            .select()
+            .single();
+        if (error || !data) {
+            set({ buttonStatus: {} });
+            return;
+        }
+        useAuthStore.getState().setSelectedCourse(data.selected_course_id);
+        set({ buttonStatus: { [courseId]: 'selected' } });
     },
 
     handleLeave: (courseId) => {

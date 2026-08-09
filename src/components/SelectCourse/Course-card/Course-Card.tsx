@@ -1,7 +1,25 @@
 import { CourseCard } from "./Card/CourseCard";
-import { courseData } from "../../../data/data";
+import { useEffect, useState } from "react";
+import { supabase } from "../../../lib/supabase";
+import type { Course } from "../../../types.ts";
 
-export function CourseCards() {
+export default function CourseCards() {
+    const [courseData, setCourseData] = useState<Course[]>([]);
+    useEffect(() => {
+        supabase
+            .from("cursos")
+            .select("id, title, description, icon")
+            .order("id", { ascending: true })
+            .then(({ data, error }) => {
+                if (error) {
+                    console.error("Error al obtener los cursos:", error);
+                } else {
+                    console.log(data);
+                    setCourseData((data ?? []).map(course => ({ ...course, notification: [] })));
+                }
+            })
+
+    }, []);
     return (
         <>
             {courseData.map(course => (

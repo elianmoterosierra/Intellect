@@ -1,11 +1,12 @@
 # Intellect — Plataforma de Gestión Académica
 
-Aplicación web de gestión académica creada con React y Vite. Permite registrar usuarios, seleccionar un curso, crear y organizar tareas, consultar un calendario mensual y recibir notificaciones basadas en las fechas de entrega.
+Aplicación web de gestión académica creada con React y Vite. Permite registrar usuarios, seleccionar un curso, crear y organizar tareas, consultar un calendario mensual y recibir notificaciones basadas en las fechas de entrega. Todo el estado se persiste en `localStorage` (sin backend propio); únicamente el catálogo de cursos de la página de selección se obtiene de una API local (ver [Catálogo de cursos](#catálogo-de-cursos-api-externa)).
 
 ## Funcionalidades
 
 - Registro, inicio y cierre de sesión con persistencia local.
 - Un curso seleccionado por cada usuario.
+- Catálogo de cursos cargado desde una API local (`http://localhost:3000/cursos`) en la página de selección; `data.ts` queda como catálogo estático de referencia (fuera del árbol de navegación solo se consulta al entrar al dashboard).
 - Creación de tareas compartidas por todos los miembros de un curso.
 - Modal único de creación de tareas (`AddTaskModal/TaskModal.tsx`) reusado desde el dashboard y la sección "Agregar Tareas".
 - Descripción con textarea de auto-resize hasta 6 líneas, contador de caracteres en vivo y botón Guardar bloqueado al superar el límite de 2000 caracteres en el modal de creación.
@@ -16,7 +17,8 @@ Aplicación web de gestión académica creada con React y Vite. Permite registra
 - Completado individual de tareas desde el dashboard, el calendario y el modal de detalle.
 - Tareas y progreso guardados en `localStorage`.
 - Resumen automático de tareas completadas, pendientes y progreso.
-- Notificaciones dinámicas para tareas pendientes, próximas o vencidas.
+- Notificaciones dinámicas para tareas pendientes **no vencidas**, ordenadas por fecha de entrega (urgentes si vencen hoy o mañana).
+- "Próximas Tareas" ordena el listado con `useMemo`: primero las pendientes no vencidas por fecha de entrega y luego las completadas.
 - Estado visual para tareas vencidas: fondo rojo y texto blanco.
 - Calendario mensual que muestra las tareas según su fecha de entrega. Al hacer clic en una tarea del día se cierra el modal del día y se abre el detalle.
 - Selector de mes del calendario con botón "Hoy", atajo para volver al mes actual, persistencia del último mes visto por curso entre recargas, y swipe horizontal en móvil.
@@ -104,6 +106,14 @@ Controla el estado de apertura y cierre de modales de interfaz:
 
 Los modales se abren mediante acciones globales desde cualquier componente (Header, BottomNav, AppBar).
 
+### Tema — `src/store/themeStore.ts`
+
+Gestiona el dark mode (ver sección [Dark Mode](#dark-mode-implementado)):
+
+- `isDark`, `toggleTheme()`, `setTheme(dark)`, `initTheme()`.
+- `toggleThemeAt(x, y)` cambia el tema con una animación circular de la **View Transitions API** (`document.startViewTransition`); si no hay soporte o `prefers-reduced-motion`, cae a cambio directo.
+- Aplica/quita la clase `.dark` en `document.documentElement` y persiste en `localStorage('theme')`; `initTheme()` sigue `prefers-color-scheme` la primera vez.
+
 El estado `completed` no se guarda en la tarea compartida: se deriva desde el perfil del usuario autenticado.
 
 Cada tarea incluye, como mínimo:
@@ -121,6 +131,14 @@ Cada tarea incluye, como mínimo:
 ### Tareas compartidas y progreso individual
 
 La aplicación combina las tareas de `tasksByCourse[courseId]` con `user.taskStatusByCourse[courseId]` antes de renderizar el dashboard, calendario o notificaciones. De este modo, si un estudiante completa una tarea, los demás estudiantes del curso continúan viéndola como pendiente.
+
+## Catálogo de cursos (API externa)
+
+> ⚠️ Dependencia externa: la página de selección **requiere la API local corriendo** en `http://localhost:3000` para listar los cursos.
+
+- `src/components/SelectCourse/Course-card/Course-Card.tsx` hace `fetch('http://localhost:3000/cursos')` al montar, guarda el resultado en estado local (`useState<Course[]>`) y mapea cada curso a `CourseCard`. No usa `data.ts`.
+- `src/data/data.ts` (`courseData`) ya **no alimenta** la lista de selección; solo se usa como referencia en `Course.tsx` (`courseData.find(...)`) para resolver los datos del curso al entrar al dashboard.
+- Los arrays `notification` de cada `Course` y `src/data/notifications.json` no se leen en runtime (históricos/referencia).
 
 ## Estados de tareas
 
@@ -150,11 +168,12 @@ Los títulos y descripciones se truncan según el contexto para mantener una int
 
 ## Notificaciones
 
-`src/utils/taskNotifications.ts` crea notificaciones desde las tareas pendientes del usuario:
+`src/utils/taskNotifications.ts` crea notificaciones desde las **tareas pendientes no vencidas** del usuario:
 
+- Excluye tareas completadas y vencidas (requiere `dueDate` presente y `días ≥ 0`).
 - Ordena por fecha de entrega.
-- Marca como urgentes las tareas vencidas, de hoy o de mañana.
-- Alimenta tanto la tarjeta de notificaciones del dashboard como el panel de la campana.
+- Marca como urgentes las tareas que vencen hoy o mañana (≤ 1 día).
+- Alimenta la tarjeta de notificaciones del dashboard (primeras 4).
 
 No se usan notificaciones estáticas para el dashboard.
 
@@ -183,10 +202,10 @@ El calendario usa la misma información compartida de `taskStorage.ts`; no tiene
 
 La estructura completa de archivos se detalla en la sección siguiente. Los directorios principales son:
 
-- `src/store/` — Stores de Zustand (auth, cursos, tareas, UI)
+- `src/store/` — Stores de Zustand (auth, cursos, tareas, UI, tema)
 - `src/utils/` — Helpers puros (fechas, estados, notificaciones)
-- `src/data/` — Datos fijos de los cursos
-- `src/Hooks/` — Hooks personalizados (calendario, swipe, búsqueda, media query)
+- `src/data/` — `data.ts` (catálogo de referencia de cursos) y `notifications.json` (histórico)
+- `src/Hooks/` — Hooks personalizados (calendario, swipe, búsqueda, media query, animación de modales)
 - `src/page/` — Páginas (home, selección de curso, dashboard del curso)
 - `src/components/` — Componentes de UI organizados por dominio
 - `src/ProtectedRoutes/` — Guard de autenticación para rutas protegidas
@@ -200,15 +219,17 @@ src/
 ├── types.ts
 ├── index.css
 ├── assets/
+│   ├── gemini-svg.svg
 │   ├── hero.png
-│   ├── react.svg
-│   └── vite.svg
+│   ├── logo_sin_fondo.png
+│   └── react.svg
 ├── data/
 │   ├── data.ts
 │   └── notifications.json
 ├── Hooks/
 │   ├── useDaysInMonth.ts
 │   ├── useMediaQuery.ts        # Hook para detectar media queries
+│   ├── useModalAnimation.ts    # Animación de entrada/salida de modales (Perfil, modales de confirmación)
 │   ├── useMonthDay.ts
 │   ├── useSearchFilter.ts      # Filtro de búsqueda por título/subtítulo
 │   └── useSwipe.ts             # Hook reutilizable para detectar swipe horizontal
@@ -223,6 +244,7 @@ src/
 │   ├── AuthStore.ts
 │   ├── courseStore.ts
 │   ├── taskStorage.ts
+│   ├── themeStore.ts           # Dark mode (clase .dark + persistencia en localStorage)
 │   └── uiStore.ts              # Control de apertura/cierre de modales
 ├── utils/
 │   ├── courseSections.ts
@@ -262,6 +284,8 @@ src/
     │       └── Card/CourseCard.tsx
     ├── SettingsModal/
     │   └── SettingsModal.tsx             # Ajustes + vista "Acerca de"
+    ├── ThemeToggle/
+    │   └── ThemeToggle.tsx               # Interruptor dark mode (sol/luna)
     └── Course/
         ├── Common/
         │   ├── DetailsModal/DetailsModal.tsx  # Detalle de tarea (reusado en toda la app)
@@ -320,17 +344,22 @@ npm run typecheck
 npm run build
 ```
 
+## Despliegue
+
+- `vercel.json` define un rewrite SPA (`/` → `/index.html`) para que el router funcione en Vercel.
+- `index.html` aún mantiene `lang="en"`, título `elian-proyect` y favicon `/favicon2.svg`; si se desea identidad "Intellect", ajustarlos al rebrandear.
+
 ---
 
-# Tarea en curso: Dark Mode (no finalizada)
+# Dark Mode (implementado)
 
-> ⚠️ **IMPORTANTE**: Esta funcionalidad quedó **a medias**. Antes de continuar, revisa las secciones de abajo y termina los pasos pendientes.
+> Estado: **completado y activo**. Guía técnica resumida en `AGENTS.md` (sección "Theming (dark mode)").
 
-## Objetivo
+## Resumen
 
-Añadir un **switch para modo oscuro** que cambie **toda la página** (no solo un componente) en las páginas **home**, **selectcourse** y **course** (dashboard completo: sidebar, calendario, modales, bottom nav, etc.), con un estado global **Zustand** compartido.
+Un **switch para modo oscuro** que cambia **toda la página** (no solo un componente) en las páginas **home**, **selectcourse** y **course** (dashboard completo: sidebar, calendario, modales, bottom nav, etc.), con un estado global **Zustand** compartido (`themeStore`).
 
-### Paleta oscura elegida (variables que deben aplicarse cuando está activo el tema oscuro)
+### Paleta oscura (variables aplicadas cuando el tema oscuro está activo)
 
 | Rol | Valor |
 |---|---|
@@ -355,7 +384,7 @@ Añadir un **switch para modo oscuro** que cambie **toda la página** (no solo u
 - **HamburgerMenu** (mobile): **arriba** del icono de ajustes.
 - **SideNav** (sidebar del Course): **arriba** del icono de ajustes.
 
-## Avance (lo ya hecho) — Dark mode completo ✅
+## Implementación (completado)
 
 - [x] **`themeStore.ts`** (`src/store/themeStore.ts`, Zustand): `isDark`, `toggleTheme()`, `setTheme(dark)`, `initTheme()`. Persiste en `localStorage` (`theme`); `initTheme()` sigue `prefers-color-scheme` la primera vez y aplica/quita `.dark` en `document.documentElement`.
 - [x] **`tailwind.config.ts`:** escalas vars (`gray/blue/green/red/amber/yellow/emerald`) + tokens semánticos (`page`, `surface`, `muted`, `muted-hover`, `muted-strong`, `muted-strong-hover`, `line`, `line-soft`, `ink`, `ink-soft`, `ink-faint`, `brand`, `brand-strong`, `brand-hover`, `brand-soft` 12%, `brand-tint` 8%, `brand-ring` 20%, `brand-faint` 6%, `on-brand`, `danger`), todo vía `rgb(var(--x) / <alpha-value>)`.
@@ -366,18 +395,19 @@ Añadir un **switch para modo oscuro** que cambie **toda la página** (no solo u
 - [x] **`src/page/css/Calendar.css`:** bloque `.dark { ... }` al final que sobreescribe sus propias variables (`--primary`, `--background`, `--surface-container-low`, `--outline`, etc.) + estilos extra (`.day-card.today`, `.modal-task-item:hover`, `.status-success`, `.status-pending`, `.task-pill.green/.orange`).
 - [x] **`src/page/css/Calendar.css`:** la variable de superficie se renombró a **`--cal-surface`**. Antes se llamaba `--surface` (igual que el token semántico global de Tailwind) y, al cargarse este CSS, `bg-surface` compilaba `rgb(#f9f9ff / 1)` (inválido) y todas las modales quedaban transparentes en dark y al volver a light.
 - [x] **`.vscode/settings.json`:** `tailwindCSS.experimental.configFile` ahora apunta a `./tailwind.config.ts` (antes apuntaba a un `.js` inexistente y el IntelliSense no cargaba ningún config).
-- [x] **`src/components/ThemeToggle/ThemeToggle.tsx`:** switch sol/luna que lee `useThemeStore` (clases `text-ink-soft hover:bg-brand-tint hover:text-brand active:scale-95`).
+- [x] **`src/components/ThemeToggle/ThemeToggle.tsx`:** switch sol/luna que lee `useThemeStore` (clases `text-ink-soft hover:bg-brand-tint hover:text-brand active:scale-95`) y llama `toggleThemeAt(x, y)` con la **View Transitions API** para la transición circular desde el centro del icono (con fallback a cambio directo si el navegador no soporta `document.startViewTransition` o hay `prefers-reduced-motion`).
 - [x] **`src/App.tsx`:** `useEffect` llama `useThemeStore.getState().initTheme()`.
 - [x] **Switch colocado** en Header (desktop, antes de ajustes), HamburgerMenu (fila "Modo oscuro") y SideNav (fila "Modo oscuro").
 - [x] **Refactor de ~30 componentes** (`Header`, `Hero`, `SelectCourse`, `Perfil`, `Dashboard`, `SideNav`, `CalendarSection`, `TaskModal`, `DayModal`, `AddTaskSection`, `FormTask`, `SearchDropdown`, `Notification`, `FormSection`, `Register`, `Login`, etc.) reemplazando colores hardcodeados por los tokens semánticos.
 - [x] **`vite.config.ts`:** se añadió `build: { cssMinify: false }`. Era una mitigación para el CSS inválido que generaba `daisyui` 5.7.16 (`.dropdown-content: [object Object]`); queda inerte tras quitar el plugin. ⚠️ Problema **preexistente**, no del dark mode.
 - [x] **`tailwind.config.ts`:** se **eliminó** `plugins: [require('daisyui')]`. No se usa ninguna clase daisyUI y el plugin rompía el build (`lightningcss`) **y** el Tailwind IntelliSense (su `require` en scope ESM hacía fallar la carga del config en la extensión). Con el plugin fuera, el autocompletado de tokens semánticos (`bg-surface`, `text-ink`, etc.) funciona.
 
-## Pendiente ⚠️ (continuar aquí)
+## Verificado / notas
 
-1. **Revisar visualmente** el dark mode completado en las vistas del curso (Dashboard, Calendario, Agregar Tareas) y cerrar los detalles finos de color que queden.
-2. **Ajuste fino del diseño** en curso: header desktop de Home/SelectCourse ya usa `bg-surface/90` (#1A2032 en dark + blur) en vez de `bg-white/85`. Verificar el resto de componentes con fondo que aún use opacidades/tonos no deseados.
+1. **Revisión visual** del dark mode en las vistas del curso (Dashboard, Calendario, Agregar Tareas): completada; los componentes usan tokens semánticos.
+2. **Ajuste fino:** header desktop de Home/SelectCourse usa `bg-surface/90` (#1A2032 en dark + blur) en vez de `bg-white/85`. Seguir usando tokens (nunca hex/rgba sueltos, salvo los permitidos en AGENTS.md).
 3. **Nota:** NUNCA renombrar typos históricos (`AddTaskSection`, `ConfirnDelete`). Mantener capitalización.
+4. `vite.config.ts` conserva `build: { cssMinify: false }`: mitigación inerte del problema preexistente con `daisyui`, hoy innecesaria tras eliminar el plugin (no reintroducir daisyUI).
 
 ## Verificación (causa raíz del error de build)
 

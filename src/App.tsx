@@ -3,36 +3,34 @@ import { BrowserRouter, Routes, Route } from 'react-router'
 import { Layout } from './components/Layout/Layout'
 import DashBoardProtected from './ProtectedRoutes/DashBoardProtected'
 import { useThemeStore } from './store/themeStore'
+import { useAuthStore } from './store/AuthStore'
+import { supabase } from './lib/supabase'
+import { PageLoader } from './page/PageLoader.tsx'
+import { useTaskStore } from './store/taskStorage'
 // Lazy imports: cada página se descarga solo cuando el usuario la visita
 const HomePage = lazy(() => import('./page/home'))
 const CoursePage = lazy(() => import('./page/SelectCourse').then(m => ({ default: m.CoursePage })))
 const Course = lazy(() => import('./page/Course'))
+
 // Pantalla de carga mientras el chunk se descarga
-function PageLoader() {
-  return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: '100vh',
-      background: 'var(--bg-primary, #0f0f1a)',
-    }}>
-      <div style={{
-        width: '40px',
-        height: '40px',
-        border: '3px solid rgba(255,255,255,0.1)',
-        borderTopColor: '#7c3aed',
-        borderRadius: '50%',
-        animation: 'spin 0.7s linear infinite',
-      }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
-  )
-}
+
 
 function App() {
   useEffect(() => {
     useThemeStore.getState().initTheme()
+    useAuthStore.getState().restoreSession()
+    useTaskStore.getState().fetchTasks()
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        useAuthStore.getState().restoreSession()
+        useTaskStore.getState().fetchTasks()
+      }
+      if (event === 'SIGNED_OUT') {
+        useAuthStore.getState().logout()
+      }
+    })
+
+    return () => authListener.subscription.unsubscribe()
   }, [])
 
   return (

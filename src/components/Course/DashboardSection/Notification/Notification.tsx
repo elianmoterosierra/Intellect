@@ -1,14 +1,8 @@
 import { getTaskNotifications } from '../../../../utils/taskNotifications';
-import type { TaskWithCompleted } from '../../../../types';
+import type { NotificationItem, TaskWithCompleted } from '../../../../types';
 
 type NotificationProps = {
     tasks: TaskWithCompleted[];
-};
-
-type NotificationItemProps = {
-    title: string;
-    subtitle: string;
-    type: 'urgent' | 'normal';
 };
 
 export function Notification({ tasks }: NotificationProps) {
@@ -30,7 +24,7 @@ export function Notification({ tasks }: NotificationProps) {
                         key={n.id}
                         title={n.title}
                         subtitle={n.subtitle}
-                        type={n.urgent ? 'urgent' : 'normal'}
+                        urgent={n.urgent}
                     />
                 ))}
             </div>
@@ -38,17 +32,16 @@ export function Notification({ tasks }: NotificationProps) {
     )
 }
 
-export function NotificationItem({ title, subtitle, type }: NotificationItemProps) {
-    const isUrgent = type === 'urgent';
+export function NotificationItem({ title, subtitle, urgent }: Omit<NotificationItem, 'id'>) {
     return (
-        <div className={`p-2 rounded-lg border ${isUrgent
+        <div className={`p-2 rounded-lg border ${urgent
             ? 'bg-red-50 border-l-4 border-danger'
             : 'bg-muted border-line'
             }`}>
-            <p className={`text-sm leading-5 font-semibold ${isUrgent ? 'text-danger' : 'text-ink'}`}>
+            <p className={`text-sm leading-5 font-semibold ${urgent ? 'text-danger' : 'text-ink'}`}>
                 {title.length > 10 ? title.slice(0, 10) + '…' : title}
             </p>
-            <p className={`text-xs leading-4 tracking-wider font-semibold uppercase mt-0.5 ${isUrgent ? 'text-danger opacity-80' : 'text-ink-soft'}`}>
+            <p className={`text-xs leading-4 tracking-wider font-semibold uppercase mt-0.5 ${urgent ? 'text-danger opacity-80' : 'text-ink-soft'}`}>
                 {subtitle}
             </p>
         </div>

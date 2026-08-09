@@ -1,6 +1,6 @@
 import { useTaskStore } from "../../../../store/taskStorage";
 import { useAuthStore } from "../../../../store/AuthStore";
-import { getTaskStatusConfig } from "../../../../utils/taskStatus";
+import { getTaskStatusConfig, getDaysDifference } from "../../../../utils/taskStatus";
 import { useState, useMemo } from "react";
 import { DeleteTask } from "../DeleteTaskButton/DeleteTask";
 import { DetailsModal } from "../../Common/DetailsModal/DetailsModal";
@@ -29,6 +29,31 @@ export function TaskList({ courseId }: TaskListProps) {
         }));
     }, [tasksByCourse, courseId, user]);
 
+    const orderedTasks = useMemo(() => {
+        const byDueDate = (a: TaskWithCompleted, b: TaskWithCompleted) =>
+            new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+
+        const pending = tasks
+            .filter((task) => {
+                if (task.completed) return false;
+                const diff = getDaysDifference(task.dueDate);
+                return diff !== null && diff >= 0;
+            })
+            .sort(byDueDate);
+
+        const completed = tasks.filter((task) => task.completed).sort(byDueDate);
+
+        const overdue = tasks
+            .filter((task) => {
+                if (task.completed) return false;
+                const diff = getDaysDifference(task.dueDate);
+                return diff === null || diff < 0;
+            })
+            .sort(byDueDate);
+
+        return [...pending, ...completed, ...overdue];
+    }, [tasks]);
+
 
     return (
         <>
@@ -38,7 +63,7 @@ export function TaskList({ courseId }: TaskListProps) {
                         Todavía no hay tareas en este curso.
                     </li>
                 ) : (
-                    tasks.map((task) => {
+                    orderedTasks.map((task) => {
                         const status = getTaskStatusConfig(task.dueDate);
                         const isOverdue = status.status === 'overdue';
                         const dateLabel = task.dueDate

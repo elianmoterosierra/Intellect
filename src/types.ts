@@ -28,9 +28,11 @@ export type TaskWithCompleted = Task & { completed: boolean };
 export type TaskStatusMap = Record<string, Record<string, { completed: boolean }>>;
 
 export type User = {
+    id: string;
     name: string;
     email: string;
     password: string;
+
     selectedCourseId: number | null;
     taskStatusByCourse: TaskStatusMap;
 };
@@ -38,7 +40,6 @@ export type User = {
 export type AuthState = {
     isLoggedIn: boolean;
     user: User | null;
-    users: User[];
 };
 
 export type LoginResult = { success: boolean; user?: User; error?: string };

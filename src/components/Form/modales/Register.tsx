@@ -14,7 +14,7 @@ export function Register({ onSwitch, onSuccess }: RegisterProps) {
     const register = useAuthStore((state) => state.register);
     const [error, setError] = useState('');
 
-    const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (name == ('') || email == ('') || password == ('')) return setError('Todos los campos son obligatorios');
         else if (name.length < 3) return setError('El nombre debe tener al menos 3 caracteres');
@@ -25,7 +25,7 @@ export function Register({ onSwitch, onSuccess }: RegisterProps) {
         else if (email.includes(' ')) return setError('El email no puede contener espacios');
 
         else {
-            const result = register({ name, email, password });
+            const result = await register({ name, email, password });
             if (!result.success) return setError(result.error ?? '');
 
             setError('');

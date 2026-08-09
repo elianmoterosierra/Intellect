@@ -13,9 +13,9 @@ export function Login({ onSwitch, onSuccess }: LoginProps) {
     const login = useAuthStore((state) => state.login);
     const [error, setError] = useState('');
 
-    const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const result = login({ email, password });
+        const result = await login({ email, password });
         if (!result.success) {
             setError(result.error ?? '');
             return;

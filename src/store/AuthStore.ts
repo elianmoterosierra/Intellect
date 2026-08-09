@@ -1,123 +1,153 @@
 import { create } from 'zustand';
+import { supabase } from '../lib/supabase';
 
 import type {
     AuthState,
     LoginResult,
     RegisterResult,
+    TaskStatusMap,
     User,
 } from '../types';
 
-const AUTH_KEY = 'auth';
-const USERS_KEY = 'users';
+type UsuarioRow = {
+    id: string;
+    name: string;
+    gmail: string;
+    password: string;
+    selected_course_id: number | null;
+    task_status: TaskStatusMap | null;
+};
 
-type PersistedAuth = Pick<AuthState, 'isLoggedIn' | 'user'>;
-const loggedOutState: PersistedAuth = { isLoggedIn: false, user: null };
-
-function readStorage<T>(key: string, fallback: T): T {
-    try {
-        const saved = localStorage.getItem(key);
-        return saved ? (JSON.parse(saved) as T) : fallback;
-    } catch {
-        return fallback;
-    }
-}
-
-function loadUsers(): User[] {
-    const users = readStorage<User[]>(USERS_KEY, []);
-    return Array.isArray(users) ? users : [];
-}
-
-function loadAuth(): PersistedAuth {
-    const auth = readStorage<PersistedAuth>(AUTH_KEY, loggedOutState);
-    return auth?.isLoggedIn && auth?.user ? auth : loggedOutState;
-}
-
-function saveAuth(user: User): PersistedAuth {
-    const auth = { isLoggedIn: true, user };
-    localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
-    return auth;
+function mapRow(row: UsuarioRow): User {
+    return {
+        id: row.id,
+        name: row.name,
+        email: row.gmail,
+        password: row.password,
+        selectedCourseId: row.selected_course_id,
+        taskStatusByCourse: row.task_status ?? {},
+    };
 }
 
 interface AuthActions {
-    login: (credentials: { email: string; password: string }) => LoginResult;
-    register: (data: { name: string; email: string; password: string }) => RegisterResult;
+    login: (credentials: { email: string; password: string }) => Promise<LoginResult>;
+    register: (data: { name: string; email: string; password: string }) => Promise<RegisterResult>;
+    updateUser: (field: keyof Pick<User, 'name' | 'email' | 'password'>, value: string) => Promise<void>;
     setSelectedCourse: (courseId: number | null) => void;
-    updateUser: (field: keyof Pick<User, 'name' | 'email' | 'password'>, value: string) => void;
+
     toggleTaskStatus: (courseId: number, taskId: string) => void;
-    logout: () => void;
+    logout: () => Promise<void>;
+    fetchProfile: (userId: string) => Promise<User | null>;
+    restoreSession: () => Promise<void>;
 }
 
+const USER_COLUMN_BY_FIELD: Record<keyof Pick<User, 'name' | 'email' | 'password'>, string> = {
+    name: 'name',
+    email: 'gmail',
+    password: 'password',
+};
+
 export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
-    ...loadAuth(),
-    users: loadUsers(),
+    isLoggedIn: false,
+    user: null,
 
-    login: ({ email, password }) => {
+    login: async ({ email, password }) => {
         const normalizedEmail = email.trim().toLowerCase();
-        const user = get().users.find(
-            (candidate) => candidate.email.toLowerCase() === normalizedEmail && candidate.password === password,
-        );
 
-        if (!user) {
-            return { success: false, error: 'El email o la contraseña son incorrectos.' };
-        }
-
-        const auth = saveAuth(user);
-        set(auth);
-        return { success: true, user };
-    },
-
-    register: ({ name, email, password }) => {
-        const normalizedEmail = email.trim().toLowerCase();
-        const users = get().users;
-
-        if (users.some((candidate) => candidate.email.toLowerCase() === normalizedEmail)) {
-            return { success: false, error: 'Ya existe una cuenta con ese email.' };
-        }
-
-        const user = {
-            name: name.trim(),
+        const { data, error } = await supabase.auth.signInWithPassword({
             email: normalizedEmail,
             password,
-            selectedCourseId: null,
-            taskStatusByCourse: {},
-        };
-        const updatedUsers = [...users, user];
-        localStorage.setItem(USERS_KEY, JSON.stringify(updatedUsers));
+        });
 
-        const auth = saveAuth(user);
-        set({ ...auth, users: updatedUsers });
+        if (error || !data.user) {
+            return { success: false, error: "Email o contraseña incorrectos." };
+        }
+
+        const user = await get().fetchProfile(data.user.id);
+        if (!user) {
+            return { success: false, error: "No se encontró el perfil del usuario." };
+        }
+
+        set({ isLoggedIn: true, user });
         return { success: true, user };
     },
 
-    setSelectedCourse: (courseId) => {
+    register: async ({ name, email, password }) => {
+        const normalizedEmail = email.trim().toLowerCase();
+
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: normalizedEmail,
+            password,
+        });
+
+        if (signUpError || !signUpData.user) {
+            console.error('[signUp] error:', signUpError?.status, signUpError?.code, signUpError?.message ?? signUpError);
+            if (signUpError?.status === 429 || signUpError?.code === "over_email_send_rate_limit") {
+                return {
+                    success: false,
+                    error: "Se alcanzó el límite de registros por hora del proyecto. Vuelve a intentarlo en la próxima hora.",
+                };
+            }
+
+            return { success: false, error: signUpError?.message ?? "Error al crear la cuenta." };
+        }
+
+        const { data, error } = await supabase
+            .from("usuarios")
+            .insert([{
+                id: signUpData.user.id,
+                name: name.trim(),
+                gmail: normalizedEmail,
+                password,
+                task_status: {},
+                selected_course_id: null,
+            }])
+            .select("*")
+            .limit(1)
+            .single();
+
+        if (error || !data) {
+            return { success: false, error: "Error al registrar usuario." };
+        }
+
+        const user = mapRow(data as UsuarioRow);
+        set({ isLoggedIn: true, user });
+        return { success: true, user };
+    },
+
+    setSelectedCourse: async (courseId) => {
         const currentUser = get().user;
         if (!currentUser) return;
+
+        await supabase
+            .from('usuarios')
+            .update({ selected_course_id: courseId })
+            .eq('id', currentUser.id);
 
         const user = { ...currentUser, selectedCourseId: courseId };
-        const users = get().users.map((candidate) =>
-            candidate.email === user.email ? user : candidate,
-        );
-
-        localStorage.setItem(USERS_KEY, JSON.stringify(users));
-        const auth = saveAuth(user);
-        set({ ...auth, users });
+        set({ user });
     },
 
-    updateUser: (field, value) => {
+    updateUser: async (field, value) => {
         const currentUser = get().user;
         if (!currentUser) return;
 
-        const updatedUser = { ...currentUser, [field]: value };
-        const users = get().users.map((candidate) =>
-            candidate.email === currentUser.email ? updatedUser : candidate
-        );
+        if (field === 'email' || field === 'password') {
+            const { error } = await supabase.auth.updateUser({ [field]: value });
+            if (error) return;
+        }
 
-        localStorage.setItem(USERS_KEY, JSON.stringify(users));
-        const auth = saveAuth(updatedUser);
-        set({ ...auth, users });
+        const updatedUser = { ...currentUser, [field]: value };
+
+        await supabase
+            .from('usuarios')
+            .update({ [USER_COLUMN_BY_FIELD[field]]: value })
+            .eq('id', currentUser.id);
+
+        set({ user: updatedUser });
     },
 
-    toggleTaskStatus: (courseId, taskId) => {
+    toggleTaskStatus: async (courseId, taskId) => {
         const currentUser = get().user;
         if (!currentUser) return;
 
@@ -129,28 +159,44 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
                 ...currentUser.taskStatusByCourse,
                 [courseId]: {
                     ...courseStatus,
-                    [taskId]: {
-                        ...currentTask,
-                        completed: !currentTask.completed,
-                    },
+                    [taskId]: { ...currentTask, completed: !currentTask.completed },
                 },
             },
         };
-        const users = get().users.map((candidate) =>
-            candidate.email === user.email ? user : candidate
-        );
 
-        localStorage.setItem(USERS_KEY, JSON.stringify(users));
-        localStorage.setItem(
-            AUTH_KEY,
-            JSON.stringify({ isLoggedIn: true, user })
-        );
+        await supabase
+            .from('usuarios')
+            .update({ task_status: user.taskStatusByCourse })
+            .eq('id', currentUser.id);
 
-        set({ user, users });
+        set({ user });
     },
 
-    logout: () => {
-        localStorage.removeItem(AUTH_KEY);
-        set(loggedOutState);
+    logout: async () => {
+        await supabase.auth.signOut();
+        set({ isLoggedIn: false, user: null });
+    },
+
+    fetchProfile: async (userId) => {
+        const { data, error } = await supabase
+            .from("usuarios")
+            .select("*")
+            .eq("id", userId)
+            .limit(1)
+            .single();
+
+        if (error || !data) return null;
+        return mapRow(data as UsuarioRow);
+    },
+
+    restoreSession: async () => {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const sessionUser = sessionData.session?.user;
+        if (!sessionUser) return;
+
+        const user = await get().fetchProfile(sessionUser.id);
+        if (!user) return;
+
+        set({ isLoggedIn: true, user });
     },
 }));

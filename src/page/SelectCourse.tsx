@@ -1,7 +1,9 @@
 import { HeroCourse } from '../components/SelectCourse/Hero/Hero';
-import { CourseCards } from '../components/SelectCourse/Course-card/Course-Card';
 import { useCourseStore } from '../store/courseStore';
 import { useNavigate } from 'react-router';
+import { lazy, Suspense } from 'react'
+
+const CourseCards = lazy(() => import('../components/SelectCourse/Course-card/Course-Card.tsx'));
 
 export function CourseButton({ courseId }: { courseId: number }) {
     const navigate = useNavigate();
@@ -57,7 +59,9 @@ export function CoursePage() {
 
                 {/* Course cards grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <CourseCards />
+                    <Suspense fallback={<div><p className="text-white"> cargando </p></div>}>
+                        <CourseCards />
+                    </Suspense>
                 </div>
 
                 {/* Support section */}

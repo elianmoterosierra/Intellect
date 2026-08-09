@@ -1,15 +1,13 @@
-import { useState, useRef, useEffect, lazy, Suspense } from 'react';
-import type { FormEvent } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { BottomNav } from '../components/Course/DashboardSection/BottomNav(mobile)/BottomNav';
 import { SideNav } from '../components/Course/DashboardSection/SideNav/SideNav';
 import { AppBar } from '../components/Course/DashboardSection/AppBar(mobile)/AppBar';
 import { useParams, Link, Navigate } from 'react-router';
 import { useAuthStore } from '../store/AuthStore';
 import { courseData } from '../data/data';
-import { COURSE_SECTIONS } from '../utils/courseSections';
-import type { SectionKey } from '../utils/courseSections';
-import { useTaskStore } from '../store/taskStorage';
-import { useUIStore } from '../store/uiStore';
+import { useCourseNavigation } from '../Hooks/useCourseNavigation';
+import { useAddTaskModal } from '../Hooks/useAddTaskModal';
+import { useAddTaskForm } from '../Hooks/useAddTaskForm';
 import { AddTaskModal } from '../components/Course/DashboardSection/UpcomingTasks/AddTaskModal/TaskModal';
 import { DetailsModal } from '../components/Course/Common/DetailsModal/DetailsModal';
 import type { TaskWithCompleted } from '../types';
@@ -18,85 +16,20 @@ const CalendarSection = lazy(() => import('../components/Course/CalendarSection/
 const Dashboard = lazy(() => import('../components/Course/DashboardSection/Dashboard'));
 const AddTaskSection = lazy(() => import('../components/Course/AddTaskSection/AddTaskSection'));
 
-function getTodayInputValue() {
-  const today = new Date();
-  const offset = today.getTimezoneOffset();
-  return new Date(today.getTime() - offset * 60_000).toISOString().slice(0, 10);
-}
-
 export default function Course() {
   const { courseId } = useParams();
   const { user } = useAuthStore();
   const course = courseData.find(c => c.id === Number(courseId));
-  const [activeSection, setActiveSection] = useState<SectionKey>(COURSE_SECTIONS.DASHBOARD);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedTask, setSelectedTask] = useState<TaskWithCompleted | null>(null);
 
-  const addTask = useTaskStore((state) => state.addTask);
-  const isAddTaskModalOpen = useUIStore(s => s.isAddTaskModalOpen);
-  const closeAddTaskModal = useUIStore(s => s.closeAddTaskModal);
-  const titleInputRef = useRef<HTMLInputElement | null>(null);
-  const [title, setTitle] = useState('');
-  const [subtitle, setSubtitle] = useState('');
-  const [dueDate, setDueDate] = useState('');
-  const [error, setError] = useState('');
-  const today = getTodayInputValue();
-
-
-  const handleSectionChange = (section: SectionKey): void => {
-    setIsSearchOpen(false);
-    setActiveSection(section);
-  };
-  const closeModal = (): void => {
-    closeAddTaskModal();
-    setError('');
-  };
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
-    event.preventDefault();
-
-    if (!course) return;
-
-    if (subtitle.length > 2000) {
-      setError(`Te has excedido por ${subtitle.length - 2000} caracteres: ${subtitle.length}/2000`);
-      return;
-    }
-
-    if (!title.trim() || !dueDate) {
-      setError('Escribe un título y selecciona una fecha de entrega.');
-      return;
-    }
-
-    const date = new Date(`${dueDate}T23:59:00`);
-    addTask(course.id, {
-      id: crypto.randomUUID(),
-      title: title.trim(),
-      subtitle: subtitle.trim() || 'Sin descripción',
-      dueDate: date.toISOString(),
-      hour: date.toLocaleDateString('es-DO', { day: 'numeric', month: 'short' }),
-    });
-
-    setTitle('');
-    setSubtitle('');
-    setDueDate('');
-    closeModal();
-  };
-
-  useEffect(() => {
-    if (!isAddTaskModalOpen) return;
-
-    titleInputRef.current?.focus();
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        closeAddTaskModal();
-        setError('');
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isAddTaskModalOpen, closeAddTaskModal]);
+  const { activeSection, handleSectionChange, isSearchOpen, setIsSearchOpen, searchQuery, setSearchQuery } = useCourseNavigation();
+  const { isOpen: isAddTaskModalOpen, close: closeAddTaskModal, titleInputRef } = useAddTaskModal();
+  const {
+    title, setTitle,
+    subtitle, setSubtitle,
+    dueDate, setDueDate,
+    today, error, handleSubmit,
+  } = useAddTaskForm(Number(courseId), closeAddTaskModal);
 
   if (String(user?.selectedCourseId) !== courseId) {
     return <Navigate to="/course" replace />;
@@ -163,7 +96,7 @@ export default function Course() {
       <BottomNav activeSection={activeSection} onSectionChange={handleSectionChange} />
 
       {isAddTaskModalOpen && (
-        <AddTaskModal closeModal={closeModal} handleSubmit={handleSubmit} titleInputRef={titleInputRef} title={title} setTitle={setTitle} subtitle={subtitle} setSubtitle={setSubtitle} dueDate={dueDate} setDueDate={setDueDate} today={today} error={error} />
+        <AddTaskModal closeModal={closeAddTaskModal} handleSubmit={handleSubmit} titleInputRef={titleInputRef} title={title} setTitle={setTitle} subtitle={subtitle} setSubtitle={setSubtitle} dueDate={dueDate} setDueDate={setDueDate} today={today} error={error} />
       )}
 
       {selectedTask && (
