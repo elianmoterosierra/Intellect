@@ -12,7 +12,7 @@ export function ButtonLogout({ onClose }: ButtonLogoutProps) {
     const handleLogout = () => {
         logout();
         onClose();
-        window.location.assign("/");
+        ;
     };
     return (
         <button

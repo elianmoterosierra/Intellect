@@ -26,7 +26,7 @@ function App() {
         useTaskStore.getState().fetchTasks()
       }
       if (event === 'SIGNED_OUT') {
-        useAuthStore.getState().logout()
+        useAuthStore.setState({ isLoggedIn: false, user: null }) // ✅ solo actualiza estado, no llama signOut()
       }
     })
 

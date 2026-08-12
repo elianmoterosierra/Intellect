@@ -98,7 +98,7 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
                 id: signUpData.user.id,
                 name: name.trim(),
                 gmail: normalizedEmail,
-                password,
+
                 task_status: {},
                 selected_course_id: null,
             }])
@@ -173,8 +173,9 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
     },
 
     logout: async () => {
-        await supabase.auth.signOut();
-        set({ isLoggedIn: false, user: null });
+        const { error } = await supabase.auth.signOut();
+        if (error) console.error('[logout] error:', error.message);
+
     },
 
     fetchProfile: async (userId) => {
