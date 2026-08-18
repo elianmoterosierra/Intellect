@@ -25,8 +25,8 @@ export function HamburgerMenu({ onClose, onOpenForm, onOpenPerfil, onOpenSetting
         }`
 
     const handleCoursesClick = () => {
+        onClose();
         if (!isLoggedIn) {
-            onClose();
             onOpenForm();
         }
     };

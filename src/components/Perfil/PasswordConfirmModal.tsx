@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuthStore } from '../../store/AuthStore'
 import { useModalAnimation } from '../../Hooks/useModalAnimation'
+import { supabase } from '../../lib/supabase'
 
 type PasswordConfirmModalProps = {
     fieldLabel: string;
@@ -14,8 +15,17 @@ export function PasswordConfirmModal({ fieldLabel, onSuccess, onCancel }: Passwo
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
 
-    const handleConfirm = () => {
-        if (password !== user?.password) {
+    const handleConfirm = async () => {
+        if (!user?.email) {
+            setError('No se pudo verificar la sesión')
+            return
+        }
+
+        const { error } = await supabase.auth.signInWithPassword({
+            email: user.email,
+            password,
+        })
+        if (error) {
             setError('Contraseña incorrecta')
             return
         }

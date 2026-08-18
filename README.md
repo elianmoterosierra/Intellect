@@ -7,6 +7,7 @@ Aplicación web de gestión académica creada con React, Vite y Supabase, acompa
 - Registro, inicio y cierre de sesión seguro mediante **Supabase Auth** y sincronización de perfiles en la tabla `public.usuarios`.
 - Envío automático de correo de bienvenida tras el registro mediante el servidor backend Express y Nodemailer.
 - Un curso seleccionado por cada usuario (sincronizado en `usuarios.selected_course_id`).
+- Modal de seguridad (`CourseAccessModal`) que solicita un código de verificación (`code_verification`) para validar y autorizar la unión de un usuario a un curso.
 - Catálogo de cursos cargado en tiempo real desde Supabase (`public.cursos`) en la página de selección; `data.ts` se conserva como referencia estática para el detalle del dashboard.
 - Creación de tareas compartidas persistidas en Supabase (`public.tasks`) para todos los miembros de un curso.
 - Modal único de creación de tareas (`AddTaskModal/TaskModal.tsx`) reusado desde el dashboard y la sección "Agregar Tareas".
@@ -88,8 +89,9 @@ taskStatusByCourse: {
 
 Mantiene el estado visual del curso seleccionado y lo sincroniza con `user.selectedCourseId` de `AuthStore` y la base de datos:
 
-- `handleSelect(courseId)` actualiza `selected_course_id` en Supabase y el store.
-- `handleLeave(courseId)` desvincula el curso asociado al usuario.
+- `verifyAndSelect(courseId, code)`: valida el código de seguridad contra la columna `code_verification` en `public.cursos` de Supabase; si es válido, ejecuta `handleSelect(courseId)` para unirse al curso.
+- `handleSelect(courseId)`: actualiza `selected_course_id` en Supabase y el store.
+- `handleLeave(courseId)`: desvincula el curso asociado al usuario.
 
 ### Tareas — `src/store/taskStorage.ts`
 
@@ -298,6 +300,8 @@ src/
     │   └── PasswordConfirmModal.tsx      # Confirmación de contraseña previa
     ├── SelectCourse/
     │   ├── Hero/Hero.tsx
+    │   ├── CourseAccessModal/
+    │   │   └── CourseAccessModal.tsx     # Modal de seguridad con código para unirse al curso
     │   └── Course-card/
     │       ├── Course-Card.tsx
     │       └── Card/CourseCard.tsx

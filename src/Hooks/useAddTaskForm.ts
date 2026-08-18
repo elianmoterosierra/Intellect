@@ -16,6 +16,7 @@ export function useAddTaskForm(courseId: number, onClose: () => void) {
     const [subtitle, setSubtitle] = useState('');
     const [dueDate, setDueDate] = useState('');
     const [error, setError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const today = getTodayInputValue();
 
     const [wasModalOpen, setWasModalOpen] = useState(isModalOpen);
@@ -25,8 +26,9 @@ export function useAddTaskForm(courseId: number, onClose: () => void) {
     }
     if (!wasModalOpen && isModalOpen) setWasModalOpen(true);
 
-    const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
         event.preventDefault();
+        if (isSubmitting) return;
 
         if (!courseId) return;
 
@@ -35,19 +37,26 @@ export function useAddTaskForm(courseId: number, onClose: () => void) {
             return;
         }
 
-        if (!title.trim() || !dueDate) {
-            setError('Escribe un título y selecciona una fecha de entrega.');
+        if (!title.trim() || !subtitle.trim() || !dueDate) {
+            setError('Completa el título, la descripción y la fecha de entrega.');
             return;
         }
 
         const date = new Date(`${dueDate}T23:59:00`);
-        addTask(courseId, {
+        setIsSubmitting(true);
+        const saved = await addTask(courseId, {
             id: crypto.randomUUID(),
             title: title.trim(),
-            subtitle: subtitle.trim() || 'Sin descripción',
+            subtitle: subtitle.trim(),
             dueDate: date.toISOString(),
             hour: date.toLocaleDateString('es-DO', { day: 'numeric', month: 'short' }),
         });
+        setIsSubmitting(false);
+
+        if (!saved) {
+            setError('No se pudo guardar la tarea. Inténtalo de nuevo.');
+            return;
+        }
 
         setTitle('');
         setSubtitle('');

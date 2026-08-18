@@ -31,7 +31,6 @@ export type User = {
     id: string;
     name: string;
     email: string;
-    password: string;
 
     selectedCourseId: number | null;
     taskStatusByCourse: TaskStatusMap;
@@ -39,6 +38,7 @@ export type User = {
 
 export type AuthState = {
     isLoggedIn: boolean;
+    sessionReady: boolean;
     user: User | null;
 };
 

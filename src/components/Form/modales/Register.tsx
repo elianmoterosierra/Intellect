@@ -13,9 +13,11 @@ export function Register({ onSwitch, onSuccess }: RegisterProps) {
     const [password, setPassword] = useState('');
     const register = useAuthStore((state) => state.register);
     const [error, setError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (isSubmitting) return;
         if (name == ('') || email == ('') || password == ('')) return setError('Todos los campos son obligatorios');
         else if (name.length < 3) return setError('El nombre debe tener al menos 3 caracteres');
         else if (password.length < 6) return setError('La contraseña debe tener al menos 6 caracteres');
@@ -25,7 +27,9 @@ export function Register({ onSwitch, onSuccess }: RegisterProps) {
         else if (email.includes(' ')) return setError('El email no puede contener espacios');
 
         else {
+            setIsSubmitting(true);
             const result = await register({ name, email, password });
+            setIsSubmitting(false);
             if (!result.success) return setError(result.error ?? '');
 
             setError('');
@@ -62,10 +66,11 @@ export function Register({ onSwitch, onSuccess }: RegisterProps) {
             />
             <button
                 type="submit"
+                disabled={isSubmitting}
                 className="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-semibold py-3 rounded-xl transition-all duration-200 text-sm animate-inputIn"
                 style={{ animationDelay: '0.4s', animationFillMode: 'both' }}
             >
-                Register
+                {isSubmitting ? 'Registrando…' : 'Register'}
             </button>
             <span className="text-sm text-red-500 animate-inputIn" style={{ animationDelay: '0.5s', animationFillMode: 'both' }}>{error}</span>
 

@@ -22,7 +22,7 @@ function rowToTask(row: { id: string; course_id: number; title: string; subtitle
 interface TaskStore {
     tasksByCourse: TasksByCourse;
     fetchTasks: () => Promise<TasksByCourse>;
-    addTask: (courseId: string | number, task: Task) => Promise<void>;
+    addTask: (courseId: string | number, task: Task) => Promise<boolean>;
     deleteTask: (courseId: string | number, taskId: string) => Promise<void>;
 
 }
@@ -76,7 +76,7 @@ export const useTaskStore = create<TaskStore>((set) => ({
 
         if (error || !data) {
             console.error('Error adding task:', error);
-            return;
+            return false;
         }
         set((state) => ({
             tasksByCourse: {
@@ -87,6 +87,7 @@ export const useTaskStore = create<TaskStore>((set) => ({
                 ],
             },
         }));
+        return true;
 
     },
     deleteTask: async (courseId, taskId) => {

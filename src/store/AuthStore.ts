@@ -13,7 +13,6 @@ type UsuarioRow = {
     id: string;
     name: string;
     gmail: string;
-    password: string;
     selected_course_id: number | null;
     task_status: TaskStatusMap | null;
 };
@@ -23,7 +22,6 @@ function mapRow(row: UsuarioRow): User {
         id: row.id,
         name: row.name,
         email: row.gmail,
-        password: row.password,
         selectedCourseId: row.selected_course_id,
         taskStatusByCourse: row.task_status ?? {},
     };
@@ -32,8 +30,9 @@ function mapRow(row: UsuarioRow): User {
 interface AuthActions {
     login: (credentials: { email: string; password: string }) => Promise<LoginResult>;
     register: (data: { name: string; email: string; password: string }) => Promise<RegisterResult>;
-    updateUser: (field: keyof Pick<User, 'name' | 'email' | 'password'>, value: string) => Promise<void>;
-    setSelectedCourse: (courseId: number | null) => void;
+    updateUser: (field: EditableUserField, value: string) => Promise<boolean>;
+    setSelectedCourse: (courseId: number | null) => Promise<boolean>;
+    setSelectedCourseLocal: (courseId: number | null) => void;
 
     toggleTaskStatus: (courseId: number, taskId: string) => void;
     logout: () => Promise<void>;
@@ -41,14 +40,16 @@ interface AuthActions {
     restoreSession: () => Promise<void>;
 }
 
-const USER_COLUMN_BY_FIELD: Record<keyof Pick<User, 'name' | 'email' | 'password'>, string> = {
+type EditableUserField = 'name' | 'email' | 'password';
+
+const USER_COLUMN_BY_FIELD: Record<'name' | 'email', string> = {
     name: 'name',
     email: 'gmail',
-    password: 'password',
 };
 
 export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
     isLoggedIn: false,
+    sessionReady: false,
     user: null,
 
     login: async ({ email, password }) => {
@@ -142,34 +143,46 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
 
     setSelectedCourse: async (courseId) => {
         const currentUser = get().user;
-        if (!currentUser) return;
+        if (!currentUser) return false;
 
-        await supabase
+        const { error } = await supabase
             .from('usuarios')
             .update({ selected_course_id: courseId })
             .eq('id', currentUser.id);
+        if (error) return false;
 
         const user = { ...currentUser, selectedCourseId: courseId };
         set({ user });
+        return true;
     },
 
-    updateUser: async (field, value) => {
+    setSelectedCourseLocal: (courseId) => {
         const currentUser = get().user;
         if (!currentUser) return;
+        set({ user: { ...currentUser, selectedCourseId: courseId } });
+    },
+
+    updateUser: async (field: EditableUserField, value) => {
+        const currentUser = get().user;
+        if (!currentUser) return false;
 
         if (field === 'email' || field === 'password') {
             const { error } = await supabase.auth.updateUser({ [field]: value });
-            if (error) return;
+            if (error) return false;
         }
 
         const updatedUser = { ...currentUser, [field]: value };
 
-        await supabase
-            .from('usuarios')
-            .update({ [USER_COLUMN_BY_FIELD[field]]: value })
-            .eq('id', currentUser.id);
+        if (field !== 'password') {
+            const { error } = await supabase
+                .from('usuarios')
+                .update({ [USER_COLUMN_BY_FIELD[field]]: value })
+                .eq('id', currentUser.id);
+            if (error) return false;
+        }
 
-        set({ user: updatedUser });
+        set({ user: field === 'password' ? currentUser : updatedUser });
+        return true;
     },
 
     toggleTaskStatus: async (courseId, taskId) => {
@@ -200,7 +213,7 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
     logout: async () => {
         const { error } = await supabase.auth.signOut();
         if (error) console.error('[logout] error:', error.message);
-
+        if (!error) set({ isLoggedIn: false, user: null });
     },
 
     fetchProfile: async (userId) => {
@@ -216,13 +229,23 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
     },
 
     restoreSession: async () => {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const sessionUser = sessionData.session?.user;
-        if (!sessionUser) return;
+        try {
+            const { data: sessionData } = await supabase.auth.getSession();
+            const sessionUser = sessionData.session?.user;
+            if (!sessionUser) {
+                set({ isLoggedIn: false, user: null });
+                return;
+            }
 
-        const user = await get().fetchProfile(sessionUser.id);
-        if (!user) return;
+            const user = await get().fetchProfile(sessionUser.id);
+            if (!user) {
+                set({ isLoggedIn: false, user: null });
+                return;
+            }
 
-        set({ isLoggedIn: true, user });
+            set({ isLoggedIn: true, user });
+        } finally {
+            set({ sessionReady: true });
+        }
     },
 }));

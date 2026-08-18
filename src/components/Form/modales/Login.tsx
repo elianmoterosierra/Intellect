@@ -12,10 +12,14 @@ export function Login({ onSwitch, onSuccess }: LoginProps) {
     const [password, setPassword] = useState('');
     const login = useAuthStore((state) => state.login);
     const [error, setError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (isSubmitting) return;
+        setIsSubmitting(true);
         const result = await login({ email, password });
+        setIsSubmitting(false);
         if (!result.success) {
             setError(result.error ?? '');
             return;
@@ -45,10 +49,11 @@ export function Login({ onSwitch, onSuccess }: LoginProps) {
             />
             <button
                 type="submit"
+                disabled={isSubmitting}
                 className="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-semibold py-3 rounded-xl transition-all duration-200 text-sm animate-inputIn"
                 style={{ animationDelay: '0.3s', animationFillMode: 'both' }}
             >
-                Login
+                {isSubmitting ? 'Iniciando sesión…' : 'Login'}
             </button>
 
             {error && <span className="text-sm text-red-500">{error}</span>}

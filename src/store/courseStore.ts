@@ -12,8 +12,9 @@ function selectedCourseStatus(): Record<string, ButtonStatus> {
 interface CourseStore {
     buttonStatus: Record<string, ButtonStatus>;
     syncFromAuth: () => void;
-    handleSelect: (courseId: number) => void;
+    handleSelect: (courseId: number) => Promise<boolean>;
     handleLeave: (courseId: number) => boolean;
+    verifyAndSelect: (courseId: number, code: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 export const useCourseStore = create<CourseStore>((set) => ({
@@ -24,7 +25,10 @@ export const useCourseStore = create<CourseStore>((set) => ({
     handleSelect: async (courseId) => {
         set({ buttonStatus: { [courseId]: 'processing' } });
         const user = useAuthStore.getState().user;
-        if (!user) return;
+        if (!user) {
+            set({ buttonStatus: {} });
+            return false;
+        }
         const { data, error } = await supabase
             .from('usuarios')
             .update({ selected_course_id: courseId })
@@ -33,11 +37,29 @@ export const useCourseStore = create<CourseStore>((set) => ({
             .single();
         if (error || !data) {
             set({ buttonStatus: {} });
-            return;
+            return false;
         }
-        useAuthStore.getState().setSelectedCourse(data.selected_course_id);
+        useAuthStore.getState().setSelectedCourseLocal(data.selected_course_id);
         set({ buttonStatus: { [courseId]: 'selected' } });
+        return true;
     },
+    verifyAndSelect: async (courseId: number, code: string): Promise<{ success: boolean; error?: string }> => {
+        const { data: isValid, error: rpcError } = await supabase
+            .from('cursos')
+            .select('id')
+            .eq('id', courseId)
+            .eq('code_verification', code.trim())
+            .single();
+        if (rpcError || !isValid) {
+            return { success: false, error: 'Código de acceso incorrecto' };
+        }
+
+        const selected = await useCourseStore.getState().handleSelect(courseId);
+        return selected
+            ? { success: true }
+            : { success: false, error: 'No se pudo seleccionar el curso. Inténtalo de nuevo.' };
+    },
+
 
     handleLeave: (courseId) => {
         const selectedCourseId = useAuthStore.getState().user?.selectedCourseId;

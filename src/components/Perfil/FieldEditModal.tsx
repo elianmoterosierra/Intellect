@@ -17,7 +17,7 @@ type FieldEditModalProps = {
 };
 
 export function FieldEditModal({ field, onCancel }: FieldEditModalProps) {
-    const { user, updateUser } = useAuthStore()
+    const { updateUser } = useAuthStore()
     const { handleClose, overlayClass, modalClass, animationStyle } = useModalAnimation({ onClose: onCancel })
     const config = INPUT_CONFIG[field]
     const [value, setValue] = useState('')
@@ -32,18 +32,28 @@ export function FieldEditModal({ field, onCancel }: FieldEditModalProps) {
 
         if (field === 'email') {
             const normalized = trimmed.toLowerCase()
-            const { data: duplicate } = await supabase
-                .from('usuarios')
-                .select('id')
-                .eq('gmail', normalized)
-                .maybeSingle()
-            if (duplicate && duplicate.id !== user?.id) {
+            const { data: isTaken, error: checkError } = await supabase.rpc('is_gmail_taken', {
+                p_gmail: normalized,
+            })
+            if (checkError) {
+                setError('No se pudo verificar el email. Inténtalo de nuevo.')
+                return
+            }
+            if (isTaken) {
                 setError('Este email ya está registrado')
                 return
             }
-            await updateUser('email', normalized)
+            const updated = await updateUser('email', normalized)
+            if (!updated) {
+                setError('No se pudo actualizar el email. Inténtalo de nuevo.')
+                return
+            }
         } else {
-            await updateUser(field, trimmed)
+            const updated = await updateUser(field, trimmed)
+            if (!updated) {
+                setError('No se pudo actualizar el perfil. Inténtalo de nuevo.')
+                return
+            }
         }
 
         onCancel()

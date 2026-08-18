@@ -1,6 +1,10 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useCourseStore } from '../../../../store/courseStore';
 import type { ReactNode } from 'react';
+import { CourseAccessModal } from '../../CourseAccessModal/CourseAccessModal'
+    ;
+
 
 const btnBase = "flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg font-semibold cursor-pointer border-none transition-all duration-200 text-sm";
 
@@ -14,7 +18,7 @@ type CourseCardProps = {
 export function CourseCard({ title, description, icon, courseId }: CourseCardProps) {
     const navigate = useNavigate();
     const buttonStatus = useCourseStore(s => s.buttonStatus);
-    const handleSelect = useCourseStore(s => s.handleSelect);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const status = buttonStatus[courseId] || 'idle';
     const anySelected = Object.values(buttonStatus).some(s => s === 'selected');
@@ -46,7 +50,7 @@ export function CourseCard({ title, description, icon, courseId }: CourseCardPro
     } else {
         button = (
             <button
-                onClick={() => handleSelect(courseId)}
+                onClick={() => setIsModalOpen(true)}
                 className={`${btnBase} bg-brand-strong text-white hover:bg-brand-hover`}
             >
                 Seleccionar Curso
@@ -55,13 +59,27 @@ export function CourseCard({ title, description, icon, courseId }: CourseCardPro
     }
 
     return (
-        <div className="bg-surface border border-gray-200 rounded-2xl p-7 flex flex-col h-full shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:border-brand-ring focus-within:outline focus-within:outline-2 focus-within:outline-brand focus-within:outline-offset-2">
-            <div className="w-[52px] h-[52px] rounded-xl flex items-center justify-center mb-5 bg-brand-soft text-brand transition-transform duration-300 group-hover:scale-105">
-                <span className="material-symbols-outlined" style={{ fontSize: '30px' }}>{icon}</span>
+        <>
+            <div className="bg-surface border border-gray-200 rounded-2xl p-7 flex flex-col h-full shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:border-brand-ring focus-within:outline focus-within:outline-2 focus-within:outline-brand focus-within:outline-offset-2">
+                <div className="w-[52px] h-[52px] rounded-xl flex items-center justify-center mb-5 bg-brand-soft text-brand transition-transform duration-300 group-hover:scale-105">
+                    <span className="material-symbols-outlined" style={{ fontSize: '30px' }}>{icon}</span>
+                </div>
+                <h3 className="text-xl font-semibold text-ink mb-2">{title}</h3>
+                <p className="text-sm text-ink-soft mb-6 flex-grow leading-[22px]">{description}</p>
+                {button}
             </div>
-            <h3 className="text-xl font-semibold text-ink mb-2">{title}</h3>
-            <p className="text-sm text-ink-soft mb-6 flex-grow leading-[22px]">{description}</p>
-            {button}
-        </div>
+
+            {isModalOpen && (
+                <CourseAccessModal
+                    courseId={courseId}
+                    courseTitle={title}
+                    onSuccess={() => {
+                        setIsModalOpen(false);
+                        navigate(`/course-dashboard/${courseId}`);
+                    }}
+                    onClose={() => setIsModalOpen(false)}
+                />
+            )}
+        </>
     );
 }

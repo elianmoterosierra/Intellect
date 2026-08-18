@@ -8,11 +8,17 @@ type DashBoardProtectedProps = {
 
 export default function DashBoardProtected({ children }: DashBoardProtectedProps) {
 
-    const { isLoggedIn } = useAuthStore();
+    const { isLoggedIn, sessionReady } = useAuthStore();
+
+    if (!sessionReady) {
+        return <div className="min-h-screen bg-page" aria-busy="true" />;
+    }
 
     if (!isLoggedIn) {
         return <Navigate to="/" replace />;
     }
+
+
 
     return children;
 }
