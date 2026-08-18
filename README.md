@@ -1,27 +1,27 @@
 # Intellect — Plataforma de Gestión Académica
 
-Aplicación web de gestión académica creada con React y Vite. Permite registrar usuarios, seleccionar un curso, crear y organizar tareas, consultar un calendario mensual y recibir notificaciones basadas en las fechas de entrega. Todo el estado se persiste en `localStorage` (sin backend propio); únicamente el catálogo de cursos de la página de selección se obtiene de una API local (ver [Catálogo de cursos](#catálogo-de-cursos-api-externa)).
+Aplicación web de gestión académica creada con React, Vite y Supabase, acompañada de un backend en Node/Express para servicios auxiliares (como envío de correos). Permite registrar usuarios, seleccionar un curso, crear y organizar tareas compartidas, consultar un calendario mensual interactivo y recibir notificaciones basadas en las fechas de entrega. La persistencia de datos (usuarios, tareas, cursos y progreso) se gestiona a través de Supabase, mientras que el tema visual y estados de sesión efímeros se manejan localmente.
 
 ## Funcionalidades
 
-- Registro, inicio y cierre de sesión con persistencia local.
-- Un curso seleccionado por cada usuario.
-- Catálogo de cursos cargado desde una API local (`http://localhost:3000/cursos`) en la página de selección; `data.ts` queda como catálogo estático de referencia (fuera del árbol de navegación solo se consulta al entrar al dashboard).
-- Creación de tareas compartidas por todos los miembros de un curso.
+- Registro, inicio y cierre de sesión seguro mediante **Supabase Auth** y sincronización de perfiles en la tabla `public.usuarios`.
+- Envío automático de correo de bienvenida tras el registro mediante el servidor backend Express y Nodemailer.
+- Un curso seleccionado por cada usuario (sincronizado en `usuarios.selected_course_id`).
+- Catálogo de cursos cargado en tiempo real desde Supabase (`public.cursos`) en la página de selección; `data.ts` se conserva como referencia estática para el detalle del dashboard.
+- Creación de tareas compartidas persistidas en Supabase (`public.tasks`) para todos los miembros de un curso.
 - Modal único de creación de tareas (`AddTaskModal/TaskModal.tsx`) reusado desde el dashboard y la sección "Agregar Tareas".
 - Descripción con textarea de auto-resize hasta 6 líneas, contador de caracteres en vivo y botón Guardar bloqueado al superar el límite de 2000 caracteres en el modal de creación.
 - Sección dedicada para la visualización y gestión de "Agregar Tareas" (`AddTaskSection`).
 - Eliminación de tareas del curso desde la sección "Agregar Tareas", con confirmación previa en `ConfirnDelete/ConfirmDelete.tsx`.
 - Modal de detalle de tarea (`Common/DetailsModal`) integrado en todos los listados, con estado `completed` en vivo desde el store.
 - Constantes centralizadas para la gestión de secciones (`courseSections.ts`).
-- Completado individual de tareas desde el dashboard, el calendario y el modal de detalle.
-- Tareas y progreso guardados en `localStorage`.
+- Completado individual de tareas desde el dashboard, el calendario y el modal de detalle (persistido en `usuarios.task_status` en Supabase).
 - Resumen automático de tareas completadas, pendientes y progreso.
 - Notificaciones dinámicas para tareas pendientes **no vencidas**, ordenadas por fecha de entrega (urgentes si vencen hoy o mañana).
 - "Próximas Tareas" ordena el listado con `useMemo`: primero las pendientes no vencidas por fecha de entrega y luego las completadas.
 - Estado visual para tareas vencidas: fondo rojo y texto blanco.
 - Calendario mensual que muestra las tareas según su fecha de entrega. Al hacer clic en una tarea del día se cierra el modal del día y se abre el detalle.
-- Selector de mes del calendario con botón "Hoy", atajo para volver al mes actual, persistencia del último mes visto por curso entre recargas, y swipe horizontal en móvil.
+- Selector de mes del calendario con botón "Hoy", atajo para volver al mes actual, persistencia del último mes visto por curso entre recargas (`sessionStorage`), y swipe horizontal en móvil.
 - Scroll infinito en el calendario móvil con carga perezosa de meses via IntersectionObserver, skeleton grid de aspect-square (sin saltos visuales), y ajuste automático del scroll al anteponer meses (forceVisible + useLayoutEffect).
 - Grid de 2 columnas en mobile (repeat 2, 1fr) y 4 en desktop.
 - DayCard con aspect-square en mobile, título truncado a 20 caracteres y máximo 3 tareas visibles.
@@ -38,13 +38,16 @@ Aplicación web de gestión académica creada con React y Vite. Permite registra
 | Herramienta | Propósito |
 |---|---|
 | React 19 | Interfaz de usuario |
-| Vite 8 | Servidor de desarrollo y build |
+| Vite 8 | Servidor de desarrollo y build de frontend |
 | TypeScript | Tipado estático estricto (`strict`, `noUncheckedIndexedAccess`) |
 | `@vitejs/plugin-react` + `@rolldown/plugin-babel` | Pipeline de React con Babel |
 | `babel-plugin-react-compiler` | React Compiler (memoización automática) |
 | React Router 8 | Rutas de la SPA |
-| Zustand 5 | Estado global y persistencia local |
-| Tailwind CSS 3 | Estilos y animaciones |
+| Zustand 5 | Estado global reactivo |
+| Supabase (`supabase-js`) | Base de datos PostgreSQL, Auth y Row Level Security (RLS) |
+| Node.js + Express 5 | Servidor backend para APIs auxiliares (`http://localhost:3000`) |
+| Nodemailer + Zod | Envío de correos transaccionales y validación de esquemas |
+| Tailwind CSS 3 | Estilos semánticos y animaciones |
 | ESLint + typescript-eslint | Análisis estático del código |
 
 ## Rutas
@@ -59,19 +62,19 @@ Las páginas principales, secciones y el calendario se cargan con `React.lazy()`
 
 ## Estado y persistencia
 
-### Autenticación — `src/store/AuthStore.ts`
+### Autenticación y Perfil — `src/store/AuthStore.ts`
 
-Gestiona los usuarios y la sesión actual en `localStorage`:
+Gestiona las credenciales mediante **Supabase Auth** y el perfil en la tabla `public.usuarios`:
 
-- `users`: cuentas registradas.
-- `auth`: sesión activa con `isLoggedIn` y `user`.
-- `login({ email, password })` e `register({ name, email, password })`.
-- `logout()` para cerrar sesión.
-- `setSelectedCourse(courseId)` para asociar el curso seleccionado al usuario.
-- `toggleTaskStatus(courseId, taskId)` para guardar el estado individual de una tarea.
-- `updateUser(field, value)` para editar nombre, email o contraseña del perfil.
+- `login({ email, password })`: autenticación JWT vía `supabase.auth.signInWithPassword`.
+- `register({ name, email, password })`: crea la cuenta en `supabase.auth.signUp`, inserta la fila en `usuarios` (`id`, `name`, `gmail`) y envía un email de bienvenida mediante el endpoint backend `POST /api/email/send`.
+- `logout()`: revoca la sesión con `supabase.auth.signOut()`.
+- `restoreSession()`: sincroniza la sesión al arrancar la app o ante eventos de `onAuthStateChange`.
+- `setSelectedCourse(courseId)`: actualiza `usuarios.selected_course_id`.
+- `toggleTaskStatus(courseId, taskId)`: conmuta el estado de completado en `usuarios.task_status`.
+- `updateUser(field, value)`: actualiza el nombre en `usuarios` y sincroniza email o contraseña en `supabase.auth.updateUser`.
 
-Cada perfil guarda su progreso en `user.taskStatusByCourse`, sin modificar la tarea compartida:
+Cada perfil guarda su progreso individual en el campo jsonb `usuarios.task_status` (mapeado a `user.taskStatusByCourse`):
 
 ```js
 taskStatusByCourse: {
@@ -81,21 +84,20 @@ taskStatusByCourse: {
 }
 ```
 
-> La autenticación es local y de demostración. Las contraseñas se almacenan en `localStorage`; no es adecuada para producción sin un backend seguro.
-
 ### Curso — `src/store/courseStore.ts`
 
-Mantiene el estado visual del curso seleccionado y lo sincroniza con `user.selectedCourseId` de `AuthStore`.
+Mantiene el estado visual del curso seleccionado y lo sincroniza con `user.selectedCourseId` de `AuthStore` y la base de datos:
 
-- `handleSelect(courseId)` selecciona un curso.
-- `handleLeave(courseId)` elimina el curso asociado a la sesión.
+- `handleSelect(courseId)` actualiza `selected_course_id` en Supabase y el store.
+- `handleLeave(courseId)` desvincula el curso asociado al usuario.
 
 ### Tareas — `src/store/taskStorage.ts`
 
-Es la única fuente de las definiciones de tareas. Las guarda bajo la clave `tasksByCourse` en `localStorage` y las agrupa por curso, por lo que todos los usuarios del mismo curso ven la misma lista.
+Persiste las definiciones de tareas en la tabla `public.tasks` de Supabase:
 
-- `addTask(courseId, task)` crea una tarea.
-- `deleteTask(courseId, taskId)` elimina una tarea.
+- `fetchTasks()` obtiene todas las tareas de la base de datos y las indexa por `courseId` en memoria.
+- `addTask(courseId, task)` inserta la tarea en Supabase y actualiza el estado local.
+- `deleteTask(courseId, taskId)` elimina la tarea de Supabase y del estado local.
 
 ### UI — `src/store/uiStore.ts`
 
@@ -130,14 +132,12 @@ Cada tarea incluye, como mínimo:
 
 ### Tareas compartidas y progreso individual
 
-La aplicación combina las tareas de `tasksByCourse[courseId]` con `user.taskStatusByCourse[courseId]` antes de renderizar el dashboard, calendario o notificaciones. De este modo, si un estudiante completa una tarea, los demás estudiantes del curso continúan viéndola como pendiente.
+La aplicación combina las tareas de `tasksByCourse[courseId]` (de `taskStorage.ts`) con `user.taskStatusByCourse[courseId]` (de `AuthStore.ts`) antes de renderizar el dashboard, calendario o notificaciones. De este modo, si un estudiante completa una tarea, los demás estudiantes del curso continúan viéndola como pendiente.
 
-## Catálogo de cursos (API externa)
+## Catálogo de cursos
 
-> ⚠️ Dependencia externa: la página de selección **requiere la API local corriendo** en `http://localhost:3000` para listar los cursos.
-
-- `src/components/SelectCourse/Course-card/Course-Card.tsx` hace `fetch('http://localhost:3000/cursos')` al montar, guarda el resultado en estado local (`useState<Course[]>`) y mapea cada curso a `CourseCard`. No usa `data.ts`.
-- `src/data/data.ts` (`courseData`) ya **no alimenta** la lista de selección; solo se usa como referencia en `Course.tsx` (`courseData.find(...)`) para resolver los datos del curso al entrar al dashboard.
+- `src/components/SelectCourse/Course-card/Course-Card.tsx` consulta en tiempo real `supabase.from("cursos").select("id, title, description, icon")` al montar el componente y renderiza las tarjetas `CourseCard`.
+- `src/data/data.ts` (`courseData`) se utiliza como catálogo de respaldo y referencia en `Course.tsx` para resolver metadatos al renderizar el dashboard del curso.
 - Los arrays `notification` de cada `Course` y `src/data/notifications.json` no se leen en runtime (históricos/referencia).
 
 ## Estados de tareas
@@ -213,6 +213,19 @@ La estructura completa de archivos se detalla en la sección siguiente. Los dire
 ## Rutas de archivos
 
 ```text
+backend/
+├── server.ts                 # Servidor Express (puerto 3000)
+├── api/
+│   └── Config.ts             # Configuración de transporte SMTP con Nodemailer
+├── controller/
+│   └── emailController.ts    # Controlador de envío de emails
+├── middleware/
+│   └── validar.ts            # Middleware de validación con Zod
+├── models/
+│   └── emailSchema.ts        # Esquema de validación para correo
+└── routes/
+    └── emailRoutes.ts        # Rutas (/api/email/send)
+
 src/
 ├── App.tsx
 ├── main.tsx
@@ -227,28 +240,34 @@ src/
 │   ├── data.ts
 │   └── notifications.json
 ├── Hooks/
+│   ├── useAddTaskForm.ts     # Manejo del formulario de creación de tarea
+│   ├── useAddTaskModal.ts    # Estado y autofocus para el modal de tareas
+│   ├── useCourseNavigation.ts# Navegación entre secciones y buscador del curso
 │   ├── useDaysInMonth.ts
-│   ├── useMediaQuery.ts        # Hook para detectar media queries
-│   ├── useModalAnimation.ts    # Animación de entrada/salida de modales (Perfil, modales de confirmación)
+│   ├── useMediaQuery.ts      # Hook para detectar media queries
+│   ├── useModalAnimation.ts  # Animación de entrada/salida de modales
 │   ├── useMonthDay.ts
-│   ├── useSearchFilter.ts      # Filtro de búsqueda por título/subtítulo
-│   └── useSwipe.ts             # Hook reutilizable para detectar swipe horizontal
+│   ├── useSearchFilter.ts    # Filtro de búsqueda por título/subtítulo
+│   └── useSwipe.ts           # Detección de swipe horizontal
+├── lib/
+│   └── supabase.ts           # Cliente Supabase (Auth, Database, Storage)
 ├── page/
 │   ├── home.tsx
 │   ├── SelectCourse.tsx
 │   ├── Course.tsx
+│   ├── PageLoader.tsx        # Fallback visual de carga para Suspense
 │   └── css/Calendar.css
 ├── ProtectedRoutes/
-│   └── DashBoardProtected.tsx  # Guard de rutas protegidas (redirige a / si no hay sesión)
+│   └── DashBoardProtected.tsx# Guard de rutas protegidas (requiere sesión)
 ├── store/
-│   ├── AuthStore.ts
-│   ├── courseStore.ts
-│   ├── taskStorage.ts
-│   ├── themeStore.ts           # Dark mode (clase .dark + persistencia en localStorage)
-│   └── uiStore.ts              # Control de apertura/cierre de modales
+│   ├── AuthStore.ts          # Autenticación Supabase + perfil usuarios
+│   ├── courseStore.ts        # Sincronización del curso activo
+│   ├── taskStorage.ts        # CRUD de tareas compartidas en Supabase
+│   ├── themeStore.ts         # Dark mode (clase .dark + persistencia en localStorage)
+│   └── uiStore.ts            # Control de apertura/cierre de modales
 ├── utils/
 │   ├── courseSections.ts
-│   ├── dateNavigation.ts       # Navegación de mes + persistencia en sessionStorage
+│   ├── dateNavigation.ts     # Navegación de mes + persistencia en sessionStorage
 │   ├── taskNotifications.ts
 │   └── taskStatus.ts
 └── components/
@@ -327,10 +346,10 @@ src/
 ## Scripts
 
 ```bash
-npm run dev      # Inicia Vite en desarrollo
-npm run build    # Genera el build de producción
-npm run preview  # Sirve el build generado
-npm run lint     # Ejecuta ESLint (flat config + typescript-eslint)
+npm run dev       # Inicia Vite y el servidor backend Express (concurrentemente con tsx watch)
+npm run build     # Genera el build de producción
+npm run preview   # Sirve el build generado
+npm run lint      # Ejecuta ESLint (flat config + typescript-eslint)
 npm run typecheck # Chequeo de tipos con tsc -b --noEmit
 ```
 

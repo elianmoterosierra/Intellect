@@ -112,6 +112,31 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
 
         const user = mapRow(data as UsuarioRow);
         set({ isLoggedIn: true, user });
+
+        await fetch(`http://localhost:3000/api/email/send`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                to: normalizedEmail,
+                subject: "Gracias por Registrarte",
+                html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; padding: 24px; border-radius: 8px;">
+        <h1 style="font-size: 22px; color: #1f2937;">¡Gracias por registrarte, ${name.trim()}!</h1>
+        <p style="font-size: 16px; color: #374151; line-height: 1.5;">
+          Tu cuenta en nuestra plataforma ha sido creada exitosamente. Ya puedes iniciar sesión y comenzar a usarla.
+        </p>
+        <p style="font-size: 16px; color: #374151; line-height: 1.5;">
+          Si tienes alguna pregunta, puedes responder directamente a este correo y con gusto te ayudamos.
+        </p>
+        <hr style="margin: 24px 0; border: none; border-top: 1px solid #e5e7eb;" />
+        <p style="font-size: 12px; color: #9ca3af;">
+          Recibiste este correo porque te registraste en [nombre de tu plataforma] ([tu-dominio.com]).
+        </p>
+      </div>
+    `,
+    text: `¡Gracias por registrarte, ${name.trim()}!\n\nTu cuenta en nuestra plataforma ha sido creada exitosamente. Ya puedes iniciar sesión y comenzar a usarla.\n\nSi tienes alguna pregunta, responde directamente a este correo.\n\n---\nRecibiste este correo porque te registraste en Intellect (https://intellect-pearl.vercel.app/).`,
+}),
+        }).catch(error => console.error('Error al enviar correo de bienvenida:', error));
         return { success: true, user };
     },
 
