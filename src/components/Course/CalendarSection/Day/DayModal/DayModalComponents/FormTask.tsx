@@ -7,9 +7,10 @@ type FormAddTaskProps = {
     setForm: React.Dispatch<React.SetStateAction<TaskForm>>;
     handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
     setShowForm: (value: boolean) => void;
+    error: string;
 };
 
-export function FormAddTask({ form, setForm, handleSubmit, setShowForm }: FormAddTaskProps) {
+export function FormAddTask({ form, setForm, handleSubmit, setShowForm, error }: FormAddTaskProps) {
     const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
 
     return (
@@ -37,6 +38,12 @@ export function FormAddTask({ form, setForm, handleSubmit, setShowForm }: FormAd
                            transition-all resize-none max-h-[160px] overflow-y-auto"
                 rows={2}
             />
+
+            {error && (
+                <p className="rounded-xl bg-red-50 px-3 py-2 text-xs text-red-600">
+                    {error}
+                </p>
+            )}
 
             {form.description.length > 0 && (
                 <div className="flex justify-between items-center">

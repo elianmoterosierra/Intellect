@@ -4,12 +4,15 @@ import { useMemo } from 'react';
 import { getDaysDifference } from '../../../../utils/taskStatus';
 import type { TaskWithCompleted } from '../../../../types';
 
+
 type UpcomingTasksProps = {
     tasks: TaskWithCompleted[];
     courseId: number;
+    canManageCourse: boolean;
 };
 
-export function UpcomingTasks({ tasks, courseId }: UpcomingTasksProps) {
+export function UpcomingTasks({ tasks, courseId, canManageCourse }: UpcomingTasksProps) {
+    const canManageCourseBool = canManageCourse
     const orderedTasks = useMemo(() => {
         const byDueDate = (a: TaskWithCompleted, b: TaskWithCompleted) =>
             new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
@@ -57,7 +60,7 @@ export function UpcomingTasks({ tasks, courseId }: UpcomingTasksProps) {
 
             {/* Add button */}
             <div className="flex justify-center my-4">
-                <AddTaskButton courseId={courseId} />
+                {canManageCourseBool && <AddTaskButton courseId={courseId} />}
             </div>
         </div>
     )

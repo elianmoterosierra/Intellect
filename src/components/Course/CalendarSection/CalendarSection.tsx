@@ -17,9 +17,11 @@ type CalendarSectionProps = {
     searchQuery: string;
     setSearchQuery: (value: string) => void;
     setSelectedTask: (task: TaskWithCompleted) => void;
+
 };
 
 export default function CalendarSection({ courseId, searchQuery, setSearchQuery, setSelectedTask }: CalendarSectionProps) {
+
 
     const today = new Date();
     const [currentYear, setCurrentYear] = useState(today.getFullYear());

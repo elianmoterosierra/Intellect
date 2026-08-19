@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 
 import type {
     AuthState,
+    CourseRole,
     LoginResult,
     RegisterResult,
     TaskStatusMap,
@@ -15,15 +16,19 @@ type UsuarioRow = {
     gmail: string;
     selected_course_id: number | null;
     task_status: TaskStatusMap | null;
+    is_admin: boolean;
+    
 };
 
-function mapRow(row: UsuarioRow): User {
+function mapRow(row: UsuarioRow, courseRoles: Record<string, CourseRole> = {}): User {
     return {
         id: row.id,
         name: row.name,
         email: row.gmail,
         selectedCourseId: row.selected_course_id,
         taskStatusByCourse: row.task_status ?? {},
+        isAdmin: row.is_admin,
+        courseRoles,
     };
 }
 
@@ -225,7 +230,18 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
             .single();
 
         if (error || !data) return null;
-        return mapRow(data as UsuarioRow);
+        const { data: memberships } = await supabase
+            .from('course_members')
+            .select('course_id, role')
+            .eq('user_id', userId);
+
+        const courseRoles: Record<string, CourseRole> = {};
+
+        for (const membership of memberships ?? []) {
+            courseRoles[String(membership.course_id)] = membership.role;
+        }
+
+        return mapRow(data as UsuarioRow, courseRoles);
     },
 
     restoreSession: async () => {

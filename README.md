@@ -10,6 +10,8 @@ Aplicación web de gestión académica creada con React, Vite y Supabase, acompa
 - Modal de seguridad (`CourseAccessModal`) que solicita un código de verificación (`code_verification`) para validar y autorizar la unión de un usuario a un curso.
 - Catálogo de cursos cargado en tiempo real desde Supabase (`public.cursos`) en la página de selección; `data.ts` se conserva como referencia estática para el detalle del dashboard.
 - Creación de tareas compartidas persistidas en Supabase (`public.tasks`) para todos los miembros de un curso.
+- Roles y permisos: `admin` universal en `usuarios.is_admin` y `manager` por curso en `course_members`.
+- Solo un admin o el manager del curso puede ver y usar las acciones de crear, editar o eliminar tareas.
 - Modal único de creación de tareas (`AddTaskModal/TaskModal.tsx`) reusado desde el dashboard y la sección "Agregar Tareas".
 - Descripción con textarea de auto-resize hasta 6 líneas, contador de caracteres en vivo y botón Guardar bloqueado al superar el límite de 2000 caracteres en el modal de creación.
 - Sección dedicada para la visualización y gestión de "Agregar Tareas" (`AddTaskSection`).
@@ -74,6 +76,7 @@ Gestiona las credenciales mediante **Supabase Auth** y el perfil en la tabla `pu
 - `setSelectedCourse(courseId)`: actualiza `usuarios.selected_course_id`.
 - `toggleTaskStatus(courseId, taskId)`: conmuta el estado de completado en `usuarios.task_status`.
 - `updateUser(field, value)`: actualiza el nombre en `usuarios` y sincroniza email o contraseña en `supabase.auth.updateUser`.
+- `fetchProfile(userId)`: carga el perfil y sus filas de `course_members`, y construye `user.courseRoles`.
 
 Cada perfil guarda su progreso individual en el campo jsonb `usuarios.task_status` (mapeado a `user.taskStatusByCourse`):
 
@@ -92,6 +95,32 @@ Mantiene el estado visual del curso seleccionado y lo sincroniza con `user.selec
 - `verifyAndSelect(courseId, code)`: valida el código de seguridad contra la columna `code_verification` en `public.cursos` de Supabase; si es válido, ejecuta `handleSelect(courseId)` para unirse al curso.
 - `handleSelect(courseId)`: actualiza `selected_course_id` en Supabase y el store.
 - `handleLeave(courseId)`: desvincula el curso asociado al usuario.
+
+### Roles y permisos
+
+La autorización combina dos niveles:
+
+- `usuarios.is_admin`: administrador universal. Si es `true`, puede gestionar tareas en cualquier curso.
+- `course_members`: membresía por curso con `role` (`student` o `manager`). Un `manager` solo puede
+  gestionar tareas del curso cuyo `course_id` tiene asignado.
+
+En el frontend, `AuthStore.fetchProfile()` convierte las membresías en:
+
+```ts
+courseRoles: {
+  "1": "manager",
+  "4": "student",
+}
+```
+
+`src/utils/permission.ts` expone `canManageCourse(user, courseId)`. `Course.tsx` lo usa para
+proteger `AddTaskSection` y `AddTaskModal`; `SideNav`, `BottomNav`, `Dashboard` y `DayModal`
+ocultan también sus controles de creación cuando el usuario no tiene permiso.
+
+La interfaz no sustituye la seguridad de Supabase. Las políticas RLS de `tasks` vuelven a validar
+el permiso en cada INSERT, UPDATE y DELETE. Las políticas de `course_members` permiten leer las
+membresías propias y al admin leerlas todas. Estas políticas ya existen en la base de datos: si se
+revisa el proyecto, comprobar primero el dashboard y no ejecutar de nuevo los `CREATE POLICY`.
 
 ### Tareas — `src/store/taskStorage.ts`
 
@@ -270,6 +299,7 @@ src/
 ├── utils/
 │   ├── courseSections.ts
 │   ├── dateNavigation.ts     # Navegación de mes + persistencia en sessionStorage
+│   ├── permission.ts          # Regla admin/manager para gestionar tareas por curso
 │   ├── taskNotifications.ts
 │   └── taskStatus.ts
 └── components/

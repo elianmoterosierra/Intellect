@@ -11,9 +11,10 @@ const EMPTY_TASKS: Task[] = [];
 
 type DashboardProps = {
     course: Course;
+    canManageTasks: boolean;
 };
 
-export default function Dashboard({ course }: DashboardProps) {
+export default function Dashboard({ course, canManageTasks }: DashboardProps) {
     const sharedTasks = useTaskStore(
         (state) => state.tasksByCourse[course.id] ?? EMPTY_TASKS
     );
@@ -37,7 +38,7 @@ export default function Dashboard({ course }: DashboardProps) {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 auto-rows-min">
                 <Notification tasks={tasks} />
                 <TaskSummary tasks={tasks} />
-                <UpcomingTasks tasks={tasks} courseId={course.id} />
+                <UpcomingTasks tasks={tasks} courseId={course.id} canManageCourse={canManageTasks} />
             </div>
         </div>
     );

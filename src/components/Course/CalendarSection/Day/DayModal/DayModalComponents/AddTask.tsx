@@ -9,9 +9,10 @@ type AddTaskProps = {
     setForm: React.Dispatch<React.SetStateAction<TaskForm>>;
     handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
     disabled: boolean;
+    error: string;
 };
 
-export const AddTask = ({ showForm, setShowForm, form, setForm, handleSubmit, disabled }: AddTaskProps) => {
+export const AddTask = ({ showForm, setShowForm, form, setForm, handleSubmit, disabled, error }: AddTaskProps) => {
     return (
         <>
             {!showForm ? (
@@ -31,7 +32,7 @@ export const AddTask = ({ showForm, setShowForm, form, setForm, handleSubmit, di
                     {disabled ? "Agregar tarea (No disponible)" : "Agregar tarea"}
                 </button>
             ) : (
-                <FormAddTask form={form} setForm={setForm} handleSubmit={handleSubmit} setShowForm={setShowForm} />
+                <FormAddTask form={form} setForm={setForm} handleSubmit={handleSubmit} setShowForm={setShowForm} error={error} />
             )}
         </>
     );

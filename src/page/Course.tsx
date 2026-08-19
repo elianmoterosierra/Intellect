@@ -11,6 +11,7 @@ import { useAddTaskForm } from '../Hooks/useAddTaskForm';
 import { AddTaskModal } from '../components/Course/DashboardSection/UpcomingTasks/AddTaskModal/TaskModal';
 import { DetailsModal } from '../components/Course/Common/DetailsModal/DetailsModal';
 import type { TaskWithCompleted } from '../types';
+import { canManageCourse } from '../utils/permission';
 
 const CalendarSection = lazy(() => import('../components/Course/CalendarSection/CalendarSection'));
 const Dashboard = lazy(() => import('../components/Course/DashboardSection/Dashboard'));
@@ -19,6 +20,8 @@ const AddTaskSection = lazy(() => import('../components/Course/AddTaskSection/Ad
 export default function Course() {
   const { courseId } = useParams();
   const { user } = useAuthStore();
+
+  const canManageTasks = canManageCourse(user, courseId ?? '');;
   const course = courseData.find(c => c.id === Number(courseId));
   const [selectedTask, setSelectedTask] = useState<TaskWithCompleted | null>(null);
 
@@ -44,10 +47,12 @@ export default function Course() {
     </div>
   );
 
+
+
   return (
     <div className="flex h-screen overflow-hidden font-[Inter,sans-serif] bg-page text-ink antialiased">
       {/* ===== SIDENAV (desktop) ===== */}
-      <SideNav courseId={courseId} activeSection={activeSection} onSectionChange={handleSectionChange} />
+      <SideNav courseId={courseId} activeSection={activeSection} onSectionChange={handleSectionChange} canManageCourse={canManageTasks} />
 
       {/* ===== MAIN CONTENT ===== */}
       <div className="flex flex-col flex-1 w-full md:ml-64">
@@ -67,7 +72,7 @@ export default function Course() {
         <main className="flex-1 overflow-y-auto bg-page pb-16 md:pb-0">
           {activeSection === 'dashboard' && (
             <Suspense fallback={<div className="p-10 text-center text-ink-soft">Cargando dashboard...</div>}>
-              <Dashboard course={course} />
+              <Dashboard course={course} canManageTasks={canManageTasks} />
             </Suspense>
           )}
 
@@ -78,11 +83,12 @@ export default function Course() {
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 setSelectedTask={setSelectedTask}
+
               />
             </Suspense>
           )}
 
-          {activeSection === 'Agregar Tareas' && (
+          {activeSection === 'Agregar Tareas' && canManageTasks && (
             <Suspense fallback={<div className="p-10 text-center text-ink-soft">Cargando tareas...</div>}>
               <AddTaskSection courseId={course.id} />
             </Suspense>
@@ -93,9 +99,9 @@ export default function Course() {
       </div>
 
       {/* ===== BOTTOM NAV (mobile only) ===== */}
-      <BottomNav activeSection={activeSection} onSectionChange={handleSectionChange} />
+      <BottomNav activeSection={activeSection} onSectionChange={handleSectionChange} canManageTasks={canManageTasks} />
 
-      {isAddTaskModalOpen && (
+      {isAddTaskModalOpen && canManageTasks && (
         <AddTaskModal closeModal={closeAddTaskModal} handleSubmit={handleSubmit} titleInputRef={titleInputRef} title={title} setTitle={setTitle} subtitle={subtitle} setSubtitle={setSubtitle} dueDate={dueDate} setDueDate={setDueDate} today={today} error={error} />
       )}
 

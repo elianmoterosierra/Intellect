@@ -16,18 +16,25 @@ const navItems = [
 type BottomNavProps = {
     activeSection: SectionKey;
     onSectionChange: (section: SectionKey) => void;
+    canManageTasks: boolean;
 };
 
-export function BottomNav({ activeSection, onSectionChange }: BottomNavProps) {
+export function BottomNav({ activeSection, onSectionChange, canManageTasks }: BottomNavProps) {
     const courseId = useAuthStore(s => s.user?.selectedCourseId);
     const openAddTaskModal = useUIStore(s => s.openAddTaskModal);
     const [showModal, setShowModal] = useState(false);
     const onClose = () => setShowModal(false);
 
+    const visibleSections = canManageTasks
+        ? navItems
+        : navItems.filter(
+            (nav) => nav.key !== COURSE_SECTIONS.ADD_TASKS
+        );
+
     return (
         <>
             <nav className="md:hidden flex fixed bottom-0 w-full bg-page border-line items-center h-16 z-50">
-                {navItems.map(({ key, icon }) => (
+                {visibleSections.map(({ key, icon }) => (
                     <button
                         key={key}
                         onClick={() => onSectionChange(key)}
@@ -36,9 +43,11 @@ export function BottomNav({ activeSection, onSectionChange }: BottomNavProps) {
                         <span className="material-symbols-outlined text-2xl">{icon}</span>
                     </button>
                 ))}
-                <button className={`${btnClass} text-ink-soft`} onClick={openAddTaskModal}>
-                    <span className="material-symbols-outlined text-2xl">add</span>
-                </button>
+                {
+                    canManageTasks && <button className={`${btnClass} text-ink-soft`} onClick={openAddTaskModal}>
+                        <span className="material-symbols-outlined text-2xl">add</span>
+                    </button>
+                }
                 <button
                     className={`${btnClass} text-red-500`}
                     onClick={() => setShowModal(true)}

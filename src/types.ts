@@ -12,6 +12,7 @@ export type Course = {
     icon: string;
     notification: NotificationItem[];
 };
+export type CourseRole = 'student' | 'manager';
 
 export type Task = {
     id: string;
@@ -34,6 +35,8 @@ export type User = {
 
     selectedCourseId: number | null;
     taskStatusByCourse: TaskStatusMap;
+    isAdmin: boolean;
+    courseRoles: Record<string, CourseRole>;
 };
 
 export type AuthState = {

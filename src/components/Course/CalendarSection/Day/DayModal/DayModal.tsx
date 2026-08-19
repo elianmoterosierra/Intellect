@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { AddTask } from "./DayModalComponents/AddTask";
 import { TaskList } from "./DayModalComponents/TaskList/TaskList";
-
+import { canManageCourse } from "../../../../../utils/permission";
 import type { CalendarDay, Task, TaskWithCompleted } from "../../../../../types";
+import { useAuthStore } from "../../../../../store/AuthStore";
 
 export type TaskForm = { title: string; description: string };
 
@@ -25,7 +26,10 @@ type DayModalProps = {
 export function DayModal({ day, tasks, courseId, year, month, onClose, onAddTask, onToggleTask, onTaskClick }: DayModalProps) {
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState<TaskForm>({ title: '', description: '' });
+    const [formError, setFormError] = useState('');
     const [closing, setClosing] = useState(false);
+    const { user } = useAuthStore();
+    const canManage = canManageCourse(user, courseId);
 
     const handleClose = () => {
         setClosing(true);
@@ -39,8 +43,18 @@ export function DayModal({ day, tasks, courseId, year, month, onClose, onAddTask
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!form.title.trim()) return;
-        if (form.description.length > 2000) return;
+        if (!form.title.trim()) {
+            setFormError('Completa el título de la tarea.');
+            return;
+        }
+        if (!form.description.trim()) {
+            setFormError('Completa la descripción de la tarea.');
+            return;
+        }
+        if (form.description.length > 2000) {
+            setFormError('La descripción no puede superar los 2000 caracteres.');
+            return;
+        }
         const dueDate = new Date(year, month, day.number, 23, 59);
         onAddTask(courseId, {
             id: crypto.randomUUID(),
@@ -51,6 +65,7 @@ export function DayModal({ day, tasks, courseId, year, month, onClose, onAddTask
             hour: dueDate.toLocaleDateString('es-DO', { day: 'numeric', month: 'short' }),
         });
         setForm({ title: '', description: '' });
+        setFormError('');
         setShowForm(false);
     };
 
@@ -160,14 +175,15 @@ export function DayModal({ day, tasks, courseId, year, month, onClose, onAddTask
 
                 {/* ── Add task form ── */}
                 <div className="px-6 pb-6 border-t border-line-soft pt-4">
-                    <AddTask
+                    {canManage && <AddTask
                         showForm={showForm}
                         setShowForm={setShowForm}
                         form={form}
                         setForm={setForm}
                         handleSubmit={handleSubmit}
                         disabled={isToday || isPast}
-                    />
+                        error={formError}
+                    />}
                 </div>
             </div>
         </div>

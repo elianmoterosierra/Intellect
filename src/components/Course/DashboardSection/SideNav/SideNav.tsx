@@ -22,14 +22,20 @@ type SideNavProps = {
     courseId: string | number;
     activeSection: SectionKey;
     onSectionChange: (section: SectionKey) => void;
+    canManageCourse: boolean;
 };
 
-export function SideNav({ courseId, activeSection, onSectionChange }: SideNavProps) {
+export function SideNav({ courseId, activeSection, onSectionChange, canManageCourse }: SideNavProps) {
     const [showModal, setShowModal] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const onClose = () => setShowModal(false);
     const { isDark } = useThemeStore();
     const { openPerfilModal, closePerfilModal, isPerfilModalOpen } = useUIStore();
+    const visibleSections = canManageCourse
+        ? sections
+        : sections.filter(
+            (section) => section.key !== COURSE_SECTIONS.ADD_TASKS
+        );
 
 
     return (
@@ -41,7 +47,7 @@ export function SideNav({ courseId, activeSection, onSectionChange }: SideNavPro
                 </div>
 
                 <ul className="flex-1 flex flex-col gap-2 list-none p-0 m-0">
-                    {sections.map(({ key, icon, label }) => (
+                    {visibleSections.map(({ key, icon, label }) => (
                         <li key={key}>
                             <button
                                 className={`${navLink} ${activeSection === key ? navLinkActive : ''}`}

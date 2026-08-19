@@ -5,6 +5,7 @@ type DayProps = {
     courseId: number;
     currentMonth: number;
     currentYear: number;
+
 };
 
 export function Day({ courseId, currentMonth, currentYear }: DayProps) {
@@ -19,6 +20,7 @@ export function Day({ courseId, currentMonth, currentYear }: DayProps) {
                     day={day}
                     year={currentYear}
                     month={currentMonth}
+
                 />
             ))}
         </>

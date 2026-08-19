@@ -49,7 +49,7 @@ export function CourseAccessModal({ courseId, courseTitle, onSuccess, onClose }:
                     </div>
                     <h3 className="text-lg font-bold text-ink">Código de acceso</h3>
                     <p className="text-sm text-ink-faint mt-1">
-                        Ingresa el código de 9 dígitos para unirte a <span className="font-semibold text-ink">{courseTitle}</span>
+                        Ingresa el código de 7 dígitos para unirte a <span className="font-semibold text-ink">{courseTitle}</span>
                     </p>
                 </div>
 
