@@ -4,8 +4,11 @@ import { TaskList } from "./DayModalComponents/TaskList/TaskList";
 import { canManageCourse } from "../../../../../utils/permission";
 import type { CalendarDay, Task, TaskWithCompleted } from "../../../../../types";
 import { useAuthStore } from "../../../../../store/AuthStore";
+import { useTaskScheduleStore } from "../../../../../store/taskScheduleStorage";
+import { getTimeOptionsAfter } from "../../../../../utils/taskSchedule";
+import { rangesOverlap } from "../../../../../utils/taskSchedule";
 
-export type TaskForm = { title: string; description: string };
+export type TaskForm = { title: string; description: string; startTime: string; endTime: string };
 
 const getMonthName = (year: number, month: number) =>
     new Date(year, month).toLocaleString('es-ES', { month: 'long' })
@@ -18,18 +21,19 @@ type DayModalProps = {
     year: number;
     month: number;
     onClose: () => void;
-    onAddTask: (courseId: number | string, task: Task) => void;
+    onAddTask: (courseId: number | string, task: Task) => Promise<boolean>;
     onToggleTask: (courseId: number, taskId: string) => void;
     onTaskClick: (task: TaskWithCompleted) => void;
 };
 
 export function DayModal({ day, tasks, courseId, year, month, onClose, onAddTask, onToggleTask, onTaskClick }: DayModalProps) {
     const [showForm, setShowForm] = useState(false);
-    const [form, setForm] = useState<TaskForm>({ title: '', description: '' });
+    const [form, setForm] = useState<TaskForm>({ title: '', description: '', startTime: '', endTime: '' });
     const [formError, setFormError] = useState('');
     const [closing, setClosing] = useState(false);
     const { user } = useAuthStore();
     const canManage = canManageCourse(user, courseId);
+    const setTaskSchedule = useTaskScheduleStore((state) => state.setTaskSchedule);
 
     const handleClose = () => {
         setClosing(true);
@@ -41,7 +45,7 @@ export function DayModal({ day, tasks, courseId, year, month, onClose, onAddTask
         if (e.target === e.currentTarget) handleClose();
     };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!form.title.trim()) {
             setFormError('Completa el título de la tarea.');
@@ -55,16 +59,42 @@ export function DayModal({ day, tasks, courseId, year, month, onClose, onAddTask
             setFormError('La descripción no puede superar los 2000 caracteres.');
             return;
         }
+        if (!form.startTime || !form.endTime || !getTimeOptionsAfter(form.startTime).includes(form.endTime)) {
+            setFormError('Selecciona un rango horario válido.');
+            return;
+        }
+        const requestedSchedule = { startTime: form.startTime, endTime: form.endTime };
+        const hasConflict = tasks.some((task) => {
+            const taskSchedule = useTaskScheduleStore.getState().schedulesByCourse[String(courseId)]?.[task.id];
+            return taskSchedule ? rangesOverlap(requestedSchedule, taskSchedule) : false;
+        });
+        if (hasConflict) {
+            setFormError('Ese horario ya está ocupado por otra tarea de ese día.');
+            return;
+        }
+        const taskId = crypto.randomUUID();
         const dueDate = new Date(year, month, day.number, 23, 59);
-        onAddTask(courseId, {
-            id: crypto.randomUUID(),
+        const task: Task = {
+            id: taskId,
             title: form.title.trim(),
             subtitle: form.description.trim() || 'Sin descripción',
             description: form.description.trim(),
             dueDate: dueDate.toISOString(),
-            hour: dueDate.toLocaleDateString('es-DO', { day: 'numeric', month: 'short' }),
-        });
-        setForm({ title: '', description: '' });
+            hour: dueDate.toLocaleDateString('es-DO', {
+                day: 'numeric',
+                month: 'short',
+            }),
+            startTime: form.startTime,
+            endTime: form.endTime,
+        };
+
+        const wasAdded = await onAddTask(courseId, task);
+        if (!wasAdded) {
+            setFormError('No se pudo guardar la tarea. Revisa tu conexión o tus permisos.');
+            return;
+        }
+        setTaskSchedule(courseId, taskId, { startTime: form.startTime, endTime: form.endTime });
+        setForm({ title: '', description: '', startTime: '', endTime: '' });
         setFormError('');
         setShowForm(false);
     };

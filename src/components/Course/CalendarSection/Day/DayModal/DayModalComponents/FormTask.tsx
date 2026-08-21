@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { TIME_OPTIONS } from '../../../../../../utils/taskSchedule';
 
 import type { TaskForm } from "../DayModal";
 
@@ -14,14 +15,14 @@ export function FormAddTask({ form, setForm, handleSubmit, setShowForm, error }:
     const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
 
     return (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3 animate-fadeIn" style={{ animationDuration: '0.22s' }}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3" >
             <input
-                autoFocus
+
                 type="text"
                 placeholder="Título de la tarea…"
                 value={form.title}
                 onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))}
-                className="w-full px-4 py-2.5 rounded-xl border border-line-soft text-sm text-ink bg-muted
+                className="w-full px-4 py-2.5 rounded-xl border border-line-soft text-base md:text-sm text-ink bg-muted
                            placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all"
             />
             <textarea
@@ -33,11 +34,22 @@ export function FormAddTask({ form, setForm, handleSubmit, setShowForm, error }:
                     e.target.style.height = 'auto';
                     e.target.style.height = Math.min(e.target.scrollHeight, 160) + 'px';
                 }}
-                className="w-full px-4 py-2.5 rounded-xl border border-line-soft text-sm text-ink bg-muted
+                className="w-full px-4 py-2.5 rounded-xl border border-line-soft text-base md:text-sm text-ink bg-muted
                            placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand
                            transition-all resize-none max-h-[160px] overflow-y-auto"
                 rows={2}
             />
+
+            <div className="grid grid-cols-2 gap-2">
+                <select required value={form.startTime} onChange={(e) => setForm(f => ({ ...f, startTime: e.target.value }))} className="w-full rounded-xl border border-line-soft bg-muted px-3 py-2.5 text-base md:text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand/30">
+                    <option value="">Inicio</option>
+                    {TIME_OPTIONS.slice(0, -1).map((time) => <option key={time} value={time}>{time}</option>)}
+                </select>
+                <select required value={form.endTime} onChange={(e) => setForm(f => ({ ...f, endTime: e.target.value }))} className="w-full rounded-xl border border-line-soft bg-muted px-3 py-2.5 text-base md:text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand/30">
+                    <option value="">Fin</option>
+                    {TIME_OPTIONS.slice(1).map((time) => <option key={time} value={time}>{time}</option>)}
+                </select>
+            </div>
 
             {error && (
                 <p className="rounded-xl bg-red-50 px-3 py-2 text-xs text-red-600">
@@ -47,11 +59,10 @@ export function FormAddTask({ form, setForm, handleSubmit, setShowForm, error }:
 
             {form.description.length > 0 && (
                 <div className="flex justify-between items-center">
-                    <span className={`text-xs transition-all ${
-                        form.description.length > 2000
-                            ? 'text-red-500 font-semibold'
-                            : 'text-ink-faint'
-                    }`}>
+                    <span className={`text-xs transition-all ${form.description.length > 2000
+                        ? 'text-red-500 font-semibold'
+                        : 'text-ink-faint'
+                        }`}>
                         {form.description.length}/2000 caracteres
                     </span>
                     {form.description.length > 2000 && (
@@ -74,11 +85,10 @@ export function FormAddTask({ form, setForm, handleSubmit, setShowForm, error }:
                 <button
                     type="submit"
                     disabled={form.description.length > 2000}
-                    className={`flex-1 py-2 rounded-xl text-sm text-white font-semibold transition-all ${
-                        form.description.length > 2000
-                            ? 'bg-gray-400 opacity-50 cursor-not-allowed'
-                            : 'bg-brand-strong hover:bg-brand-hover active:scale-95'
-                    }`}
+                    className={`flex-1 py-2 rounded-xl text-sm text-white font-semibold transition-all ${form.description.length > 2000
+                        ? 'bg-gray-400 opacity-50 cursor-not-allowed'
+                        : 'bg-brand-strong hover:bg-brand-hover active:scale-95'
+                        }`}
                 >
                     Guardar
                 </button>

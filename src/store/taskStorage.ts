@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
-
+import { toDatabaseTime } from './taskScheduleStorage';
 import type { Task } from '../types';
 
 
@@ -8,7 +8,7 @@ import type { Task } from '../types';
 type TasksByCourse = Record<string, Task[]>;
 
 
-function rowToTask(row: { id: string; course_id: number; title: string; subtitle: string; due_date: string; hour: string; description?: string | null }): Task {
+function rowToTask(row: { id: string; course_id: number; title: string; subtitle: string; due_date: string; hour: string; description?: string | null, start_time?: string | null, end_time?: string | null }): Task {
     return {
         id: row.id,
         title: row.title,
@@ -16,6 +16,8 @@ function rowToTask(row: { id: string; course_id: number; title: string; subtitle
         dueDate: row.due_date,
         hour: row.hour,
         ...(row.description ? { description: row.description } : {}),
+        ...(row.start_time ? { startTime: row.start_time } : {}),
+        ...(row.end_time ? { endTime: row.end_time } : {}),
     };
 }
 
@@ -52,6 +54,8 @@ export const useTaskStore = create<TaskStore>((set) => ({
                 dueDate: row.due_date,          // ← snake → camel
                 hour: row.hour,
                 ...(row.description ? { description: row.description } : {}),
+                ...(row.start_time ? { startTime: row.start_time } : {}),
+                ...(row.end_time ? { endTime: row.end_time } : {}),
             });
         }
 
@@ -69,7 +73,8 @@ export const useTaskStore = create<TaskStore>((set) => ({
                 subtitle: task.subtitle,
                 due_date: task.dueDate,
                 hour: task.hour,
-                description: task.description,
+                start_time: task.startTime ? toDatabaseTime(task.startTime) : null,
+                end_time: task.endTime ? toDatabaseTime(task.endTime) : null,
             })
             .select('*')
             .single();

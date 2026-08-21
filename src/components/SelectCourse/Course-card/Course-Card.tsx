@@ -14,7 +14,7 @@ export default function CourseCards() {
                 if (error) {
                     console.error("Error al obtener los cursos:", error);
                 } else {
-                    console.log(data);
+
                     setCourseData((data ?? []).map(course => ({ ...course, notification: [] })));
                 }
             })

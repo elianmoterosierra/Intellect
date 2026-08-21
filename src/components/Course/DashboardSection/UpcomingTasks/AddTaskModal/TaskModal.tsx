@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import type { FormEvent, RefObject } from 'react';
+import { TIME_OPTIONS } from '../../../../../utils/taskSchedule';
 
 type AddTaskModalProps = {
     closeModal: () => void;
@@ -13,9 +14,13 @@ type AddTaskModalProps = {
     setDueDate: (value: string) => void;
     today: string;
     error: string;
+    startTime: string;
+    endTime: string;
+    setStartTime: (value: string) => void;
+    setEndTime: (value: string) => void;
 };
 
-export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, setTitle, subtitle, setSubtitle, dueDate, setDueDate, today, error }: AddTaskModalProps) {
+export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, setTitle, subtitle, setSubtitle, dueDate, setDueDate, today, error, startTime, endTime, setStartTime, setEndTime }: AddTaskModalProps) {
     const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
 
     return (
@@ -25,7 +30,7 @@ export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, s
             role="presentation"
         >
             <form
-                className="flex flex-col w-full max-w-[500px] max-h-[90vh] overflow-hidden rounded-2xl bg-surface shadow-2xl border border-line-soft animate-fadeIn"
+                className="flex flex-col w-full max-w-[500px] max-h-[90vh] overflow-hidden rounded-2xl bg-surface shadow-2xl border border-line-soft "
                 onSubmit={handleSubmit}
                 onClick={(event) => event.stopPropagation()}
             >
@@ -80,8 +85,8 @@ export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, s
                         {(subtitle.length > 0 || error) && (
                             <div className="flex justify-between items-center">
                                 <span className={`text-xs transition-all ${subtitle.length > 2000
-                                        ? 'text-red-500 font-semibold'
-                                        : 'text-ink-faint'
+                                    ? 'text-red-500 font-semibold'
+                                    : 'text-ink-faint'
                                     }`}>
                                     {subtitle.length}/2000 caracteres
                                 </span>
@@ -104,6 +109,23 @@ export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, s
                             />
                         </div>
 
+                        <div className="grid grid-cols-2 gap-3">
+                            <label className="flex flex-col gap-1.5 text-xs font-semibold text-ink-soft">
+                                Hora de inicio
+                                <select required value={startTime} onChange={(event) => setStartTime(event.target.value)} className="rounded-xl border border-line bg-muted px-4 py-3 text-sm text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/25">
+                                    <option value="">Selecciona</option>
+                                    {TIME_OPTIONS.slice(0, -1).map((time) => <option key={time} value={time}>{time}</option>)}
+                                </select>
+                            </label>
+                            <label className="flex flex-col gap-1.5 text-xs font-semibold text-ink-soft">
+                                Hora de finalización
+                                <select required value={endTime} onChange={(event) => setEndTime(event.target.value)} className="rounded-xl border border-line bg-muted px-4 py-3 text-sm text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/25">
+                                    <option value="">Selecciona</option>
+                                    {TIME_OPTIONS.slice(1).map((time) => <option key={time} value={time}>{time}</option>)}
+                                </select>
+                            </label>
+                        </div>
+
                         {error && <p className="rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-600">{error}</p>}
                     </div>
                 </div>
@@ -116,8 +138,8 @@ export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, s
                         type="submit"
                         disabled={subtitle.length > 2000}
                         className={`flex-1 rounded-xl py-3 text-[15px] font-bold text-white transition-opacity ${subtitle.length > 2000
-                                ? 'opacity-40 cursor-not-allowed'
-                                : 'hover:opacity-90'
+                            ? 'opacity-40 cursor-not-allowed'
+                            : 'hover:opacity-90'
                             }`}
                         style={{ backgroundColor: 'rgb(var(--brand-strong))' }}
                     >

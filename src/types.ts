@@ -21,6 +21,8 @@ export type Task = {
     dueDate: string;
     hour: string;
     description?: string;
+    startTime?: string;
+    endTime?: string;
 };
 
 export type TaskWithCompleted = Task & { completed: boolean };

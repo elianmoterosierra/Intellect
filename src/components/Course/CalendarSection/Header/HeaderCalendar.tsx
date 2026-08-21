@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { formatMonthLabel } from '../../../../utils/dateNavigation';
 import { useSwipe } from '../../../../Hooks/useSwipe';
 import { SearchDropdown } from '../../DashboardSection/AppBar(mobile)/SearchDropdown';
 
@@ -7,12 +6,11 @@ import type { TaskWithCompleted } from '../../../../types';
 
 type HeaderCalendarProps = {
     handlePerfil: (e: React.MouseEvent) => void;
-    handlePreviousMonth: () => void;
-    handleNextMonth: () => void;
+    handlePreviousWeek: () => void;
+    handleNextWeek: () => void;
     handleToday: () => void;
-    currentMonth: number;
-    currentYear: number;
-    isCurrentMonth: boolean;
+    weekLabel: string;
+    isCurrentWeek: boolean;
     searchQuery: string;
     setSearchQuery: (value: string) => void;
     courseId: number;
@@ -21,20 +19,19 @@ type HeaderCalendarProps = {
 
 export function HeaderCalendar({
     handlePerfil,
-    handlePreviousMonth,
-    handleNextMonth,
+    handlePreviousWeek,
+    handleNextWeek,
     handleToday,
-    currentMonth,
-    currentYear,
-    isCurrentMonth,
+    weekLabel,
+    isCurrentWeek,
     searchQuery,
     setSearchQuery,
     courseId,
     setSelectedTask,
 }: HeaderCalendarProps) {
     const swipe = useSwipe({
-        onSwipeLeft: handleNextMonth,
-        onSwipeRight: handlePreviousMonth,
+        onSwipeLeft: handleNextWeek,
+        onSwipeRight: handlePreviousWeek,
     });
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -60,28 +57,28 @@ export function HeaderCalendar({
                 >
                     <button
                         type="button"
-                        onClick={handlePreviousMonth}
+                        onClick={handlePreviousWeek}
                         className="selector-arrow"
-                        aria-label="Mes anterior"
+                        aria-label="Semana anterior"
                     >
                         <span className="material-symbols-outlined">chevron_left</span>
                     </button>
-                    <span className="date-range">{formatMonthLabel(currentYear, currentMonth)}</span>
+                    <span className="date-range">{weekLabel}</span>
                     <button
                         type="button"
                         onClick={handleToday}
                         className="today-button"
-                        aria-label="Volver al mes actual"
-                        disabled={isCurrentMonth}
+                        aria-label="Volver a la semana actual"
+                        disabled={isCurrentWeek}
                     >
                         <span className="material-symbols-outlined">today</span>
                         Hoy
                     </button>
                     <button
                         type="button"
-                        onClick={handleNextMonth}
+                        onClick={handleNextWeek}
                         className="selector-arrow"
-                        aria-label="Mes siguiente"
+                        aria-label="Semana siguiente"
                     >
                         <span className="material-symbols-outlined">chevron_right</span>
                     </button>

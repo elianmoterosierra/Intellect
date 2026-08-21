@@ -31,6 +31,7 @@ export default function Course() {
     title, setTitle,
     subtitle, setSubtitle,
     dueDate, setDueDate,
+    startTime, endTime, setStartTime, setEndTime,
     today, error, handleSubmit,
   } = useAddTaskForm(Number(courseId), closeAddTaskModal);
 
@@ -102,7 +103,7 @@ export default function Course() {
       <BottomNav activeSection={activeSection} onSectionChange={handleSectionChange} canManageTasks={canManageTasks} />
 
       {isAddTaskModalOpen && canManageTasks && (
-        <AddTaskModal closeModal={closeAddTaskModal} handleSubmit={handleSubmit} titleInputRef={titleInputRef} title={title} setTitle={setTitle} subtitle={subtitle} setSubtitle={setSubtitle} dueDate={dueDate} setDueDate={setDueDate} today={today} error={error} />
+        <AddTaskModal closeModal={closeAddTaskModal} handleSubmit={handleSubmit} titleInputRef={titleInputRef} title={title} setTitle={setTitle} subtitle={subtitle} setSubtitle={setSubtitle} dueDate={dueDate} setDueDate={setDueDate} today={today} error={error} startTime={startTime} endTime={endTime} setStartTime={setStartTime} setEndTime={setEndTime} />
       )}
 
       {selectedTask && (

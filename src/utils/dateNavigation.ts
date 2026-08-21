@@ -27,6 +27,32 @@ export function formatMonthLabel(year: number, month: number): string {
     return `${MONTH_NAMES[month]} - ${year}`;
 }
 
+export function getMonday(date: Date): Date {
+    const result = new Date(date);
+    const day = result.getDay();
+    const difference = day === 0 ? -6 : 1 - day;
+    result.setDate(result.getDate() + difference);
+    result.setHours(0, 0, 0, 0);
+    return result;
+}
+
+export function addDays(date: Date, amount: number): Date {
+    const result = new Date(date);
+    result.setDate(result.getDate() + amount);
+    return result;
+}
+
+export function isCurrentWeek(weekStart: Date): boolean {
+    return getMonday(new Date()).getTime() === getMonday(weekStart).getTime();
+}
+
+export function formatWeekLabel(weekStart: Date): string {
+    const weekEnd = addDays(weekStart, 4);
+    const start = weekStart.toLocaleDateString('es-DO', { day: 'numeric', month: 'short' });
+    const end = weekEnd.toLocaleDateString('es-DO', { day: 'numeric', month: 'short', year: 'numeric' });
+    return `${start} – ${end}`;
+}
+
 // Persistencia ligera por curso: sobrevive recargas, muere al cerrar la pestaña.
 const KEY_PREFIX = 'intellect.calendar.lastMonth.';
 

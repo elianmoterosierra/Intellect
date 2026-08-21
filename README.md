@@ -1,6 +1,6 @@
 # Intellect — Plataforma de Gestión Académica
 
-Aplicación web de gestión académica creada con React, Vite y Supabase, acompañada de un backend en Node/Express para servicios auxiliares (como envío de correos). Permite registrar usuarios, seleccionar un curso, crear y organizar tareas compartidas, consultar un calendario mensual interactivo y recibir notificaciones basadas en las fechas de entrega. La persistencia de datos (usuarios, tareas, cursos y progreso) se gestiona a través de Supabase, mientras que el tema visual y estados de sesión efímeros se manejan localmente.
+Aplicación web de gestión académica creada con React, Vite y Supabase, acompañada de un backend en Node/Express para servicios auxiliares (como envío de correos). Permite registrar usuarios, seleccionar un curso, crear y organizar tareas compartidas, consultar una agenda semanal con franjas horarias y recibir notificaciones basadas en las fechas de entrega. La persistencia de usuarios, tareas, cursos y progreso se gestiona a través de Supabase; el tema visual se maneja localmente y los horarios permanecen temporalmente en memoria mientras se prepara su migración a Supabase.
 
 ## Funcionalidades
 
@@ -23,11 +23,12 @@ Aplicación web de gestión académica creada con React, Vite y Supabase, acompa
 - Notificaciones dinámicas para tareas pendientes **no vencidas**, ordenadas por fecha de entrega (urgentes si vencen hoy o mañana).
 - "Próximas Tareas" ordena el listado con `useMemo`: primero las pendientes no vencidas por fecha de entrega y luego las completadas.
 - Estado visual para tareas vencidas: fondo rojo y texto blanco.
-- Calendario mensual que muestra las tareas según su fecha de entrega. Al hacer clic en una tarea del día se cierra el modal del día y se abre el detalle.
-- Selector de mes del calendario con botón "Hoy", atajo para volver al mes actual, persistencia del último mes visto por curso entre recargas (`sessionStorage`), y swipe horizontal en móvil.
-- Scroll infinito en el calendario móvil con carga perezosa de meses via IntersectionObserver, skeleton grid de aspect-square (sin saltos visuales), y ajuste automático del scroll al anteponer meses (forceVisible + useLayoutEffect).
-- Grid de 2 columnas en mobile (repeat 2, 1fr) y 4 en desktop.
-- DayCard con aspect-square en mobile, título truncado a 20 caracteres y máximo 3 tareas visibles.
+- Agenda semanal de lunes a viernes que muestra las tareas según su fecha de entrega y horario. Al hacer clic en una tarea se abre su detalle.
+- Navegación por semanas con botón "Hoy" en desktop y mobile.
+- Franjas horarias de 7:30 AM a 3:30 PM; las tareas ocupan visualmente desde su inicio hasta su hora final.
+- Validación de horarios obligatorios y bloqueo de tareas que se solapan en el mismo día.
+- En desktop se muestran las cinco columnas laborales; en mobile existe scroll horizontal entre días y vertical entre franjas, con el eje horario y el encabezado fijados. El calendario usa un bloqueo del eje dominante para evitar desplazamientos diagonales y conserva inercia suave al finalizar un swipe rápido.
+- DayCard conserva colores por estado: completadas verdes, tareas del día rojas, tareas de mañana amarillas y tareas normales aleatorias.
 - Límites de texto por contexto (títulos truncados según la ubicación).
 - Guard de autenticación con `DashBoardProtected` que redirige a `/` si no hay sesión.
 - Menú hamburguesa para navegación mobile con enlaces y auth-gating.
@@ -130,6 +131,13 @@ Persiste las definiciones de tareas en la tabla `public.tasks` de Supabase:
 - `addTask(courseId, task)` inserta la tarea en Supabase y actualiza el estado local.
 - `deleteTask(courseId, taskId)` elimina la tarea de Supabase y del estado local.
 
+### Horarios de tareas — `src/store/taskScheduleStorage.ts`
+
+- El store mantiene temporalmente `startTime` y `endTime` en memoria durante la sesión.
+- Los horarios no se guardan en `localStorage` ni en Supabase todavía.
+- `src/utils/taskSchedule.ts` centraliza las opciones de hora, las franjas visibles, la conversión de horas y la detección de solapamientos.
+- La siguiente migración debe guardar estos valores en Supabase relacionados con cada tarea.
+
 ### UI — `src/store/uiStore.ts`
 
 Controla el estado de apertura y cierre de modales de interfaz:
@@ -210,24 +218,23 @@ No se usan notificaciones estáticas para el dashboard.
 
 ## Calendario
 
-El calendario usa la misma información compartida de `taskStorage.ts`; no tiene un store independiente. Antes de mostrar una tarea, combina su definición con el progreso del usuario actual.
+El calendario usa las tareas compartidas de `taskStorage.ts`, combina su estado individual desde `AuthStore` y obtiene temporalmente los horarios desde `taskScheduleStorage.ts`.
 
-### Desktop
-- `CalendarSection.tsx` administra el mes visible con HeaderCalendar + flechas de navegación y persiste el último mes visto por curso en `sessionStorage` (clave `intellect.calendar.lastMonth.<courseId>`). Al recargar la pestaña se restaura; al cerrar el navegador vuelve al mes actual.
-- `Day.tsx` + `DayCard.tsx` filtran las tareas del curso por fecha.
-- Grid de 4 columnas.
+### Desktop y mobile
 
-### Mobile (scroll infinito)
-- `CalendarSection.tsx` mantiene una lista `months` con los meses visibles. Dos centinelas (top/bottom) con `IntersectionObserver` cargan meses anteriores/siguientes sin límite.
-- `MonthGroup.tsx` renderiza cada mes con lazy loading via `IntersectionObserver` (rootMargin 600px). Mientras no está cerca del viewport, muestra un skeleton grid con celdas `aspect-square` vacías que ocupan la misma altura que el contenido real, evitando reflows al hacer la transición.
-- Al anteponer un mes (centinela superior), se activa `forceVisible` para que el nuevo mes renderice inmediatamente sus `DayCards`, y un `useLayoutEffect` ajusta el `scrollTop` para mantener la posición visual.
-- Grid de 2 columnas (`repeat(2, 1fr)`) en mobile.
-- `DayCard` usa `aspect-square md:aspect-auto`, trunca títulos a 20 caracteres y muestra máximo 3 tareas.
+- `CalendarSection.tsx` administra una sola semana laboral y navega con las flechas o el botón "Hoy".
+- `Day.tsx` construye las columnas de lunes a viernes.
+- `DayCard.tsx` dibuja diez filas horarias y extiende cada tarea mediante `grid-row` según `startTime` y `endTime`.
+- Desktop muestra las cinco columnas completas.
+- Mobile usa scroll horizontal para los días y vertical para las horas; el encabezado de días y la columna de horas permanecen visibles durante el desplazamiento. `useAxisLockedScroll.ts` controla los gestos táctiles con `Pointer Events`: después de un umbral inicial elige el eje dominante, actualiza únicamente `scrollLeft` o `scrollTop` y aplica momentum al soltar.
+- Las tareas vencidas de días anteriores no se renderizan en la agenda semanal.
+- Las tareas sin horario no se renderizan en la agenda semanal hasta que exista una migración o edición de horario.
+- `DayCard` trunca títulos según el contexto y muestra el detalle completo al seleccionar una tarea.
 
 ### Componentes compartidos
 - `DayModal.tsx` muestra, crea y completa tareas del día seleccionado.
 - Al hacer clic en una tarea del `DayModal` se cierra el modal del día y se abre el detalle (`Common/DetailsModal`).
-- El `date-selector` del header expone un botón "Hoy" (deshabilitado cuando ya estás en el mes actual) y soporte de swipe horizontal en móvil (`Hooks/useSwipe.ts`).
+- El `date-selector` del header expone un botón "Hoy" (deshabilitado cuando ya estás en el mes actual) y soporte de swipe horizontal en móvil (`Hooks/useSwipe.ts`). El scroll bidimensional de la agenda usa `Hooks/useAxisLockedScroll.ts`; no debe reemplazarse por `overflow: auto` sin mantener el bloqueo, porque el navegador puede mover ambos ejes en gestos diagonales.
 
 ## Estructura del proyecto
 
@@ -236,7 +243,7 @@ La estructura completa de archivos se detalla en la sección siguiente. Los dire
 - `src/store/` — Stores de Zustand (auth, cursos, tareas, UI, tema)
 - `src/utils/` — Helpers puros (fechas, estados, notificaciones)
 - `src/data/` — `data.ts` (catálogo de referencia de cursos) y `notifications.json` (histórico)
-- `src/Hooks/` — Hooks personalizados (calendario, swipe, búsqueda, media query, animación de modales)
+- `src/Hooks/` — Hooks personalizados (calendario, swipe, scroll táctil, búsqueda, media query, animación de modales)
 - `src/page/` — Páginas (home, selección de curso, dashboard del curso)
 - `src/components/` — Componentes de UI organizados por dominio
 - `src/ProtectedRoutes/` — Guard de autenticación para rutas protegidas
@@ -279,7 +286,8 @@ src/
 │   ├── useModalAnimation.ts  # Animación de entrada/salida de modales
 │   ├── useMonthDay.ts
 │   ├── useSearchFilter.ts    # Filtro de búsqueda por título/subtítulo
-│   └── useSwipe.ts           # Detección de swipe horizontal
+│   ├── useSwipe.ts           # Detección de swipe horizontal
+│   └── useAxisLockedScroll.ts # Scroll mobile con bloqueo de eje e inercia
 ├── lib/
 │   └── supabase.ts           # Cliente Supabase (Auth, Database, Storage)
 ├── page/
@@ -294,11 +302,13 @@ src/
 │   ├── AuthStore.ts          # Autenticación Supabase + perfil usuarios
 │   ├── courseStore.ts        # Sincronización del curso activo
 │   ├── taskStorage.ts        # CRUD de tareas compartidas en Supabase
+│   ├── taskScheduleStorage.ts # Horarios temporales en memoria
 │   ├── themeStore.ts         # Dark mode (clase .dark + persistencia en localStorage)
 │   └── uiStore.ts            # Control de apertura/cierre de modales
 ├── utils/
 │   ├── courseSections.ts
-│   ├── dateNavigation.ts     # Navegación de mes + persistencia en sessionStorage
+│   ├── dateNavigation.ts     # Navegación de semanas y fechas
+│   ├── taskSchedule.ts       # Opciones, franjas y validaciones de horarios
 │   ├── permission.ts          # Regla admin/manager para gestionar tareas por curso
 │   ├── taskNotifications.ts
 │   └── taskStatus.ts
