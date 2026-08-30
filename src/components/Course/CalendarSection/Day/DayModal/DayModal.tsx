@@ -2,7 +2,7 @@ import { useState } from "react";
 import { AddTask } from "./DayModalComponents/AddTask";
 import { TaskList } from "./DayModalComponents/TaskList/TaskList";
 import { canManageCourse } from "../../../../../utils/permission";
-import type { CalendarDay, Task, TaskWithCompleted } from "../../../../../types";
+import type { CalendarDay, Subject, SubjectSchedule, Task, TaskWithCompleted } from "../../../../../types";
 import { useAuthStore } from "../../../../../store/AuthStore";
 import { useTaskScheduleStore } from "../../../../../store/taskScheduleStorage";
 import { getTimeOptionsAfter } from "../../../../../utils/taskSchedule";
@@ -16,6 +16,8 @@ const getMonthName = (year: number, month: number) =>
 
 type DayModalProps = {
     day: CalendarDay;
+    subject: Subject | null;
+    schedule: SubjectSchedule | null;
     tasks: TaskWithCompleted[];
     courseId: number;
     year: number;
@@ -26,7 +28,7 @@ type DayModalProps = {
     onTaskClick: (task: TaskWithCompleted) => void;
 };
 
-export function DayModal({ day, tasks, courseId, year, month, onClose, onAddTask, onToggleTask, onTaskClick }: DayModalProps) {
+export function DayModal({ day, subject, tasks, courseId, year, month, onClose, onAddTask, onToggleTask, onTaskClick }: DayModalProps) {
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState<TaskForm>({ title: '', description: '', startTime: '', endTime: '' });
     const [formError, setFormError] = useState('');
@@ -84,6 +86,7 @@ export function DayModal({ day, tasks, courseId, year, month, onClose, onAddTask
                 day: 'numeric',
                 month: 'short',
             }),
+            ...(subject ? { subjectId: subject.id } : {}),
             startTime: form.startTime,
             endTime: form.endTime,
         };
@@ -152,14 +155,14 @@ export function DayModal({ day, tasks, courseId, year, month, onClose, onAddTask
                     </button>
 
                     <div className="flex items-end gap-3">
-                        <span className={`text-6xl font-black leading-none ${isHighlighted ? 'text-white' : 'text-ink'
+                        <span className={`${subject ? 'max-w-[220px] text-3xl break-words' : 'text-6xl'} font-black leading-none ${isHighlighted ? 'text-white' : 'text-ink'
                             }`}>
-                            {day.number}
+                            {subject?.name ?? day.number}
                         </span>
                         <div className="flex flex-col mb-1">
                             <span className={`text-sm font-semibold tracking-wide ${isHighlighted ? 'text-white/90' : 'text-ink-soft'
                                 }`}>
-                                {day.name}
+                                {subject?.teacher ?? day.name}
                             </span>
                             <span className={`text-xs ${isHighlighted ? 'text-white/70' : 'text-ink-faint'
                                 }`}>

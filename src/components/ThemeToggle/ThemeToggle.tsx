@@ -2,6 +2,7 @@ import { useThemeStore } from '../../store/themeStore';
 
 export function ThemeToggle() {
     const isDark = useThemeStore((s) => s.isDark);
+
     const toggleThemeAt = useThemeStore((s) => s.toggleThemeAt);
 
     function handleClick(e: React.MouseEvent<HTMLButtonElement>) {

@@ -49,7 +49,7 @@ export function FormSection({ onClose, onSuccess }: FormSectionProps) {
                     </div>
 
                     {/* Forms slider wrapper */}
-                    <div className="overflow-hidden relative w-full h-[300px]">
+                    <div className="overflow-hidden relative w-full h-[390px]">
                         <div
                             className="flex w-[200%] h-full transition-transform duration-500 ease-out"
                             style={{ transform: loginIsVisible ? 'translateX(0%)' : 'translateX(-50%)' }}

@@ -5,13 +5,15 @@ import { EMPTY_TASKS } from '../../../../../Hooks/useMonthDay';
 import { useTaskStore } from '../../../../../store/taskStorage';
 import { useAuthStore } from '../../../../../store/AuthStore';
 import { DetailsModal } from '../../../Common/DetailsModal/DetailsModal';
-import { TIME_OPTIONS, TIME_SLOTS, isSameLocalDay } from '../../../../../utils/taskSchedule';
+import { TIME_OPTIONS, TIME_SLOTS, fromDatabaseTime, isSameLocalDay } from '../../../../../utils/taskSchedule';
 import { useTaskScheduleStore } from '../../../../../store/taskScheduleStorage';
+import { EMPTY_SUBJECTS, useSubjectStore } from '../../../../../store/subjectStorage';
+import { getSubjectWeekday } from '../../../../../utils/subjectSchedule';
 
-import type { CalendarDay, TaskWithCompleted } from '../../../../../types';
+import type { CalendarDay, Subject, SubjectColor, SubjectSchedule, TaskWithCompleted } from '../../../../../types';
 
 const EMPTY_SCHEDULES: Readonly<Record<string, { startTime: string; endTime: string }>> = Object.freeze({});
-const RANDOM_COLORS = ['weekly-task-pink', 'weekly-task-purple', 'weekly-task-blue', 'weekly-task-gray'] as const;
+const RANDOM_COLORS = ['weekly-task-pink', 'weekly-task-purple', 'weekly-task-blue', 'weekly-task-gray', 'weekly-task-blue-2', 'weekly-task-yellow-2'] as const;
 
 const typeStyles: Record<CalendarDay['type'], string> = {
     past: 'opacity-60 bg-muted border-line',
@@ -27,6 +29,7 @@ type DayCardProps = {
     month: number;
     courseId: number;
     weekly?: boolean;
+    dataVersion: string;
 };
 
 function getDayStart(date: Date): Date {
@@ -35,9 +38,10 @@ function getDayStart(date: Date): Date {
     return result;
 }
 
-export const DayCard = memo(function DayCard({ day, year, month, courseId, weekly = false }: DayCardProps) {
+export const DayCard = memo(function DayCard({ day, year, month, courseId, weekly = false, dataVersion }: DayCardProps) {
     const { number, type } = day;
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedSubject, setSelectedSubject] = useState<{ subject: Subject; schedule: SubjectSchedule } | null>(null);
     const [detailsTask, setDetailsTask] = useState<TaskWithCompleted | null>(null);
     const [colorSeed] = useState(() => Math.random());
     const courseTasks = useTaskStore((state) => state.tasksByCourse[courseId] ?? EMPTY_TASKS);
@@ -45,6 +49,7 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId, weekl
     const user = useAuthStore((state) => state.user);
     const toggleTaskStatus = useAuthStore((state) => state.toggleTaskStatus);
     const schedules = useTaskScheduleStore((state) => state.schedulesByCourse[String(courseId)] ?? EMPTY_SCHEDULES);
+    const subjects = useSubjectStore((state) => state.subjectsByCourse[String(courseId)] ?? EMPTY_SUBJECTS);
     const cardDate = new Date(year, month, number);
 
     const tasks = useMemo(
@@ -76,22 +81,46 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId, weekl
 
     function getTaskColor(task: TaskWithCompleted): string {
         if (task.completed) return 'weekly-task-green';
+        if (getTaskStatusConfig(new Date(task.dueDate)).status === 'overdue') return 'weekly-task-overdue';
         if (isSameLocalDay(new Date(task.dueDate), new Date())) return 'weekly-task-red';
         if (getTaskStatusConfig(new Date(task.dueDate)).status === 'tomorrow') return 'weekly-task-yellow';
         return getRandomColor(task.id);
     }
 
+    function getTaskSchedule(task: TaskWithCompleted) {
+        const inMemorySchedule = schedules[task.id];
+        if (inMemorySchedule) return inMemorySchedule;
+        if (!task.startTime || !task.endTime) return null;
+
+        return {
+            startTime: fromDatabaseTime(task.startTime),
+            endTime: fromDatabaseTime(task.endTime),
+        };
+    }
+
     const weeklyTasks = tasks.filter((task) => {
-        const schedule = schedules[task.id];
+        const schedule = getTaskSchedule(task);
         if (!schedule) return false;
         return TIME_OPTIONS.includes(schedule.startTime as typeof TIME_OPTIONS[number])
             && TIME_OPTIONS.includes(schedule.endTime as typeof TIME_OPTIONS[number]);
     });
 
+    const weekday = getSubjectWeekday(cardDate);
+    const daySubjects = subjects.flatMap((subject) => subject.schedules
+        .filter((schedule) => schedule.weekday === weekday)
+        .map((schedule) => ({ subject, schedule })));
+    const modalTasks = selectedSubject
+        ? tasks.filter((task) => task.subjectId === selectedSubject.subject.id)
+        : tasks;
+
     const weeklyCard = (
         <div
             className={`weekly-day-card ${type === 'today' ? 'weekly-day-card-today' : ''}`}
-            onClick={() => setIsModalOpen(true)}
+            data-version={dataVersion}
+            onClick={() => {
+                setSelectedSubject(null);
+                setIsModalOpen(true);
+            }}
             data-today={isToday ? '' : undefined}
         >
             {TIME_SLOTS.map((slot, index) => (
@@ -102,25 +131,60 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId, weekl
                     aria-hidden="true"
                 />
             ))}
+            {daySubjects.map(({ subject, schedule }) => {
+                const startRow = TIME_OPTIONS.indexOf(schedule.startTime as typeof TIME_OPTIONS[number]);
+                const endRow = TIME_OPTIONS.indexOf(schedule.endTime as typeof TIME_OPTIONS[number]);
+                if (startRow < 0 || endRow <= startRow) return null;
+                const rowSpan = endRow - startRow;
+                const subjectTasks = tasks.filter((task) => task.subjectId === subject.id);
+                const pendingCount = subjectTasks.filter((task) => !task.completed).length;
+
+                return (
+                    <div
+                        key={`${subject.id}-${schedule.id}`}
+                        className={`weekly-subject-block subject-${subject.color as SubjectColor}`}
+                        style={{ gridRow: `${startRow + 1} / span ${rowSpan}` }}
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            setSelectedSubject({ subject, schedule });
+                            setIsModalOpen(true);
+                        }}
+                        title={`${subject.name} · ${schedule.startTime} – ${schedule.endTime}`}
+                    >
+                        <div className="weekly-subject-heading">
+                            <strong>{subject.name}</strong>
+                            {pendingCount > 0 && <span className="weekly-subject-count">{pendingCount}</span>}
+                        </div>
+
+                        {subjectTasks.map((task) => (
+                            <span key={task.id} className={`weekly-subject-task ${task.completed ? 'weekly-subject-task-completed' : ''}`}>
+                                {task.title}
+                            </span>
+                        ))}
+                    </div>
+                );
+            })}
             {weeklyTasks.map((task) => {
-                const schedule = schedules[task.id];
+                const schedule = getTaskSchedule(task);
                 if (!schedule) return null;
                 const startRow = TIME_OPTIONS.indexOf(schedule.startTime as typeof TIME_OPTIONS[number]);
                 const endRow = TIME_OPTIONS.indexOf(schedule.endTime as typeof TIME_OPTIONS[number]);
                 if (startRow < 0 || endRow <= startRow) return null;
+                const rowSpan = endRow - startRow;
                 return (
                     <button
                         type="button"
                         key={task.id}
                         className={`weekly-task-block ${getTaskColor(task)}`}
-                        style={{ gridRow: `${startRow + 1} / ${endRow + 1}` }}
+                        style={{ gridRow: `${startRow + 1} / span ${rowSpan}` }}
                         onClick={(event) => {
                             event.stopPropagation();
+                            setSelectedSubject(null);
                             setDetailsTask(task);
                         }}
                         title={`${task.title} · ${schedule.startTime} – ${schedule.endTime}`}
                     >
-                        <span className="weekly-task-time">{schedule.startTime} – {schedule.endTime}</span>
+
                         <span>{task.title.length > 30 ? `${task.title.slice(0, 30)}…` : task.title}</span>
                     </button>
                 );
@@ -131,7 +195,10 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId, weekl
     const regularCard = (
         <div
             className={`relative rounded-xl border p-3 flex flex-col gap-1.5 cursor-pointer transition-all duration-200 ease-out hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 aspect-square md:aspect-auto ${typeStyles[type] ?? typeStyles.future} ${type === 'past' || type === 'future' ? 'border-line' : ''}`}
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+                setSelectedSubject(null);
+                setIsModalOpen(true);
+            }}
             data-today={isToday ? '' : undefined}
         >
             <div className={`flex justify-end items-center rounded-t-[10px] -mx-3 -mt-3 px-3 pt-3 pb-1.5 ${isToday ? 'bg-gradient-to-br from-amber-500 to-amber-600' : isTomorrow ? 'bg-gradient-to-br from-[#0058be] to-[#0041a8]' : isWeekend ? 'bg-gradient-to-br from-green-500 to-green-600' : ''}`}>
@@ -157,15 +224,21 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId, weekl
             {isModalOpen && (
                 <DayModal
                     day={day}
-                    tasks={tasks}
+                    subject={selectedSubject?.subject ?? null}
+                    schedule={selectedSubject?.schedule ?? null}
+                    tasks={modalTasks}
                     courseId={courseId}
                     year={year}
                     month={month}
-                    onClose={() => setIsModalOpen(false)}
+                    onClose={() => {
+                        setIsModalOpen(false);
+                        setSelectedSubject(null);
+                    }}
                     onAddTask={addTask}
                     onToggleTask={toggleTaskStatus}
                     onTaskClick={(task) => {
                         setIsModalOpen(false);
+                        setSelectedSubject(null);
                         setDetailsTask(task);
                     }}
                 />

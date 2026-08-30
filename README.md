@@ -1,17 +1,18 @@
 # Intellect — Plataforma de Gestión Académica
 
-Aplicación web de gestión académica creada con React, Vite y Supabase, acompañada de un backend en Node/Express para servicios auxiliares (como envío de correos). Permite registrar usuarios, seleccionar un curso, crear y organizar tareas compartidas, consultar una agenda semanal con franjas horarias y recibir notificaciones basadas en las fechas de entrega. La persistencia de usuarios, tareas, cursos y progreso se gestiona a través de Supabase; el tema visual se maneja localmente y los horarios permanecen temporalmente en memoria mientras se prepara su migración a Supabase.
+Aplicación web de gestión académica creada con React, Vite y Supabase. Permite registrar usuarios, seleccionar un curso, crear y organizar tareas compartidas, gestionar materias recurrentes, consultar una agenda semanal con franjas horarias y recibir notificaciones basadas en las fechas de entrega. La persistencia de usuarios, tareas, cursos, materias, horarios y progreso se gestiona a través de Supabase; el tema visual se maneja localmente.
 
 ## Funcionalidades
 
 - Registro, inicio y cierre de sesión seguro mediante **Supabase Auth** y sincronización de perfiles en la tabla `public.usuarios`.
-- Envío automático de correo de bienvenida tras el registro mediante el servidor backend Express y Nodemailer.
 - Un curso seleccionado por cada usuario (sincronizado en `usuarios.selected_course_id`).
 - Modal de seguridad (`CourseAccessModal`) que solicita un código de verificación (`code_verification`) para validar y autorizar la unión de un usuario a un curso.
 - Catálogo de cursos cargado en tiempo real desde Supabase (`public.cursos`) en la página de selección; `data.ts` se conserva como referencia estática para el detalle del dashboard.
 - Creación de tareas compartidas persistidas en Supabase (`public.tasks`) para todos los miembros de un curso.
 - Roles y permisos: `admin` universal en `usuarios.is_admin` y `manager` por curso en `course_members`.
 - Solo un admin o el manager del curso puede ver y usar las acciones de crear, editar o eliminar tareas.
+- Materias recurrentes: admins y managers pueden crear materias con profesor, descripción, color elegido y varios horarios semanales sin solapamientos; se guardan en `public.subjects` y `public.subject_schedules` y se renderizan en el calendario.
+- El formulario nuevo de tareas permite seleccionar una materia y una fecha válida para esa materia; las tareas mantienen `dueDate` para expiración y guardan la relación mediante `tasks.subject_id`.
 - Modal único de creación de tareas (`AddTaskModal/TaskModal.tsx`) reusado desde el dashboard y la sección "Agregar Tareas".
 - Descripción con textarea de auto-resize hasta 6 líneas, contador de caracteres en vivo y botón Guardar bloqueado al superar el límite de 2000 caracteres en el modal de creación.
 - Sección dedicada para la visualización y gestión de "Agregar Tareas" (`AddTaskSection`).
@@ -49,8 +50,6 @@ Aplicación web de gestión académica creada con React, Vite y Supabase, acompa
 | React Router 8 | Rutas de la SPA |
 | Zustand 5 | Estado global reactivo |
 | Supabase (`supabase-js`) | Base de datos PostgreSQL, Auth y Row Level Security (RLS) |
-| Node.js + Express 5 | Servidor backend para APIs auxiliares (`http://localhost:3000`) |
-| Nodemailer + Zod | Envío de correos transaccionales y validación de esquemas |
 | Tailwind CSS 3 | Estilos semánticos y animaciones |
 | ESLint + typescript-eslint | Análisis estático del código |
 
@@ -71,7 +70,7 @@ Las páginas principales, secciones y el calendario se cargan con `React.lazy()`
 Gestiona las credenciales mediante **Supabase Auth** y el perfil en la tabla `public.usuarios`:
 
 - `login({ email, password })`: autenticación JWT vía `supabase.auth.signInWithPassword`.
-- `register({ name, email, password })`: crea la cuenta en `supabase.auth.signUp`, inserta la fila en `usuarios` (`id`, `name`, `gmail`) y envía un email de bienvenida mediante el endpoint backend `POST /api/email/send`.
+- `register({ name, email, password })`: crea la cuenta con `supabase.auth.signUp` e inserta la fila en `usuarios` (`id`, `name`, `gmail`) cuando Supabase devuelve una sesión.
 - `logout()`: revoca la sesión con `supabase.auth.signOut()`.
 - `restoreSession()`: sincroniza la sesión al arrancar la app o ante eventos de `onAuthStateChange`.
 - `setSelectedCourse(courseId)`: actualiza `usuarios.selected_course_id`.
@@ -93,8 +92,7 @@ taskStatusByCourse: {
 
 Mantiene el estado visual del curso seleccionado y lo sincroniza con `user.selectedCourseId` de `AuthStore` y la base de datos:
 
-- `verifyAndSelect(courseId, code)`: valida el código de seguridad contra la columna `code_verification` en `public.cursos` de Supabase; si es válido, ejecuta `handleSelect(courseId)` para unirse al curso.
-- `handleSelect(courseId)`: actualiza `selected_course_id` en Supabase y el store.
+- `verifyAndSelect(courseId, code)`: valida el código de seguridad contra la columna `code_verification` en `public.cursos` de Supabase y, si es válido, actualiza `selected_course_id` para unirse al curso.
 - `handleLeave(courseId)`: desvincula el curso asociado al usuario.
 
 ### Roles y permisos
@@ -137,6 +135,18 @@ Persiste las definiciones de tareas en la tabla `public.tasks` de Supabase:
 - Los horarios no se guardan en `localStorage` ni en Supabase todavía.
 - `src/utils/taskSchedule.ts` centraliza las opciones de hora, las franjas visibles, la conversión de horas y la detección de solapamientos.
 - La siguiente migración debe guardar estos valores en Supabase relacionados con cada tarea.
+
+### Materias recurrentes — `src/store/subjectStorage.ts`
+
+- Las materias y sus horarios recurrentes se guardan en Supabase (`subjects` y `subject_schedules`), agrupadas por curso en el store.
+- Cada materia puede tener varios horarios en distintos días o varias franjas el mismo día.
+- `src/utils/subjectSchedule.ts` reutiliza `rangesOverlap` para rechazar horarios solapados entre materias del mismo curso.
+- `DayCard` pinta cada horario de materia en la cuadrícula semanal, por lo que una materia se repite automáticamente cada semana.
+- Los managers del curso y los admins universales pueden crear y eliminar materias desde `AddTaskSection`.
+- `loadSubjects(courseId)` carga únicamente las materias y horarios del curso indicado después de restaurar la sesión.
+- Las horas de PostgreSQL (`HH:mm:ss`) se convierten al formato de la cuadrícula (`h:mm AM/PM`) antes de renderizar.
+- Las tareas nuevas envían `subject_id` a `public.tasks` y conservan `due_date` para su expiración.
+- `supabase/add_subject_id_to_tasks.sql` prepara la relación tarea-materia; `supabase/add_subject_metadata.sql` completa `teacher` y `description` si se creó la tabla con el primer script.
 
 ### UI — `src/store/uiStore.ts`
 
@@ -227,6 +237,7 @@ El calendario usa las tareas compartidas de `taskStorage.ts`, combina su estado 
 - `DayCard.tsx` dibuja diez filas horarias y extiende cada tarea mediante `grid-row` según `startTime` y `endTime`.
 - Desktop muestra las cinco columnas completas.
 - Mobile usa scroll horizontal para los días y vertical para las horas; el encabezado de días y la columna de horas permanecen visibles durante el desplazamiento. `useAxisLockedScroll.ts` controla los gestos táctiles con `Pointer Events`: después de un umbral inicial elige el eje dominante, actualiza únicamente `scrollLeft` o `scrollTop` y aplica momentum al soltar.
+- Las materias recurrentes comparten la cuadrícula con las tareas normales; cada horario se posiciona por `grid-row` usando el día de la semana y sus horas configuradas.
 - Las tareas vencidas de días anteriores no se renderizan en la agenda semanal.
 - Las tareas sin horario no se renderizan en la agenda semanal hasta que exista una migración o edición de horario.
 - `DayCard` trunca títulos según el contexto y muestra el detalle completo al seleccionar una tarea.
@@ -252,17 +263,7 @@ La estructura completa de archivos se detalla en la sección siguiente. Los dire
 
 ```text
 backend/
-├── server.ts                 # Servidor Express (puerto 3000)
-├── api/
-│   └── Config.ts             # Configuración de transporte SMTP con Nodemailer
-├── controller/
-│   └── emailController.ts    # Controlador de envío de emails
-├── middleware/
-│   └── validar.ts            # Middleware de validación con Zod
-├── models/
-│   └── emailSchema.ts        # Esquema de validación para correo
-└── routes/
-    └── emailRoutes.ts        # Rutas (/api/email/send)
+└── server.ts                 # Servidor Express para servicios auxiliares
 
 src/
 ├── App.tsx
@@ -301,6 +302,7 @@ src/
 ├── store/
 │   ├── AuthStore.ts          # Autenticación Supabase + perfil usuarios
 │   ├── courseStore.ts        # Sincronización del curso activo
+│   ├── subjectStorage.ts     # Materias y horarios recurrentes en Supabase
 │   ├── taskStorage.ts        # CRUD de tareas compartidas en Supabase
 │   ├── taskScheduleStorage.ts # Horarios temporales en memoria
 │   ├── themeStore.ts         # Dark mode (clase .dark + persistencia en localStorage)
@@ -309,6 +311,7 @@ src/
 │   ├── courseSections.ts
 │   ├── dateNavigation.ts     # Navegación de semanas y fechas
 │   ├── taskSchedule.ts       # Opciones, franjas y validaciones de horarios
+│   ├── subjectSchedule.ts     # Días recurrentes y conflictos de materias
 │   ├── permission.ts          # Regla admin/manager para gestionar tareas por curso
 │   ├── taskNotifications.ts
 │   └── taskStatus.ts
@@ -390,7 +393,7 @@ src/
 ## Scripts
 
 ```bash
-npm run dev       # Inicia Vite y el servidor backend Express (concurrentemente con tsx watch)
+npm run dev       # Inicia Vite y el servidor auxiliar (concurrentemente con tsx watch)
 npm run build     # Genera el build de producción
 npm run preview   # Sirve el build generado
 npm run lint      # Ejecuta ESLint (flat config + typescript-eslint)

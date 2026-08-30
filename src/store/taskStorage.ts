@@ -8,7 +8,7 @@ import type { Task } from '../types';
 type TasksByCourse = Record<string, Task[]>;
 
 
-function rowToTask(row: { id: string; course_id: number; title: string; subtitle: string; due_date: string; hour: string; description?: string | null, start_time?: string | null, end_time?: string | null }): Task {
+function rowToTask(row: { id: string; course_id: number; title: string; subtitle: string; due_date: string; hour: string; description?: string | null; subject_id?: string | null; start_time?: string | null; end_time?: string | null }): Task {
     return {
         id: row.id,
         title: row.title,
@@ -16,6 +16,7 @@ function rowToTask(row: { id: string; course_id: number; title: string; subtitle
         dueDate: row.due_date,
         hour: row.hour,
         ...(row.description ? { description: row.description } : {}),
+        ...(row.subject_id ? { subjectId: row.subject_id } : {}),
         ...(row.start_time ? { startTime: row.start_time } : {}),
         ...(row.end_time ? { endTime: row.end_time } : {}),
     };
@@ -24,6 +25,7 @@ function rowToTask(row: { id: string; course_id: number; title: string; subtitle
 interface TaskStore {
     tasksByCourse: TasksByCourse;
     fetchTasks: () => Promise<TasksByCourse>;
+    clearTasks: () => void;
     addTask: (courseId: string | number, task: Task) => Promise<boolean>;
     deleteTask: (courseId: string | number, taskId: string) => Promise<void>;
 
@@ -54,6 +56,7 @@ export const useTaskStore = create<TaskStore>((set) => ({
                 dueDate: row.due_date,          // ← snake → camel
                 hour: row.hour,
                 ...(row.description ? { description: row.description } : {}),
+                ...(row.subject_id ? { subjectId: row.subject_id } : {}),
                 ...(row.start_time ? { startTime: row.start_time } : {}),
                 ...(row.end_time ? { endTime: row.end_time } : {}),
             });
@@ -63,6 +66,7 @@ export const useTaskStore = create<TaskStore>((set) => ({
         set({ tasksByCourse: grouped });
         return grouped;
     },
+    clearTasks: () => set({ tasksByCourse: {} }),
     addTask: async (courseId, task) => {
         const { data, error } = await supabase
             .from('tasks')
@@ -73,6 +77,7 @@ export const useTaskStore = create<TaskStore>((set) => ({
                 subtitle: task.subtitle,
                 due_date: task.dueDate,
                 hour: task.hour,
+                subject_id: task.subjectId ?? null,
                 start_time: task.startTime ? toDatabaseTime(task.startTime) : null,
                 end_time: task.endTime ? toDatabaseTime(task.endTime) : null,
             })
@@ -99,7 +104,8 @@ export const useTaskStore = create<TaskStore>((set) => ({
         const { error } = await supabase
             .from('tasks')
             .delete()
-            .eq('id', taskId);
+            .eq('id', taskId)
+            .eq('course_id', Number(courseId));
 
         if (error) {
             console.error('Error deleting task:', error);

@@ -34,6 +34,7 @@ function mapRow(row: UsuarioRow, courseRoles: Record<string, CourseRole> = {}): 
 
 interface AuthActions {
     login: (credentials: { email: string; password: string }) => Promise<LoginResult>;
+    loginWithGoogle: () => Promise<LoginResult>;
     register: (data: { name: string; email: string; password: string }) => Promise<RegisterResult>;
     updateUser: (field: EditableUserField, value: string) => Promise<boolean>;
     setSelectedCourse: (courseId: number | null) => Promise<boolean>;
@@ -52,6 +53,29 @@ const USER_COLUMN_BY_FIELD: Record<'name' | 'email', string> = {
     email: 'gmail',
 };
 
+async function ensureProfile(userId: string, email: string | undefined, metadata: Record<string, unknown>, preferredName?: string): Promise<boolean> {
+    if (!email) return false;
+
+    const metadataName = typeof metadata.full_name === 'string'
+        ? metadata.full_name
+        : typeof metadata.name === 'string' ? metadata.name : '';
+    const name = preferredName?.trim() || metadataName.trim() || email.split('@')[0] || 'Usuario';
+    const { error } = await supabase.from('usuarios').insert({
+        id: userId,
+        name,
+        gmail: email,
+        task_status: {},
+        selected_course_id: null,
+        is_admin: false,
+    });
+
+    if (error && error.code !== '23505') {
+        console.error('[ensureProfile] error:', error.message);
+        return false;
+    }
+    return true;
+}
+
 export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
     isLoggedIn: false,
     sessionReady: false,
@@ -69,13 +93,33 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
             return { success: false, error: "Email o contraseña incorrectos." };
         }
 
-        const user = await get().fetchProfile(data.user.id);
+        let user = await get().fetchProfile(data.user.id);
+        if (!user) {
+            await ensureProfile(data.user.id, data.user.email, data.user.user_metadata as Record<string, unknown>);
+            user = await get().fetchProfile(data.user.id);
+        }
         if (!user) {
             return { success: false, error: "No se encontró el perfil del usuario." };
         }
 
         set({ isLoggedIn: true, user });
         return { success: true, user };
+    },
+
+    loginWithGoogle: async () => {
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: `${window.location.origin}/course`,
+            },
+        });
+
+        if (error) {
+            console.error('[googleSignIn] error:', error.message);
+            return { success: false, error: 'No se pudo iniciar sesión con Google.' };
+        }
+
+        return { success: true };
     },
 
     register: async ({ name, email, password }) => {
@@ -98,6 +142,13 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
             return { success: false, error: signUpError?.message ?? "Error al crear la cuenta." };
         }
 
+        if (!signUpData.session) {
+            return {
+                success: false,
+                error: 'Cuenta creada. Revisa tu correo para confirmar la cuenta antes de iniciar sesión.',
+            };
+        }
+
         const { data, error } = await supabase
             .from("usuarios")
             .insert([{
@@ -118,31 +169,6 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
 
         const user = mapRow(data as UsuarioRow);
         set({ isLoggedIn: true, user });
-
-        await fetch(`http://localhost:3000/api/email/send`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                to: normalizedEmail,
-                subject: "Gracias por Registrarte",
-                html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; padding: 24px; border-radius: 8px;">
-        <h1 style="font-size: 22px; color: #1f2937;">¡Gracias por registrarte, ${name.trim()}!</h1>
-        <p style="font-size: 16px; color: #374151; line-height: 1.5;">
-          Tu cuenta en nuestra plataforma ha sido creada exitosamente. Ya puedes iniciar sesión y comenzar a usarla.
-        </p>
-        <p style="font-size: 16px; color: #374151; line-height: 1.5;">
-          Si tienes alguna pregunta, puedes responder directamente a este correo y con gusto te ayudamos.
-        </p>
-        <hr style="margin: 24px 0; border: none; border-top: 1px solid #e5e7eb;" />
-        <p style="font-size: 12px; color: #9ca3af;">
-          Recibiste este correo porque te registraste en [nombre de tu plataforma] ([tu-dominio.com]).
-        </p>
-      </div>
-    `,
-    text: `¡Gracias por registrarte, ${name.trim()}!\n\nTu cuenta en nuestra plataforma ha sido creada exitosamente. Ya puedes iniciar sesión y comenzar a usarla.\n\nSi tienes alguna pregunta, responde directamente a este correo.\n\n---\nRecibiste este correo porque te registraste en Intellect (https://intellect-pearl.vercel.app/).`,
-}),
-        }).catch(error => console.error('Error al enviar correo de bienvenida:', error));
         return { success: true, user };
     },
 
@@ -253,7 +279,20 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
                 return;
             }
 
-            const user = await get().fetchProfile(sessionUser.id);
+            let user = await get().fetchProfile(sessionUser.id);
+
+            if (!user && sessionUser.app_metadata?.provider === 'google' && sessionUser.email) {
+                const created = await ensureProfile(
+                    sessionUser.id,
+                    sessionUser.email,
+                    sessionUser.user_metadata as Record<string, unknown>,
+                );
+
+                if (created) {
+                    user = await get().fetchProfile(sessionUser.id);
+                }
+            }
+
             if (!user) {
                 set({ isLoggedIn: false, user: null });
                 return;

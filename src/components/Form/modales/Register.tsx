@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useAuthStore } from "../../../store/AuthStore";
+import { GoogleIcon } from '../GoogleIcon';
 
 type RegisterProps = {
     onSwitch: () => void;
@@ -12,8 +13,10 @@ export function Register({ onSwitch, onSuccess }: RegisterProps) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const register = useAuthStore((state) => state.register);
+    const loginWithGoogle = useAuthStore((state) => state.loginWithGoogle);
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -38,6 +41,17 @@ export function Register({ onSwitch, onSuccess }: RegisterProps) {
 
     };
 
+    const handleGoogleRegister = async () => {
+        if (isGoogleSubmitting) return;
+        setError('');
+        setIsGoogleSubmitting(true);
+        const result = await loginWithGoogle();
+        if (!result.success) {
+            setError(result.error ?? 'No se pudo registrarte con Google.');
+            setIsGoogleSubmitting(false);
+        }
+    };
+
     return (
         <form className="flex flex-col items-center gap-4 w-full md:mt-8" onSubmit={handleSubmit}>
             <input
@@ -45,7 +59,7 @@ export function Register({ onSwitch, onSuccess }: RegisterProps) {
                 placeholder="Nombre"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200 text-sm hover:border-gray-300 animate-inputIn"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200 text-base md:text-sm hover:border-gray-300 animate-inputIn"
                 style={{ animationDelay: '0.1s', animationFillMode: 'both' }}
             />
             <input
@@ -53,7 +67,7 @@ export function Register({ onSwitch, onSuccess }: RegisterProps) {
                 placeholder="Email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200 text-sm hover:border-gray-300 animate-inputIn"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200 text-base md:text-sm hover:border-gray-300 animate-inputIn"
                 style={{ animationDelay: '0.2s', animationFillMode: 'both' }}
             />
             <input
@@ -61,7 +75,7 @@ export function Register({ onSwitch, onSuccess }: RegisterProps) {
                 placeholder="Password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200 text-sm hover:border-gray-300 animate-inputIn"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200 text-base md:text-sm hover:border-gray-300 animate-inputIn"
                 style={{ animationDelay: '0.3s', animationFillMode: 'both' }}
             />
             <button
@@ -71,6 +85,22 @@ export function Register({ onSwitch, onSuccess }: RegisterProps) {
                 style={{ animationDelay: '0.4s', animationFillMode: 'both' }}
             >
                 {isSubmitting ? 'Registrando…' : 'Register'}
+            </button>
+
+            <div className="flex w-full items-center gap-3 text-xs text-ink-faint">
+                <span className="h-px flex-1 bg-line" />
+                <span>o regístrate con</span>
+                <span className="h-px flex-1 bg-line" />
+            </div>
+
+            <button
+                type="button"
+                onClick={() => void handleGoogleRegister()}
+                disabled={isGoogleSubmitting || isSubmitting}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface py-3 text-sm font-semibold text-ink transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+            >
+                <GoogleIcon />
+                {isGoogleSubmitting ? 'Conectando…' : 'Registrarse con Google'}
             </button>
             <span className="text-sm text-red-500 animate-inputIn" style={{ animationDelay: '0.5s', animationFillMode: 'both' }}>{error}</span>
 

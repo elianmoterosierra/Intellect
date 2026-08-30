@@ -12,7 +12,6 @@ function selectedCourseStatus(): Record<string, ButtonStatus> {
 interface CourseStore {
     buttonStatus: Record<string, ButtonStatus>;
     syncFromAuth: () => void;
-    handleSelect: (courseId: number) => Promise<boolean>;
     handleLeave: (courseId: number) => boolean;
     verifyAndSelect: (courseId: number, code: string) => Promise<{ success: boolean; error?: string }>;
 }
@@ -22,27 +21,6 @@ export const useCourseStore = create<CourseStore>((set) => ({
 
     syncFromAuth: () => set({ buttonStatus: selectedCourseStatus() }),
 
-    handleSelect: async (courseId) => {
-        set({ buttonStatus: { [courseId]: 'processing' } });
-        const user = useAuthStore.getState().user;
-        if (!user) {
-            set({ buttonStatus: {} });
-            return false;
-        }
-        const { data, error } = await supabase
-            .from('usuarios')
-            .update({ selected_course_id: courseId })
-            .eq('id', user.id)
-            .select()
-            .single();
-        if (error || !data) {
-            set({ buttonStatus: {} });
-            return false;
-        }
-        useAuthStore.getState().setSelectedCourseLocal(data.selected_course_id);
-        set({ buttonStatus: { [courseId]: 'selected' } });
-        return true;
-    },
     verifyAndSelect: async (courseId: number, code: string): Promise<{ success: boolean; error?: string }> => {
         const { data: isValid, error: rpcError } = await supabase
             .from('cursos')
@@ -54,10 +32,27 @@ export const useCourseStore = create<CourseStore>((set) => ({
             return { success: false, error: 'Código de acceso incorrecto' };
         }
 
-        const selected = await useCourseStore.getState().handleSelect(courseId);
-        return selected
-            ? { success: true }
-            : { success: false, error: 'No se pudo seleccionar el curso. Inténtalo de nuevo.' };
+        set({ buttonStatus: { [courseId]: 'processing' } });
+        const user = useAuthStore.getState().user;
+        if (!user) {
+            set({ buttonStatus: {} });
+            return { success: false, error: 'Debes iniciar sesión para seleccionar un curso.' };
+        }
+
+        const { data, error } = await supabase
+            .from('usuarios')
+            .update({ selected_course_id: courseId })
+            .eq('id', user.id)
+            .select('selected_course_id')
+            .single();
+        if (error || !data) {
+            set({ buttonStatus: {} });
+            return { success: false, error: 'No se pudo seleccionar el curso. Inténtalo de nuevo.' };
+        }
+
+        useAuthStore.getState().setSelectedCourseLocal(data.selected_course_id);
+        set({ buttonStatus: { [courseId]: 'selected' } });
+        return { success: true };
     },
 
 

@@ -36,6 +36,17 @@ export function timeToMinutes(time: string): number {
     return hour * 60 + minute;
 }
 
+/** Converts a Postgres time value (HH:mm:ss) to the UI's 12-hour format. */
+export function fromDatabaseTime(time: string): string {
+    const match = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(time);
+    if (!match) return time;
+
+    const hour = Number(match[1]);
+    const meridiem = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${match[2]} ${meridiem}`;
+}
+
 export function rangesOverlap(first: TaskSchedule, second: TaskSchedule): boolean {
     return timeToMinutes(first.startTime) < timeToMinutes(second.endTime)
         && timeToMinutes(second.startTime) < timeToMinutes(first.endTime);

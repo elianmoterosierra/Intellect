@@ -38,6 +38,20 @@ export function SideNav({ courseId, activeSection, onSectionChange, canManageCou
         );
 
 
+
+
+
+    const toggleThemeAt = useThemeStore((s) => s.toggleThemeAt);
+
+    function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
+        // Centro del botón como origen de la onda
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = Math.round(rect.left + rect.width / 2);
+        const y = Math.round(rect.top + rect.height / 2);
+        toggleThemeAt(x, y);
+    }
+
+
     return (
         <>
             <nav className=" hidden md:flex flex-col fixed left-0 top-0 h-full p-4 bg-muted text-brand text-sm leading-5 border-r border-line w-64 z-40 transition-all duration-200">
@@ -67,11 +81,11 @@ export function SideNav({ courseId, activeSection, onSectionChange, canManageCou
 
                 <ul className="mt-auto flex flex-col gap-2 border-t border-line pt-4 list-none p-0 m-0">
                     <li>
-                        <div className="flex items-center gap-3 px-2 py-2">
+                        <button onClick={handleClick} className="flex items-center gap-3 px-2 py-2">
                             <ThemeToggle />
-                            <span className=" text-sm text-ink-soft">Modo {isDark ? 'Claro' : 'Oscuro'}</span>
+                            <span className=" text-sm text-ink-soft cursor-pointer">Modo {isDark ? 'Claro' : 'Oscuro'}</span>
 
-                        </div>
+                        </button>
                     </li>
 
                     <li>

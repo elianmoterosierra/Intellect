@@ -1,9 +1,10 @@
-import { useState, lazy, Suspense } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { BottomNav } from '../components/Course/DashboardSection/BottomNav(mobile)/BottomNav';
 import { SideNav } from '../components/Course/DashboardSection/SideNav/SideNav';
 import { AppBar } from '../components/Course/DashboardSection/AppBar(mobile)/AppBar';
 import { useParams, Link, Navigate } from 'react-router';
 import { useAuthStore } from '../store/AuthStore';
+import { useSubjectStore } from '../store/subjectStorage';
 import { courseData } from '../data/data';
 import { useCourseNavigation } from '../Hooks/useCourseNavigation';
 import { useAddTaskModal } from '../Hooks/useAddTaskModal';
@@ -25,14 +26,21 @@ export default function Course() {
   const course = courseData.find(c => c.id === Number(courseId));
   const [selectedTask, setSelectedTask] = useState<TaskWithCompleted | null>(null);
 
+  useEffect(() => {
+    if (course) {
+      void useSubjectStore.getState().loadSubjects(course.id);
+    }
+  }, [course]);
+
   const { activeSection, handleSectionChange, isSearchOpen, setIsSearchOpen, searchQuery, setSearchQuery } = useCourseNavigation();
   const { isOpen: isAddTaskModalOpen, close: closeAddTaskModal, titleInputRef } = useAddTaskModal();
   const {
     title, setTitle,
     subtitle, setSubtitle,
+    subjectId, setSubjectId,
+    subjects, availableDates,
     dueDate, setDueDate,
-    startTime, endTime, setStartTime, setEndTime,
-    today, error, handleSubmit,
+    error, handleSubmit,
   } = useAddTaskForm(Number(courseId), closeAddTaskModal);
 
   if (String(user?.selectedCourseId) !== courseId) {
@@ -103,7 +111,7 @@ export default function Course() {
       <BottomNav activeSection={activeSection} onSectionChange={handleSectionChange} canManageTasks={canManageTasks} />
 
       {isAddTaskModalOpen && canManageTasks && (
-        <AddTaskModal closeModal={closeAddTaskModal} handleSubmit={handleSubmit} titleInputRef={titleInputRef} title={title} setTitle={setTitle} subtitle={subtitle} setSubtitle={setSubtitle} dueDate={dueDate} setDueDate={setDueDate} today={today} error={error} startTime={startTime} endTime={endTime} setStartTime={setStartTime} setEndTime={setEndTime} />
+        <AddTaskModal closeModal={closeAddTaskModal} handleSubmit={handleSubmit} titleInputRef={titleInputRef} title={title} setTitle={setTitle} subtitle={subtitle} setSubtitle={setSubtitle} subjectId={subjectId} setSubjectId={setSubjectId} subjects={subjects} availableDates={availableDates} dueDate={dueDate} setDueDate={setDueDate} error={error} />
       )}
 
       {selectedTask && (

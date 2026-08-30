@@ -9,9 +9,10 @@ type DayProps = {
     currentYear: number;
     desktopWorkweek?: boolean;
     weekStart?: Date;
+    dataVersion?: string;
 };
 
-export function Day({ courseId, currentMonth, currentYear, desktopWorkweek = false, weekStart }: DayProps) {
+export function Day({ courseId, currentMonth, currentYear, desktopWorkweek = false, weekStart, dataVersion = '' }: DayProps) {
     const monthDaysData = useMonthDay(currentYear, currentMonth);
 
     if (desktopWorkweek) {
@@ -49,8 +50,12 @@ export function Day({ courseId, currentMonth, currentYear, desktopWorkweek = fal
                         {TIME_SLOTS.map((slot) => <div key={slot.start} className="calendar-time-label">{slot.start}</div>)}
                     </div>
                     {weekdays.map((day) => (
-                        <DayCard key={day.id} courseId={courseId} day={day} year={day.date.getFullYear()} month={day.date.getMonth()} weekly />
+                        <DayCard key={day.id} courseId={courseId} day={day} year={day.date.getFullYear()} month={day.date.getMonth()} weekly dataVersion={dataVersion} />
                     ))}
+                    <div className="calendar-recess-overlay" aria-label="Horarios de recreo">
+                        <div className="calendar-recess-band calendar-recess-band-morning">Recreo</div>
+                        <div className="calendar-recess-band calendar-recess-band-afternoon">Recreo</div>
+                    </div>
                 </div>
             </div>
         );
@@ -65,6 +70,7 @@ export function Day({ courseId, currentMonth, currentYear, desktopWorkweek = fal
                     day={day}
                     year={currentYear}
                     month={currentMonth}
+                    dataVersion={dataVersion}
 
                 />
             ))}

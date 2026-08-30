@@ -6,6 +6,9 @@ import { Day } from './Day/Day';
 import { isCurrentWeek, getMonday, formatWeekLabel, addDays } from '../../../utils/dateNavigation';
 import { useMediaQuery } from '../../../Hooks/useMediaQuery';
 import { useAxisLockedScroll } from '../../../Hooks/useAxisLockedScroll';
+import { EMPTY_TASKS } from '../../../Hooks/useMonthDay';
+import { useTaskStore } from '../../../store/taskStorage';
+import { EMPTY_SUBJECTS, useSubjectStore } from '../../../store/subjectStorage';
 
 import type { TaskWithCompleted } from '../../../types';
 
@@ -25,6 +28,9 @@ export default function CalendarSection({ courseId, searchQuery, setSearchQuery,
     const [showPerfil, setShowPerfil] = useState(false);
     const isDesktop = useMediaQuery('(min-width: 768px)');
     const mobileScrollHandlers = useAxisLockedScroll();
+    const tasks = useTaskStore((state) => state.tasksByCourse[String(courseId)] ?? EMPTY_TASKS);
+    const subjects = useSubjectStore((state) => state.subjectsByCourse[String(courseId)] ?? EMPTY_SUBJECTS);
+    const calendarDataVersion = JSON.stringify({ tasks, subjects });
     // Navegación compartida entre desktop y mobile.
     function handleNextWeek() {
         setWeekStart((current) => addDays(current, 7));
@@ -60,7 +66,7 @@ export default function CalendarSection({ courseId, searchQuery, setSearchQuery,
                     setSelectedTask={setSelectedTask}
                 />
                 <div className="calendar-container" style={{ overflowY: 'visible' }}>
-                    <Day courseId={courseId} currentMonth={weekStart.getMonth()} currentYear={weekStart.getFullYear()} desktopWorkweek weekStart={weekStart} />
+                    <Day courseId={courseId} currentMonth={weekStart.getMonth()} currentYear={weekStart.getFullYear()} desktopWorkweek weekStart={weekStart} dataVersion={calendarDataVersion} />
                 </div>
             </div>}
 
@@ -82,7 +88,7 @@ export default function CalendarSection({ courseId, searchQuery, setSearchQuery,
                     </button>
                 </div>
                 <div className="calendar-mobile-scroll" {...mobileScrollHandlers}>
-                    <Day courseId={courseId} currentMonth={weekStart.getMonth()} currentYear={weekStart.getFullYear()} desktopWorkweek weekStart={weekStart} />
+                    <Day courseId={courseId} currentMonth={weekStart.getMonth()} currentYear={weekStart.getFullYear()} desktopWorkweek weekStart={weekStart} dataVersion={calendarDataVersion} />
                 </div>
             </div>}
 

@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import type { FormEvent, RefObject } from 'react';
-import { TIME_OPTIONS } from '../../../../../utils/taskSchedule';
+import type { Subject } from '../../../../../types';
+import type { SubjectDateOption } from '../../../../../utils/subjectSchedule';
 
 type AddTaskModalProps = {
     closeModal: () => void;
@@ -10,17 +11,16 @@ type AddTaskModalProps = {
     setTitle: (value: string) => void;
     subtitle: string;
     setSubtitle: (value: string) => void;
+    subjectId: string;
+    setSubjectId: (value: string) => void;
+    subjects: Subject[];
+    availableDates: SubjectDateOption[];
     dueDate: string;
     setDueDate: (value: string) => void;
-    today: string;
     error: string;
-    startTime: string;
-    endTime: string;
-    setStartTime: (value: string) => void;
-    setEndTime: (value: string) => void;
 };
 
-export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, setTitle, subtitle, setSubtitle, dueDate, setDueDate, today, error, startTime, endTime, setStartTime, setEndTime }: AddTaskModalProps) {
+export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, setTitle, subtitle, setSubtitle, subjectId, setSubjectId, subjects, availableDates, dueDate, setDueDate, error }: AddTaskModalProps) {
     const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
 
     return (
@@ -82,6 +82,24 @@ export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, s
                             rows={2}
                         />
 
+                        <label className="flex flex-col gap-1.5 text-xs font-semibold text-ink-soft">
+                            Materia
+                            <select
+                                required
+                                value={subjectId}
+                                onChange={(event) => {
+                                    setSubjectId(event.target.value);
+                                    setDueDate('');
+                                }}
+                                className="w-full rounded-xl border border-line bg-muted px-4 py-3 text-base text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/25 md:text-sm"
+                            >
+                                <option value="">Selecciona una materia</option>
+                                {subjects.map((subject) => (
+                                    <option key={subject.id} value={subject.id}>{subject.name}</option>
+                                ))}
+                            </select>
+                        </label>
+
                         {(subtitle.length > 0 || error) && (
                             <div className="flex justify-between items-center">
                                 <span className={`text-xs transition-all ${subtitle.length > 2000
@@ -100,30 +118,16 @@ export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, s
 
                         <div className="relative">
                             <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-ink-faint">calendar_month</span>
-                            <input
-                                type="date"
+                            <select
+                                required
                                 value={dueDate}
-                                min={today}
                                 onChange={(event) => setDueDate(event.target.value)}
-                                className="w-full rounded-xl border border-line bg-muted py-3 pl-11 pr-4 text-[15px] text-ink-soft outline-none transition-all focus:border-brand focus:ring-2 focus:ring-brand/25"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            <label className="flex flex-col gap-1.5 text-xs font-semibold text-ink-soft">
-                                Hora de inicio
-                                <select required value={startTime} onChange={(event) => setStartTime(event.target.value)} className="rounded-xl border border-line bg-muted px-4 py-3 text-sm text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/25">
-                                    <option value="">Selecciona</option>
-                                    {TIME_OPTIONS.slice(0, -1).map((time) => <option key={time} value={time}>{time}</option>)}
-                                </select>
-                            </label>
-                            <label className="flex flex-col gap-1.5 text-xs font-semibold text-ink-soft">
-                                Hora de finalización
-                                <select required value={endTime} onChange={(event) => setEndTime(event.target.value)} className="rounded-xl border border-line bg-muted px-4 py-3 text-sm text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/25">
-                                    <option value="">Selecciona</option>
-                                    {TIME_OPTIONS.slice(1).map((time) => <option key={time} value={time}>{time}</option>)}
-                                </select>
-                            </label>
+                                className="w-full appearance-none rounded-xl border border-line bg-muted py-3 pl-11 pr-4 text-base text-ink-soft outline-none transition-all focus:border-brand focus:ring-2 focus:ring-brand/25 md:text-sm"
+                                disabled={!subjectId}
+                            >
+                                <option value="">{subjectId ? 'Selecciona el día de entrega' : 'Selecciona primero una materia'}</option>
+                                {availableDates.map((date) => <option key={date.value} value={date.value}>{date.label}</option>)}
+                            </select>
                         </div>
 
                         {error && <p className="rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-600">{error}</p>}

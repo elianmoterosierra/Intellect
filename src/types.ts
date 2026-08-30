@@ -21,11 +21,34 @@ export type Task = {
     dueDate: string;
     hour: string;
     description?: string;
+    subjectId?: string;
     startTime?: string;
     endTime?: string;
 };
 
 export type TaskWithCompleted = Task & { completed: boolean };
+
+export type SubjectColor = 'blue' | 'purple' | 'pink' | 'yellow' | 'green' | 'orange';
+
+export type SubjectWeekday = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday';
+
+export type SubjectSchedule = {
+    id: string;
+    weekday: SubjectWeekday;
+    startTime: string;
+    endTime: string;
+};
+
+export type Subject = {
+    id: string;
+    courseId: number;
+    name: string;
+    teacher: string;
+    description: string;
+    color: SubjectColor;
+    schedules: SubjectSchedule[];
+    createdAt: string;
+};
 
 /** Estado `completed` por curso y tarea, almacenado en el perfil del usuario. */
 export type TaskStatusMap = Record<string, Record<string, { completed: boolean }>>;

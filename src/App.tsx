@@ -7,6 +7,7 @@ import { useAuthStore } from './store/AuthStore'
 import { supabase } from './lib/supabase'
 import { PageLoader } from './page/PageLoader.tsx'
 import { useTaskStore } from './store/taskStorage'
+import { useSubjectStore } from './store/subjectStorage'
 // Lazy imports: cada página se descarga solo cuando el usuario la visita
 const HomePage = lazy(() => import('./page/home'))
 const CoursePage = lazy(() => import('./page/SelectCourse').then(m => ({ default: m.CoursePage })))
@@ -16,17 +17,34 @@ const Course = lazy(() => import('./page/Course'))
 
 
 function App() {
-  useEffect(() => {
+    useEffect(() => {
     useThemeStore.getState().initTheme()
-    useAuthStore.getState().restoreSession()
-    useTaskStore.getState().fetchTasks()
+
+    const restoreAndLoadData = async () => {
+      await useAuthStore.getState().restoreSession()
+
+      if (useAuthStore.getState().isLoggedIn) {
+        const selectedCourseId = useAuthStore.getState().user?.selectedCourseId ?? null
+        await Promise.all([
+          useSubjectStore.getState().loadSubjects(selectedCourseId),
+          useTaskStore.getState().fetchTasks(),
+        ])
+      } else {
+        useSubjectStore.getState().clearSubjects()
+        useTaskStore.getState().clearTasks()
+      }
+    }
+
+    void restoreAndLoadData()
+
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        useAuthStore.getState().restoreSession()
-        useTaskStore.getState().fetchTasks()
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+        void restoreAndLoadData()
       }
       if (event === 'SIGNED_OUT') {
-        useAuthStore.setState({ isLoggedIn: false, sessionReady: true, user: null }) // ✅ solo actualiza estado, no llama signOut()
+        useSubjectStore.getState().clearSubjects()
+        useTaskStore.getState().clearTasks()
+        useAuthStore.setState({ isLoggedIn: false, sessionReady: true, user: null })
       }
     })
 

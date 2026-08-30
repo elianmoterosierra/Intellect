@@ -1,51 +1,7 @@
 import { HeroCourse } from '../components/SelectCourse/Hero/Hero';
-import { useCourseStore } from '../store/courseStore';
-import { useNavigate } from 'react-router';
 import { lazy, Suspense } from 'react'
 
 const CourseCards = lazy(() => import('../components/SelectCourse/Course-card/Course-Card.tsx'));
-
-export function CourseButton({ courseId }: { courseId: number }) {
-    const navigate = useNavigate();
-    const buttonStatus = useCourseStore(s => s.buttonStatus);
-    const handleSelect = useCourseStore(s => s.handleSelect);
-
-    const status = buttonStatus[courseId] || 'idle';
-    const anySelected = Object.values(buttonStatus).some(s => s === 'selected');
-
-    const btnBase = "flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all duration-200 border-none cursor-pointer";
-
-    if (status === 'processing') {
-        return (
-            <button disabled className={`${btnBase} bg-gray-100 text-gray-400 opacity-60 cursor-not-allowed`}>
-                <span className="material-symbols-outlined animate-spin">sync</span> Procesando...
-            </button>
-        );
-    }
-
-    if (status === 'selected') {
-        return (
-            <button className={`${btnBase} bg-green-700/10 text-green-700 border border-green-700/20`} onClick={() => navigate(`/course-dashboard/${courseId}`)}>
-                <span className="material-symbols-outlined">check_circle</span> abrir curso
-            </button>
-        );
-    }
-
-    if (anySelected) {
-        return (
-            <button disabled className={`${btnBase} bg-gray-100 text-gray-400 opacity-60 cursor-not-allowed`}>
-                <span className="material-symbols-outlined">lock</span>
-                Ya eres parte de un curso
-            </button>
-        );
-    }
-
-    return (
-        <button onClick={() => handleSelect(courseId)} className={`${btnBase} bg-brand-strong text-white hover:bg-brand-hover`}>
-            Seleccionar Curso
-        </button>
-    );
-}
 
 export function CoursePage() {
     return (
