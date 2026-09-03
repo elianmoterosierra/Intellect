@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { ConfirmDelete } from "../ConfirnDelete/ConfirmDelete";
-import { useMediaQuery } from "../../../../Hooks/useMediaQuery";
 
 type DeleteTaskProps = {
     courseId: number;
@@ -10,27 +9,27 @@ type DeleteTaskProps = {
 
 export function DeleteTask({ courseId, taskId, isOverdue }: DeleteTaskProps) {
     const [showConfirmModal, setShowConfirmModal] = useState(false);
-    const isMobile = useMediaQuery('(max-width: 767px)');
 
-
-    function OpenModal() {
+    function openModal() {
         setShowConfirmModal(true);
     }
 
     return (
         <>
             <button
-                onClick={OpenModal}
+                onClick={(event) => {
+                    event.stopPropagation();
+                    openModal();
+                }}
                 type="button"
-                className={`flex-shrink-0 rounded-md border-2 border-red-600 leading-4 tracking-widest font-semibold cursor-pointer transition-colors duration-200 ${isMobile
-                    ? 'px-1.5 py-0.5 text-[11px]'
-                    : 'px-2 py-1 text-[14px]'
-                    } ${isOverdue
-                    ? 'bg-white/15 text-white hover:bg-white/25'
-                    : 'bg-transparent text-red-600 hover:bg-red-200'
+                className={`material-symbols-outlined flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border transition-colors duration-200 ${isOverdue
+                    ? 'border-white/30 bg-white/15 text-white hover:bg-white/25'
+                    : 'border-transparent text-red-600 hover:border-red-200 hover:bg-red-100'
                     }`}
+                aria-label="Eliminar tarea"
+                title="Eliminar tarea"
             >
-                Eliminar
+                delete
             </button>
             {showConfirmModal && (
                 <ConfirmDelete taskId={taskId} courseId={courseId} setShowConfirmModal={setShowConfirmModal} />

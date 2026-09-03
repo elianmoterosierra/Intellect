@@ -8,6 +8,7 @@ import type { Subject, SubjectColor, SubjectSchedule, SubjectWeekday } from '../
 type SubjectModalProps = {
     courseId: number;
     onClose: () => void;
+    subject?: Subject;
 };
 
 const WEEKDAYS: Array<{ value: SubjectWeekday; label: string }> = [
@@ -33,6 +34,7 @@ const RECESS_RANGES = [
 ] as const;
 
 const RECESS_START_TIMES: ReadonlySet<string> = new Set(RECESS_RANGES.map((range) => range.startTime));
+const RECESS_END_TIMES: ReadonlySet<string> = new Set(RECESS_RANGES.map((range) => range.endTime));
 
 function createSchedule(): SubjectSchedule {
     return {
@@ -43,14 +45,14 @@ function createSchedule(): SubjectSchedule {
     };
 }
 
-export function SubjectModal({ courseId, onClose }: SubjectModalProps) {
+export function SubjectModal({ courseId, onClose, subject }: SubjectModalProps) {
     const addSubject = useSubjectStore((state) => state.addSubject);
+    const updateSubject = useSubjectStore((state) => state.updateSubject);
     const existingSubjects = useSubjectStore((state) => state.subjectsByCourse[String(courseId)] ?? EMPTY_SUBJECTS);
-    const [name, setName] = useState('');
-    const [teacher, setTeacher] = useState('');
-    const [description, setDescription] = useState('');
-    const [color, setColor] = useState<SubjectColor>('blue');
-    const [schedules, setSchedules] = useState<SubjectSchedule[]>([createSchedule()]);
+    const [name, setName] = useState(subject?.name ?? '');
+    const [teacher, setTeacher] = useState(subject?.teacher ?? '');
+    const [color, setColor] = useState<SubjectColor>(subject?.color ?? 'blue');
+    const [schedules, setSchedules] = useState<SubjectSchedule[]>(subject?.schedules ?? [createSchedule()]);
     const [error, setError] = useState('');
     const {
         handleClose,
@@ -88,8 +90,8 @@ export function SubjectModal({ courseId, onClose }: SubjectModalProps) {
         const trimmedName = name.trim();
         const trimmedTeacher = teacher.trim();
 
-        if (!trimmedName || !trimmedTeacher || !description.trim()) {
-            setError('Completa el nombre, el profesor y la descripción.');
+        if (!trimmedName || !trimmedTeacher) {
+            setError('Completa el nombre y el profesor.');
             return;
         }
 
@@ -103,13 +105,17 @@ export function SubjectModal({ courseId, onClose }: SubjectModalProps) {
             return;
         }
 
-        const overlapsRecess = schedules.some((schedule) => RECESS_RANGES.some((recess) => rangesOverlap(schedule, recess)));
-        if (overlapsRecess) {
+        const startsOrEndsAtRecessBoundary = schedules.some((schedule) => (
+            RECESS_START_TIMES.has(schedule.startTime) || RECESS_END_TIMES.has(schedule.endTime)
+        ));
+        if (startsOrEndsAtRecessBoundary) {
             setError('Ese horario está reservado para el recreo.');
             return;
         }
 
-        const existingSchedules = existingSubjects.flatMap((subject) => subject.schedules);
+        const existingSchedules = existingSubjects
+            .filter((existingSubject) => existingSubject.id !== subject?.id)
+            .flatMap((existingSubject) => existingSubject.schedules);
         const conflictsWithExisting = schedules.some((schedule) => existingSchedules.some((existing) => (
             schedule.weekday === existing.weekday && rangesOverlap(schedule, existing)
         )));
@@ -119,18 +125,20 @@ export function SubjectModal({ courseId, onClose }: SubjectModalProps) {
             return;
         }
 
-        const subject: Subject = {
-            id: crypto.randomUUID(),
+        const subjectToSave: Subject = {
+            id: subject?.id ?? crypto.randomUUID(),
             courseId,
             name: trimmedName,
             teacher: trimmedTeacher,
-            description: description.trim(),
+            description: '',
             color,
             schedules,
-            createdAt: new Date().toISOString(),
+            createdAt: subject?.createdAt ?? new Date().toISOString(),
         };
 
-        const saved = await addSubject(subject);
+        const saved = subject
+            ? await updateSubject(subjectToSave)
+            : await addSubject(subjectToSave);
         if (!saved) {
             setError('No se pudo guardar la materia. Inténtalo nuevamente.');
             return;
@@ -141,41 +149,36 @@ export function SubjectModal({ courseId, onClose }: SubjectModalProps) {
 
     return (
         <div className={`fixed inset-0 z-[220] flex items-center justify-center bg-black/50 p-4 ${overlayClass}`} onClick={(event) => { if (event.target === event.currentTarget) handleClose(); }} style={animationStyle}>
-            <div className={`w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl bg-surface border border-line-soft shadow-2xl ${modalClass}`} onClick={(event) => event.stopPropagation()} style={animationStyle}>
+            <div className={`subject-modal-scroll w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl bg-surface border border-line-soft shadow-2xl ${modalClass}`} onClick={(event) => event.stopPropagation()} style={animationStyle}>
                 <div className="flex items-start justify-between gap-4 border-b border-line-soft px-6 py-5">
-                    <div>
-                        <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">Horario recurrente</p>
-                        <h3 className="mt-1 text-xl font-bold text-ink">Agregar materia</h3>
-                        <p className="mt-1 text-sm text-ink-soft">Se repetirá cada semana en los días seleccionados.</p>
+                    <div className="text-left">
+
+                        <h3 className="mt-1 text-xl font-bold text-ink">{subject ? 'Editar materia' : 'Agregar materia'}</h3>
+
                     </div>
                     <button type="button" onClick={handleClose} className="material-symbols-outlined rounded-full p-1 text-ink-soft hover:bg-muted" aria-label="Cerrar">close</button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-6 py-5">
-                    <label className="flex flex-col gap-1.5 text-sm font-semibold text-ink">
+                <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-6 py-5 text-left">
+                    <label className="flex flex-col gap-1.5 text-left text-sm font-semibold text-ink">
                         Nombre de la materia
                         <input value={name} onChange={(event) => setName(event.target.value)} className="rounded-xl border border-line bg-muted px-4 py-3 text-base text-ink outline-none focus:border-brand md:text-sm" placeholder="Matemática" />
                     </label>
 
-                    <label className="flex flex-col gap-1.5 text-sm font-semibold text-ink">
+                    <label className="flex flex-col gap-1.5 text-left text-sm font-semibold text-ink">
                         Profesor
                         <input value={teacher} onChange={(event) => setTeacher(event.target.value)} className="rounded-xl border border-line bg-muted px-4 py-3 text-base text-ink outline-none focus:border-brand md:text-sm" placeholder="Nombre del profesor" />
                     </label>
 
-                    <label className="flex flex-col gap-1.5 text-sm font-semibold text-ink">
-                        Descripción
-                        <textarea value={description} onChange={(event) => setDescription(event.target.value)} className="min-h-24 resize-y rounded-xl border border-line bg-muted px-4 py-3 text-base text-ink outline-none focus:border-brand md:text-sm" placeholder="Información adicional de la materia" />
-                    </label>
-
                     <fieldset>
-                        <legend className="mb-2 text-sm font-semibold text-ink">Color de la materia</legend>
-                        <div className="flex flex-wrap gap-2">
+                        <legend className="mb-2 text-left text-sm font-semibold text-ink">Color de la materia</legend>
+                        <div className="grid grid-cols-3 gap-2">
                             {COLORS.map((option) => (
                                 <button
                                     key={option.value}
                                     type="button"
                                     onClick={() => setColor(option.value)}
-                                    className={`flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition ${color === option.value ? 'border-brand ring-2 ring-brand-ring' : 'border-line'}`}
+                                    className={`flex w-full items-center justify-center gap-2 rounded-full border px-2 py-2 text-xs font-semibold transition ${color === option.value ? 'border-brand ring-2 ring-brand-ring' : 'border-line'}`}
                                 >
                                     <span className={`h-3 w-3 rounded-full ${option.className}`} />
                                     {option.label}
@@ -186,8 +189,8 @@ export function SubjectModal({ courseId, onClose }: SubjectModalProps) {
 
                     <fieldset>
                         <div className="mb-2 flex items-center justify-between gap-3">
-                            <legend className="text-sm font-semibold text-ink">Días y horarios</legend>
-                            <button type="button" onClick={addSchedule} className="rounded-lg border border-brand px-3 py-1.5 text-xs font-semibold text-brand hover:bg-brand-tint">Agregar horario</button>
+                            <legend className="text-left text-sm font-semibold text-ink">Días y horarios</legend>
+                            <button type="button" onClick={addSchedule} className="rounded-lg border border-brand px-3 py-1.5 text-xs font-semibold text-brand hover:bg-brand-tint"><span className="material-symbols-outlined">add</span></button>
                         </div>
 
                         <div className="flex flex-col gap-3">
@@ -197,7 +200,7 @@ export function SubjectModal({ courseId, onClose }: SubjectModalProps) {
                                         {WEEKDAYS.map((weekday) => <option key={weekday.value} value={weekday.value}>{weekday.label}</option>)}
                                     </select>
                                     <select value={schedule.startTime} onChange={(event) => updateSchedule(schedule.id, { startTime: event.target.value, endTime: getTimeOptionsAfter(event.target.value)[0] ?? '' })} className="rounded-lg border border-line bg-surface px-3 py-2.5 text-base text-ink md:text-sm">
-                                        {TIME_OPTIONS.slice(0, -1).map((time) => <option key={time} value={time} disabled={RECESS_START_TIMES.has(time)}>{time}{RECESS_START_TIMES.has(time) ? ' (Recreo)' : ''}</option>)}
+                                        {TIME_OPTIONS.slice(0, -1).map((time) => <option key={time} value={time}>{time}</option>)}
                                     </select>
                                     <select value={schedule.endTime} onChange={(event) => updateSchedule(schedule.id, { endTime: event.target.value })} className="rounded-lg border border-line bg-surface px-3 py-2.5 text-base text-ink md:text-sm">
                                         {(availableEndTimes[index] ?? []).map((time) => <option key={time} value={time}>{time}</option>)}
@@ -212,7 +215,7 @@ export function SubjectModal({ courseId, onClose }: SubjectModalProps) {
 
                     <div className="flex gap-3 pt-2">
                         <button type="button" onClick={handleClose} className="flex-1 rounded-xl border border-line py-3 text-sm font-semibold text-ink-soft hover:bg-muted">Cancelar</button>
-                        <button type="submit" className="flex-1 rounded-xl bg-brand-strong py-3 text-sm font-semibold text-white hover:bg-brand-hover">Guardar materia</button>
+                        <button type="submit" className="flex-1 rounded-xl bg-brand-strong py-3 text-sm font-semibold text-white hover:bg-brand-hover">{subject ? 'Guardar cambios' : 'Guardar materia'}</button>
                     </div>
                 </form>
             </div>

@@ -18,7 +18,7 @@ export function CourseAccessModal({ courseId, courseTitle, onSuccess, onClose }:
 
     const handleConfirm = async () => {
         const trimmed = code.trim();
-        if (trimmed.length !== 7) {
+        if (!/^\d{7}$/.test(trimmed)) {
             setError('El código debe tener 7 dígitos');
             return;
         }

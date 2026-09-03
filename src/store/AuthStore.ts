@@ -250,7 +250,7 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
     fetchProfile: async (userId) => {
         const { data, error } = await supabase
             .from("usuarios")
-            .select("*")
+            .select("id, name, gmail, selected_course_id, task_status, is_admin")
             .eq("id", userId)
             .limit(1)
             .single();

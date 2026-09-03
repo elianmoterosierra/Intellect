@@ -50,7 +50,6 @@ export function HeaderCalendar({
     return (
         <header className="desktop-header">
             <div className="header-left">
-                <h1 className="page-title">Calendario</h1>
                 <div
                     className="date-selector"
                     {...swipe}

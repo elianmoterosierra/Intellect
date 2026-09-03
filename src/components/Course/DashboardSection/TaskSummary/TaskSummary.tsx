@@ -13,7 +13,7 @@ export function TaskSummary({ tasks }: TaskSummaryProps) {
         : 0;
 
     return (
-        <div className="md:col-span-4 bg-gradient-to-br from-[#2170e4] to-[#005ac2] text-[#fefcff] rounded-xl p-6 shadow-sm flex flex-col justify-between">
+        <div className="order-1 flex flex-col justify-between rounded-xl bg-gradient-to-br from-[#2170e4] to-[#005ac2] p-6 text-[#fefcff] shadow-sm md:order-2 md:col-span-4">
             <div>
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl leading-7 font-semibold">Resumen de Tareas</h3>

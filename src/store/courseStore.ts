@@ -39,6 +39,19 @@ export const useCourseStore = create<CourseStore>((set) => ({
             return { success: false, error: 'Debes iniciar sesión para seleccionar un curso.' };
         }
 
+        const { error: membershipError } = await supabase
+            .from('course_members')
+            .upsert({
+                user_id: user.id,
+                course_id: courseId,
+                role: 'student',
+            }, { onConflict: 'user_id,course_id', ignoreDuplicates: true });
+
+        if (membershipError && membershipError.code !== '23505') {
+            set({ buttonStatus: {} });
+            return { success: false, error: 'No se pudo registrar tu acceso al curso. Inténtalo de nuevo.' };
+        }
+
         const { data, error } = await supabase
             .from('usuarios')
             .update({ selected_course_id: courseId })

@@ -28,25 +28,22 @@ export function DetailsModal({ task, courseId, onClose }: DetailsModalProps) {
             >
                 {/* Header con gradiente, mismo estilo que AddTaskModal */}
                 <div
-                    className="relative flex items-center gap-5 px-7 py-7 text-white"
+                    className="relative flex items-center gap-3 px-6 py-5 text-white"
                     style={{ background: 'linear-gradient(135deg, #0058be 0%, #2170e4 100%)' }}
                 >
-                    <span className="material-symbols-outlined text-5xl leading-none">description</span>
-                    <div className="flex flex-col">
-                        <h3 className="text-xl font-bold leading-6">Detalle de la tarea</h3>
+                    <span className="material-symbols-outlined shrink-0 text-3xl leading-none">description</span>
+                    <div className="min-w-0 flex-1 text-left">
+                        <h3 className="text-lg font-bold leading-6">Detalle de la tarea</h3>
                         <p className="mt-1 text-sm font-medium text-white/80">Información completa del pendiente</p>
                     </div>
-                    <span className={`ml-auto rounded-full border px-3 py-1 text-[10px] font-bold tracking-wider transition-all duration-200 ${done ? 'border-white/30 bg-white/15' : 'border-white/30 bg-white/15'}`}>
-                        {done ? 'COMPLETADA' : 'PENDIENTE'}
-                    </span>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="absolute right-5 top-5 rounded-full p-1 text-white/75 transition-colors hover:bg-white/15 hover:text-white"
-                        aria-label="Cerrar detalle"
-                    >
-                        <span className="material-symbols-outlined block text-2xl">close</span>
-                    </button>
+                    <div className="flex shrink-0 items-center gap-2">
+                        <span className="rounded-full border border-white/30 bg-white/15 px-3 py-1 text-[10px] font-bold tracking-wider transition-all duration-200">
+                            {done ? 'COMPLETADA' : 'PENDIENTE'}
+                        </span>
+                        <button type="button" onClick={onClose} className="rounded-full p-1 text-white/75 transition-colors hover:bg-white/15 hover:text-white" aria-label="Cerrar detalle">
+                            <span className="material-symbols-outlined block text-2xl">close</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Título centrado */}

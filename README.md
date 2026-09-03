@@ -10,19 +10,23 @@ Aplicación web de gestión académica creada con React, Vite y Supabase. Permit
 - Catálogo de cursos cargado en tiempo real desde Supabase (`public.cursos`) en la página de selección; `data.ts` se conserva como referencia estática para el detalle del dashboard.
 - Creación de tareas compartidas persistidas en Supabase (`public.tasks`) para todos los miembros de un curso.
 - Roles y permisos: `admin` universal en `usuarios.is_admin` y `manager` por curso en `course_members`.
+- El registro de membresías es idempotente: si el usuario ya pertenece al curso, no se genera
+  un conflicto `409` ni se modifica su rol actual.
 - Solo un admin o el manager del curso puede ver y usar las acciones de crear, editar o eliminar tareas.
-- Materias recurrentes: admins y managers pueden crear materias con profesor, descripción, color elegido y varios horarios semanales sin solapamientos; se guardan en `public.subjects` y `public.subject_schedules` y se renderizan en el calendario.
+- Materias recurrentes: admins y managers pueden crear, editar y eliminar materias con profesor, descripción, color elegido y varios horarios semanales sin solapamientos; se guardan en `public.subjects` y `public.subject_schedules` y se renderizan en el calendario.
 - El formulario nuevo de tareas permite seleccionar una materia y una fecha válida para esa materia; las tareas mantienen `dueDate` para expiración y guardan la relación mediante `tasks.subject_id`.
 - Modal único de creación de tareas (`AddTaskModal/TaskModal.tsx`) reusado desde el dashboard y la sección "Agregar Tareas".
 - Descripción con textarea de auto-resize hasta 6 líneas, contador de caracteres en vivo y botón Guardar bloqueado al superar el límite de 2000 caracteres en el modal de creación.
-- Sección dedicada para la visualización y gestión de "Agregar Tareas" (`AddTaskSection`).
-- Eliminación de tareas del curso desde la sección "Agregar Tareas", con confirmación previa en `ConfirnDelete/ConfirmDelete.tsx`.
+- Sección dedicada para la visualización y gestión de tareas (`AddTaskSection`), con filtros A-Z, Z-A y más recientes.
+- Sección protegida `Gestionar materias` para listar, crear, editar y eliminar materias sin duplicar esa gestión dentro de `AddTaskSection`.
+- Edición de tareas mediante `TaskEdit` y eliminación desde `AddTaskSection`, con confirmación previa en `ConfirnDelete/ConfirmDelete.tsx`.
 - Modal de detalle de tarea (`Common/DetailsModal`) integrado en todos los listados, con estado `completed` en vivo desde el store.
 - Constantes centralizadas para la gestión de secciones (`courseSections.ts`).
 - Completado individual de tareas desde el dashboard, el calendario y el modal de detalle (persistido en `usuarios.task_status` en Supabase).
 - Resumen automático de tareas completadas, pendientes y progreso.
 - Notificaciones dinámicas para tareas pendientes **no vencidas**, ordenadas por fecha de entrega (urgentes si vencen hoy o mañana).
-- "Próximas Tareas" ordena el listado con `useMemo`: primero las pendientes no vencidas por fecha de entrega y luego las completadas.
+- "Próximas Tareas" muestra como máximo cuatro tareas pendientes no vencidas; el enlace a todas las pendientes indica cuántas tareas adicionales existen.
+- `PendingTasksModal` muestra todas las tareas pendientes desde el dashboard mobile y desktop.
 - Estado visual para tareas vencidas: fondo rojo y texto blanco.
 - Agenda semanal de lunes a viernes que muestra las tareas según su fecha de entrega y horario. Al hacer clic en una tarea se abre su detalle.
 - Navegación por semanas con botón "Hoy" en desktop y mobile.
@@ -33,10 +37,12 @@ Aplicación web de gestión académica creada con React, Vite y Supabase. Permit
 - Límites de texto por contexto (títulos truncados según la ubicación).
 - Guard de autenticación con `DashBoardProtected` que redirige a `/` si no hay sesión.
 - Menú hamburguesa para navegación mobile con enlaces y auth-gating.
+- Sidebar desktop colapsable por defecto: al recibir foco o hover muestra las etiquetas y al perderlo vuelve a mostrar solo iconos.
 - Perfil de usuario editable: nombre, email y contraseña con flujo de confirmación en 2 pasos.
 - Confirmación en 2 pasos al abandonar un curso, con protección contra borrado accidental.
 - Modal de ajustes (`SettingsModal`) con vista "Acerca de" mostrando versión y tecnologías.
 - Diseño responsive: navegación completa en escritorio y menú compacto en pantallas pequeñas.
+- Home separa sus tarjetas de gestión y estudiantes en componentes específicos y ofrece una modal de política de privacidad desde el footer.
 
 ## Tecnologías
 
@@ -113,21 +119,26 @@ courseRoles: {
 ```
 
 `src/utils/permission.ts` expone `canManageCourse(user, courseId)`. `Course.tsx` lo usa para
-proteger `AddTaskSection` y `AddTaskModal`; `SideNav`, `BottomNav`, `Dashboard` y `DayModal`
+proteger `AddTaskSection`, `ManageSubjectsSection` y `AddTaskModal`; `SideNav`, `CourseHamburgerMenu`, `Dashboard` y `DayModal`
 ocultan también sus controles de creación cuando el usuario no tiene permiso.
 
 La interfaz no sustituye la seguridad de Supabase. Las políticas RLS de `tasks` vuelven a validar
 el permiso en cada INSERT, UPDATE y DELETE. Las políticas de `course_members` permiten leer las
-membresías propias y al admin leerlas todas. Estas políticas ya existen en la base de datos: si se
-revisa el proyecto, comprobar primero el dashboard y no ejecutar de nuevo los `CREATE POLICY`.
+membresías propias y al admin leerlas todas; al seleccionar un curso se crea una membresía propia
+con rol `student`. El frontend usa `upsert` con `ignoreDuplicates` para que seleccionar o
+restaurar un curso ya asociado no provoque un `409 Conflict` por la clave primaria compuesta.
+Las políticas de `subjects` y `subject_schedules` permiten lectura a miembros
+del curso y escritura solo a admins/managers. Están documentadas en
+`supabase/subjects_read_policies.sql`; revisar primero el dashboard antes de aplicar el script.
 
 ### Tareas — `src/store/taskStorage.ts`
 
 Persiste las definiciones de tareas en la tabla `public.tasks` de Supabase:
 
-- `fetchTasks()` obtiene todas las tareas de la base de datos y las indexa por `courseId` en memoria.
+- `fetchTasks()` obtiene las tareas después de restaurar la sesión y las indexa por `courseId` en memoria.
 - `addTask(courseId, task)` inserta la tarea en Supabase y actualiza el estado local.
 - `deleteTask(courseId, taskId)` elimina la tarea de Supabase y del estado local.
+- `updateTask(courseId, task)` actualiza título, descripción, fecha y materia de una tarea en Supabase y en el estado local.
 
 ### Horarios de tareas — `src/store/taskScheduleStorage.ts`
 
@@ -142,7 +153,8 @@ Persiste las definiciones de tareas en la tabla `public.tasks` de Supabase:
 - Cada materia puede tener varios horarios en distintos días o varias franjas el mismo día.
 - `src/utils/subjectSchedule.ts` reutiliza `rangesOverlap` para rechazar horarios solapados entre materias del mismo curso.
 - `DayCard` pinta cada horario de materia en la cuadrícula semanal, por lo que una materia se repite automáticamente cada semana.
-- Los managers del curso y los admins universales pueden crear y eliminar materias desde `AddTaskSection`.
+- Los managers del curso y los admins universales gestionan materias desde `ManageSubjectsSection`; `SubjectModal` se reutiliza para alta y edición.
+- `updateSubject(subject)` actualiza los datos de la materia y reemplaza sus horarios en Supabase, conservando la validación de conflictos.
 - `loadSubjects(courseId)` carga únicamente las materias y horarios del curso indicado después de restaurar la sesión.
 - Las horas de PostgreSQL (`HH:mm:ss`) se convierten al formato de la cuadrícula (`h:mm AM/PM`) antes de renderizar.
 - Las tareas nuevas envían `subject_id` a `public.tasks` y conservan `due_date` para su expiración.
@@ -155,7 +167,10 @@ Controla el estado de apertura y cierre de modales de interfaz:
 - `isAddTaskModalOpen` / `openAddTaskModal()` / `closeAddTaskModal()`
 - `isPerfilModalOpen` / `openPerfilModal()` / `closePerfilModal()`
 
-Los modales se abren mediante acciones globales desde cualquier componente (Header, BottomNav, AppBar).
+Los modales se abren mediante acciones globales desde los componentes correspondientes (Header, AppBar y navegación del curso).
+El modal de perfil se renderiza una sola vez en `page/Course.tsx`; `AppBar` y `SideNav` solo
+disparan `openPerfilModal()`. Esto evita duplicarlo en móvil cuando ambos componentes están
+montados aunque `SideNav` permanezca oculto mediante CSS.
 
 ### Tema — `src/store/themeStore.ts`
 
@@ -238,6 +253,7 @@ El calendario usa las tareas compartidas de `taskStorage.ts`, combina su estado 
 - Desktop muestra las cinco columnas completas.
 - Mobile usa scroll horizontal para los días y vertical para las horas; el encabezado de días y la columna de horas permanecen visibles durante el desplazamiento. `useAxisLockedScroll.ts` controla los gestos táctiles con `Pointer Events`: después de un umbral inicial elige el eje dominante, actualiza únicamente `scrollLeft` o `scrollTop` y aplica momentum al soltar.
 - Las materias recurrentes comparten la cuadrícula con las tareas normales; cada horario se posiciona por `grid-row` usando el día de la semana y sus horas configuradas.
+- Si un horario de materia atraviesa un recreo, `DayCard` lo divide en segmentos superiores e inferiores con bordes redondeados y mantiene ambos segmentos seleccionables.
 - Las tareas vencidas de días anteriores no se renderizan en la agenda semanal.
 - Las tareas sin horario no se renderizan en la agenda semanal hasta que exista una migración o edición de horario.
 - `DayCard` trunca títulos según el contexto y muestra el detalle completo al seleccionar una tarea.
@@ -245,6 +261,7 @@ El calendario usa las tareas compartidas de `taskStorage.ts`, combina su estado 
 ### Componentes compartidos
 - `DayModal.tsx` muestra, crea y completa tareas del día seleccionado.
 - Al hacer clic en una tarea del `DayModal` se cierra el modal del día y se abre el detalle (`Common/DetailsModal`).
+- `AddTaskModal` y `DetailsModal` usan headers compactos con título/subtítulo a la izquierda y sus controles alineados a la derecha.
 - El `date-selector` del header expone un botón "Hoy" (deshabilitado cuando ya estás en el mes actual) y soporte de swipe horizontal en móvil (`Hooks/useSwipe.ts`). El scroll bidimensional de la agenda usa `Hooks/useAxisLockedScroll.ts`; no debe reemplazarse por `overflow: auto` sin mantener el bloqueo, porque el navegador puede mover ambos ejes en gestos diagonales.
 
 ## Estructura del proyecto
@@ -318,7 +335,9 @@ src/
 └── components/
     ├── Layout/Layout.tsx
     ├── Header/header.tsx
-    ├── Footer/Footer.tsx
+    ├── Footer/
+    │   ├── Footer.tsx
+    │   └── PrivacyPolicyModal.tsx
     ├── Button/{ButtonPrincipal.tsx, ButtonSecondary.tsx}
     ├── CardRol/RoleCard.tsx
     ├── Form/
@@ -329,12 +348,14 @@ src/
     ├── Home/
     │   ├── hero/hero.tsx
     │   ├── Role/RoleSection.tsx
+    │   ├── Role/StudentFeatureCard.tsx
     │   ├── CallToAction/CallToAction.tsx
     │   ├── hamburgerMenu/HamburgerMenu.tsx  # Menú mobile slide-in
     │   └── features/
     │       ├── featuresSection.tsx
     │       ├── CalendarCard/Calendar.tsx
     │       ├── ManagementCard/ManagementCard.tsx
+    │       ├── ManagementCard/ManagementOverview.tsx
     │       └── Progress/Progress.tsx
     ├── Perfil/
     │   ├── Perfil.tsx
@@ -360,16 +381,21 @@ src/
         │   ├── AddTaskSection.tsx
         │   ├── ConfirnDelete/ConfirmDelete.tsx
         │   ├── DeleteTaskButton/DeleteTask.tsx
+        │   ├── TaskEdit/TaskEdit.tsx
+        │   ├── AddSubjectModal/SubjectModal.tsx
         │   └── TaskList/TaskList.tsx
+        ├── ManageSubjectsSection/
+        │   ├── ManageSubjectsSection.tsx
+        │   └── SubjectEditModal.tsx
         ├── DashboardSection/
         │   ├── Dashboard.tsx
         │   ├── Header/HeaderDashboard.tsx
-        │   ├── Notification/Notification.tsx
         │   ├── SideNav/SideNav.tsx
         │   ├── TaskSummary/TaskSummary.tsx
         │   ├── AppBar(mobile)/AppBar.tsx
+        │   ├── AppBar(mobile)/CourseHamburgerMenu.tsx
         │   ├── AppBar(mobile)/SearchDropdown.tsx     # Búsqueda de tareas con autocompletado
-        │   ├── BottomNav(mobile)/BottomNav.tsx
+        │   ├── PendingTasksModal/PendingTasksModal.tsx
         │   └── UpcomingTasks/
         │       ├── UpcomingTasks.tsx
         │       ├── AddTask/AddTaskButton.tsx
@@ -464,6 +490,9 @@ Un **switch para modo oscuro** que cambia **toda la página** (no solo un compon
 - [x] **`src/components/ThemeToggle/ThemeToggle.tsx`:** switch sol/luna que lee `useThemeStore` (clases `text-ink-soft hover:bg-brand-tint hover:text-brand active:scale-95`) y llama `toggleThemeAt(x, y)` con la **View Transitions API** para la transición circular desde el centro del icono (con fallback a cambio directo si el navegador no soporta `document.startViewTransition` o hay `prefers-reduced-motion`).
 - [x] **`src/App.tsx`:** `useEffect` llama `useThemeStore.getState().initTheme()`.
 - [x] **Switch colocado** en Header (desktop, antes de ajustes), HamburgerMenu (fila "Modo oscuro") y SideNav (fila "Modo oscuro").
+- [x] **Modal de perfil centralizado** en `Course.tsx`; se eliminó el render duplicado entre `AppBar` y `SideNav`.
+- [x] **Membresías idempotentes** mediante `upsert` con `ignoreDuplicates`, evitando conflictos `409` al restaurar o seleccionar un curso ya asociado.
+- [x] **Estructura HTML corregida** en `SideNav`: el contenedor de `ThemeToggle` ya no anida botones.
 - [x] **Refactor de ~30 componentes** (`Header`, `Hero`, `SelectCourse`, `Perfil`, `Dashboard`, `SideNav`, `CalendarSection`, `TaskModal`, `DayModal`, `AddTaskSection`, `FormTask`, `SearchDropdown`, `Notification`, `FormSection`, `Register`, `Login`, etc.) reemplazando colores hardcodeados por los tokens semánticos.
 - [x] **`vite.config.ts`:** se añadió `build: { cssMinify: false }`. Era una mitigación para el CSS inválido que generaba `daisyui` 5.7.16 (`.dropdown-content: [object Object]`); queda inerte tras quitar el plugin. ⚠️ Problema **preexistente**, no del dark mode.
 - [x] **`tailwind.config.ts`:** se **eliminó** `plugins: [require('daisyui')]`. No se usa ninguna clase daisyUI y el plugin rompía el build (`lightningcss`) **y** el Tailwind IntelliSense (su `require` en scope ESM hacía fallar la carga del config en la extensión). Con el plugin fuera, el autocompletado de tokens semánticos (`bg-surface`, `text-ink`, etc.) funciona.

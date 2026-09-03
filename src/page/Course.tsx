@@ -1,5 +1,4 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
-import { BottomNav } from '../components/Course/DashboardSection/BottomNav(mobile)/BottomNav';
 import { SideNav } from '../components/Course/DashboardSection/SideNav/SideNav';
 import { AppBar } from '../components/Course/DashboardSection/AppBar(mobile)/AppBar';
 import { useParams, Link, Navigate } from 'react-router';
@@ -11,20 +10,25 @@ import { useAddTaskModal } from '../Hooks/useAddTaskModal';
 import { useAddTaskForm } from '../Hooks/useAddTaskForm';
 import { AddTaskModal } from '../components/Course/DashboardSection/UpcomingTasks/AddTaskModal/TaskModal';
 import { DetailsModal } from '../components/Course/Common/DetailsModal/DetailsModal';
+import { Perfil } from '../components/Perfil/Perfil';
+import { useUIStore } from '../store/uiStore';
 import type { TaskWithCompleted } from '../types';
 import { canManageCourse } from '../utils/permission';
 
 const CalendarSection = lazy(() => import('../components/Course/CalendarSection/CalendarSection'));
 const Dashboard = lazy(() => import('../components/Course/DashboardSection/Dashboard'));
 const AddTaskSection = lazy(() => import('../components/Course/AddTaskSection/AddTaskSection'));
+const ManageSubjectsSection = lazy(() => import('../components/Course/ManageSubjectsSection/ManageSubjectsSection'));
 
 export default function Course() {
   const { courseId } = useParams();
   const { user } = useAuthStore();
+  const { isPerfilModalOpen, closePerfilModal } = useUIStore();
 
   const canManageTasks = canManageCourse(user, courseId ?? '');;
   const course = courseData.find(c => c.id === Number(courseId));
   const [selectedTask, setSelectedTask] = useState<TaskWithCompleted | null>(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
   useEffect(() => {
     if (course) {
@@ -61,10 +65,10 @@ export default function Course() {
   return (
     <div className="flex h-screen overflow-hidden font-[Inter,sans-serif] bg-page text-ink antialiased">
       {/* ===== SIDENAV (desktop) ===== */}
-      <SideNav courseId={courseId} activeSection={activeSection} onSectionChange={handleSectionChange} canManageCourse={canManageTasks} />
+      <SideNav courseId={courseId} activeSection={activeSection} onSectionChange={handleSectionChange} canManageCourse={canManageTasks} isCollapsed={isSidebarCollapsed} onCollapsedChange={setIsSidebarCollapsed} />
 
       {/* ===== MAIN CONTENT ===== */}
-      <div className="flex flex-col flex-1 w-full md:ml-64">
+      <div className={`flex flex-col flex-1 w-full transition-[margin] duration-300 ease-in-out ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
 
         {/* TopAppBar (mobile only) */}
         <AppBar
@@ -75,10 +79,12 @@ export default function Course() {
           setSearchQuery={setSearchQuery}
           courseId={course.id}
           setSelectedTask={setSelectedTask}
+          onSectionChange={handleSectionChange}
+          canManageTasks={canManageTasks}
         />
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto bg-page pb-16 md:pb-0">
+        <main className="flex-1 overflow-y-auto bg-page pb-0">
           {activeSection === 'dashboard' && (
             <Suspense fallback={<div className="p-10 text-center text-ink-soft">Cargando dashboard...</div>}>
               <Dashboard course={course} canManageTasks={canManageTasks} />
@@ -103,12 +109,15 @@ export default function Course() {
             </Suspense>
           )}
 
+          {activeSection === 'Gestionar materias' && canManageTasks && (
+            <Suspense fallback={<div className="p-10 text-center text-ink-soft">Cargando materias...</div>}>
+              <ManageSubjectsSection courseId={course.id} />
+            </Suspense>
+          )}
+
 
         </main>
       </div>
-
-      {/* ===== BOTTOM NAV (mobile only) ===== */}
-      <BottomNav activeSection={activeSection} onSectionChange={handleSectionChange} canManageTasks={canManageTasks} />
 
       {isAddTaskModalOpen && canManageTasks && (
         <AddTaskModal closeModal={closeAddTaskModal} handleSubmit={handleSubmit} titleInputRef={titleInputRef} title={title} setTitle={setTitle} subtitle={subtitle} setSubtitle={setSubtitle} subjectId={subjectId} setSubjectId={setSubjectId} subjects={subjects} availableDates={availableDates} dueDate={dueDate} setDueDate={setDueDate} error={error} />
@@ -121,6 +130,8 @@ export default function Course() {
           onClose={() => setSelectedTask(null)}
         />
       )}
+
+      {isPerfilModalOpen && <Perfil onClose={closePerfilModal} compact />}
     </div>
   );
 }

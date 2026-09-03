@@ -77,7 +77,6 @@ export default function CalendarSection({ courseId, searchQuery, setSearchQuery,
                         <span className="material-symbols-outlined">chevron_left</span>
                     </button>
                     <div>
-                        <p className="calendar-mobile-title">Calendario</p>
                         <p className="calendar-mobile-range">{formatWeekLabel(weekStart)}</p>
                     </div>
                     <button type="button" onClick={handleToday} className="today-button" disabled={isCurrentWeek(weekStart)}>

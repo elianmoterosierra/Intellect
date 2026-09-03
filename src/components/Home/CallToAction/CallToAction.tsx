@@ -1,5 +1,5 @@
 import { ButtonPrincipal } from '../../Button/ButtonPrincipal'
-import { ButtonOutline } from '../../Button/ButtonSecondary'
+
 import { useState } from "react"
 import type { MouseEvent } from "react"
 import { FormSection } from "../../Form/FormSection"
@@ -36,8 +36,8 @@ export function CTASection() {
                 Únete a miles de estudiantes y educadores que ya optimizan su tiempo con Intellect.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <ButtonPrincipal onClick={handleCoursesClick} title="seguir" />
-                <ButtonOutline title="Donarle dinero a elian" />
+                <ButtonPrincipal onClick={handleCoursesClick} title="continuar" />
+
             </div>
             {
                 showForm && (

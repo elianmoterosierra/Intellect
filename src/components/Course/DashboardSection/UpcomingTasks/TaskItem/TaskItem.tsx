@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { MouseEvent } from 'react';
 import { DetailsModal } from '../../../Common/DetailsModal/DetailsModal';
 import { useMediaQuery } from '../../../../../Hooks/useMediaQuery';
+import { DeleteTask } from '../../../AddTaskSection/DeleteTaskButton/DeleteTask';
 import type { TaskWithCompleted } from '../../../../../types';
 import type { TaskStatusConfig } from '../../../../../types';
 
@@ -23,14 +24,14 @@ function getBadgeVariant(statusCfg: TaskStatusConfig): 'danger' | 'warning' | 'n
 type TaskItemProps = {
     task: TaskWithCompleted;
     courseId: number;
+    canManageCourse: boolean;
 };
 
-export function TaskItem({ task, courseId }: TaskItemProps) {
+export function TaskItem({ task, courseId, canManageCourse }: TaskItemProps) {
     const toggleTaskStatus = useAuthStore((state) => state.toggleTaskStatus);
     const [showDetails, setShowDetails] = useState(false);
     const isMobile = useMediaQuery('(max-width: 767px)');
     const maxTitle = isMobile ? 15 : 20;
-    const maxSubtitle = isMobile ? 10 : 30;
     const done = task.completed;
     const statusCfg = getTaskStatusConfig(task.dueDate);
     const isOverdue = !done && statusCfg.status === 'overdue';
@@ -70,14 +71,8 @@ export function TaskItem({ task, courseId }: TaskItemProps) {
                 </button>
 
                 {/* Info */}
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 text-left">
                     <p className={`text-base leading-6 font-semibold overflow-hidden text-ellipsis whitespace-nowrap ${done ? 'text-ink-faint line-through' : isOverdue ? 'text-white' : 'text-ink'}`}>{task.title.length > maxTitle ? task.title.slice(0, maxTitle) + '…' : task.title}</p>
-                    <div className="flex items-center gap-4 mt-1">
-                        <span className={`flex items-center gap-1 text-xs leading-4 tracking-wide font-semibold ${isOverdue ? 'text-white/85' : 'text-ink-soft'}`}>
-                            <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>school</span>
-                            {task.subtitle.length > maxSubtitle ? task.subtitle.slice(0, maxSubtitle) + '…' : task.subtitle}
-                        </span>
-                    </div>
                 </div>
 
                 {/* Badge */}
@@ -88,6 +83,10 @@ export function TaskItem({ task, courseId }: TaskItemProps) {
                         {isOverdue ? 'Vencida' : task.hour}
                     </span>
                 </div>
+
+                {canManageCourse && (
+                    <DeleteTask courseId={courseId} taskId={task.id} isOverdue={isOverdue} />
+                )}
             </li>
 
             {showDetails && (

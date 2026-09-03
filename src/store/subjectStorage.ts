@@ -30,6 +30,7 @@ type SubjectStore = {
     loadSubjects: (courseId: number | null) => Promise<void>;
     clearSubjects: () => void;
     addSubject: (subject: Subject) => Promise<boolean>;
+    updateSubject: (subject: Subject) => Promise<boolean>;
     deleteSubject: (courseId: number, subjectId: string) => Promise<boolean>;
 };
 
@@ -189,6 +190,69 @@ export const useSubjectStore = create<SubjectStore>((set) => ({
                 },
             };
         });
+
+        return true;
+    },
+
+    updateSubject: async (subject) => {
+        const { data: subjectRow, error: subjectError } = await supabase
+            .from('subjects')
+            .update({
+                name: subject.name,
+                teacher: subject.teacher,
+                description: subject.description,
+                color: subject.color,
+            })
+            .eq('id', subject.id)
+            .eq('course_id', subject.courseId)
+            .select('id, course_id, name, teacher, description, color, created_at')
+            .single();
+
+        if (subjectError || !subjectRow) {
+            console.error('Error updating subject:', subjectError);
+            return false;
+        }
+
+        const { error: deleteSchedulesError } = await supabase
+            .from('subject_schedules')
+            .delete()
+            .eq('subject_id', subject.id);
+
+        if (deleteSchedulesError) {
+            console.error('Error replacing subject schedules:', deleteSchedulesError);
+            return false;
+        }
+
+        const scheduleRows = subject.schedules.map((schedule) => ({
+            id: schedule.id,
+            subject_id: subject.id,
+            course_id: subject.courseId,
+            weekday: weekdayToNumber(schedule.weekday),
+            start_time: schedule.startTime,
+            end_time: schedule.endTime,
+        }));
+
+        const { error: schedulesError } = await supabase
+            .from('subject_schedules')
+            .insert(scheduleRows);
+
+        if (schedulesError) {
+            console.error('Error adding updated subject schedules:', schedulesError);
+            return false;
+        }
+
+        const updatedSubject: Subject = {
+            ...subject,
+            createdAt: subjectRow.created_at,
+        };
+
+        set((state) => ({
+            subjectsByCourse: {
+                ...state.subjectsByCourse,
+                [String(subject.courseId)]: (state.subjectsByCourse[String(subject.courseId)] ?? [])
+                    .map((currentSubject) => currentSubject.id === subject.id ? updatedSubject : currentSubject),
+            },
+        }));
 
         return true;
     },

@@ -50,7 +50,7 @@ export function Login({ onSwitch, onSuccess }: LoginProps) {
                 placeholder="Email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200 text-base md:text-sm hover:border-gray-300 animate-inputIn"
+                className="w-full rounded-xl border-2 border-brand bg-surface px-4 py-3 text-base text-ink outline-none transition-all duration-200 placeholder:text-ink-faint hover:border-brand-hover focus:border-brand-strong focus:ring-2 focus:ring-brand-ring md:text-sm animate-inputIn"
                 style={{ animationDelay: '0.1s', animationFillMode: 'both' }}
             />
             <input
@@ -58,7 +58,7 @@ export function Login({ onSwitch, onSuccess }: LoginProps) {
                 placeholder="Password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200 text-base md:text-sm hover:border-gray-300 animate-inputIn"
+                className="w-full rounded-xl border-2 border-brand bg-surface px-4 py-3 text-base text-ink outline-none transition-all duration-200 placeholder:text-ink-faint hover:border-brand-hover focus:border-brand-strong focus:ring-2 focus:ring-brand-ring md:text-sm animate-inputIn"
                 style={{ animationDelay: '0.2s', animationFillMode: 'both' }}
             />
             <button

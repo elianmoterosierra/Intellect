@@ -27,6 +27,7 @@ interface TaskStore {
     fetchTasks: () => Promise<TasksByCourse>;
     clearTasks: () => void;
     addTask: (courseId: string | number, task: Task) => Promise<boolean>;
+    updateTask: (courseId: string | number, task: Task) => Promise<boolean>;
     deleteTask: (courseId: string | number, taskId: string) => Promise<void>;
 
 }
@@ -99,6 +100,37 @@ export const useTaskStore = create<TaskStore>((set) => ({
         }));
         return true;
 
+    },
+    updateTask: async (courseId, task) => {
+        const { data, error } = await supabase
+            .from('tasks')
+            .update({
+                title: task.title,
+                subtitle: task.subtitle,
+                due_date: task.dueDate,
+                hour: task.hour,
+                subject_id: task.subjectId ?? null,
+            })
+            .eq('id', task.id)
+            .eq('course_id', Number(courseId))
+            .select('*')
+            .single();
+
+        if (error || !data) {
+            console.error('Error updating task:', error);
+            return false;
+        }
+
+        const updatedTask = rowToTask(data);
+        set((state) => ({
+            tasksByCourse: {
+                ...state.tasksByCourse,
+                [courseId]: (state.tasksByCourse[courseId] ?? []).map((currentTask) => (
+                    currentTask.id === task.id ? updatedTask : currentTask
+                )),
+            },
+        }));
+        return true;
     },
     deleteTask: async (courseId, taskId) => {
         const { error } = await supabase

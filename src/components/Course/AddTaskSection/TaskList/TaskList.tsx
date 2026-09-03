@@ -1,23 +1,24 @@
 import { useTaskStore } from "../../../../store/taskStorage";
 import { useAuthStore } from "../../../../store/AuthStore";
-import { getTaskStatusConfig, getDaysDifference } from "../../../../utils/taskStatus";
+import { getTaskStatusConfig } from "../../../../utils/taskStatus";
 import { useState, useMemo } from "react";
 import { DeleteTask } from "../DeleteTaskButton/DeleteTask";
+import { TaskEdit } from "../TaskEdit/TaskEdit";
 import { DetailsModal } from "../../Common/DetailsModal/DetailsModal";
-import { useMediaQuery } from "../../../../Hooks/useMediaQuery";
 import type { TaskWithCompleted } from "../../../../types";
 
 type TaskListProps = {
     courseId: number;
+    sortMode?: TaskSortMode;
 };
 
-export function TaskList({ courseId }: TaskListProps) {
+export type TaskSortMode = 'asc' | 'desc' | 'recent';
+
+export function TaskList({ courseId, sortMode = 'recent' }: TaskListProps) {
     const tasksByCourse = useTaskStore((state) => state.tasksByCourse);
     const user = useAuthStore((state) => state.user);
     const [selectedTask, setSelectedTask] = useState<TaskWithCompleted | null>(null);
-    const isMobile = useMediaQuery('(max-width: 767px)');
-    const maxTitle = isMobile ? 5 : 20;
-    const maxSubtitle = isMobile ? 10 : 30;
+    const [editingTask, setEditingTask] = useState<TaskWithCompleted | null>(null);
 
     const tasks = useMemo<TaskWithCompleted[]>(() => {
         const rawTasks = tasksByCourse?.[courseId] ?? [];
@@ -30,29 +31,17 @@ export function TaskList({ courseId }: TaskListProps) {
     }, [tasksByCourse, courseId, user]);
 
     const orderedTasks = useMemo(() => {
-        const byDueDate = (a: TaskWithCompleted, b: TaskWithCompleted) =>
-            new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-
-        const pending = tasks
-            .filter((task) => {
-                if (task.completed) return false;
-                const diff = getDaysDifference(task.dueDate);
-                return diff !== null && diff >= 0;
-            })
-            .sort(byDueDate);
-
-        const completed = tasks.filter((task) => task.completed).sort(byDueDate);
-
-        const overdue = tasks
-            .filter((task) => {
-                if (task.completed) return false;
-                const diff = getDaysDifference(task.dueDate);
-                return diff === null || diff < 0;
-            })
-            .sort(byDueDate);
-
-        return [...pending, ...completed, ...overdue];
-    }, [tasks]);
+        const sorted = [...tasks];
+        if (sortMode === 'asc' || sortMode === 'desc') {
+            sorted.sort((a, b) => {
+                const result = a.title.localeCompare(b.title, 'es', { sensitivity: 'base' });
+                return sortMode === 'asc' ? result : -result;
+            });
+        } else {
+            sorted.sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime());
+        }
+        return sorted;
+    }, [sortMode, tasks]);
 
 
     return (
@@ -66,50 +55,30 @@ export function TaskList({ courseId }: TaskListProps) {
                     orderedTasks.map((task) => {
                         const status = getTaskStatusConfig(task.dueDate);
                         const isOverdue = status.status === 'overdue';
-                        const dateLabel = task.dueDate
-                            ? new Date(task.dueDate).toLocaleDateString('es-ES', {
-                                day: '2-digit',
-                                month: 'short',
-                            })
-                            : '—';
 
                         return (
                             <li
                                 key={task.id}
-                                className={`relative pl-4 pr-4 py-2.5 flex items-center gap-3 border-t first:border-t-0 transition-colors duration-200 group cursor-pointer ${isOverdue
+                                className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-t px-4 py-4 transition-colors duration-200 group cursor-pointer first:border-t-0 sm:px-6 ${isOverdue
                                     ? 'bg-danger border-danger text-white hover:bg-danger'
                                     : 'border-line hover:bg-muted'
                                     }`}
                                 onClick={() => setSelectedTask(task)}
                             >
-                                <p className={`absolute left-0 right-0 top-2.5 px-24 text-center text-lg leading-5 font-semibold overflow-hidden text-ellipsis whitespace-nowrap pointer-events-none ${isOverdue ? 'text-white' : 'text-ink'}`}>
-                                    {task.title.length > maxTitle ? task.title.slice(0, maxTitle) + '…' : task.title}
+                                <p className={`min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-left text-sm font-semibold ${isOverdue ? 'text-white' : 'text-ink'}`}>
+                                    {task.title}
                                 </p>
-                                <div className="flex-1 min-w-0 pt-5">
-                                    <div className="flex items-center gap-3 mt-0.5">
-                                        <span className={`flex items-center gap-1 text-[11px] leading-4 tracking-wide font-semibold ${isOverdue ? 'text-white/85' : 'text-ink-soft'
-                                            }`}>
-                                            <span className="material-symbols-outlined" style={{ fontSize: '30px' }}>
-                                                school
-                                            </span>
-                                            {task.subtitle.length > maxSubtitle ? task.subtitle.slice(0, maxSubtitle) + '…' : task.subtitle}
-                                        </span>
-                                    </div>
-                                </div>
 
-                                <div className="flex-shrink-0">
-                                    <span className={`inline-flex items-center rounded-full leading-4 tracking-wide font-semibold ${isMobile
-                                        ? 'px-1.5 py-0.5 text-[11px]'
-                                        : 'px-2 py-0.5 text-[14px]'
-                                        } ${isOverdue
-                                        ? 'bg-white/15 text-white border border-white/30'
-                                        : 'bg-muted-strong text-ink-soft'
-                                        }`}>
-                                        {isOverdue ? 'Vencida' : dateLabel}
-                                    </span>
-                                </div>
-
-                                <div onClick={(e) => e.stopPropagation()}>
+                                <div className="flex items-center gap-1.5" onClick={(event) => event.stopPropagation()}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditingTask(task)}
+                                        className={`material-symbols-outlined flex h-9 w-9 items-center justify-center rounded-full transition-colors ${isOverdue ? 'text-white hover:bg-white/15' : 'text-ink-soft hover:bg-brand-tint hover:text-brand'}`}
+                                        aria-label={`Editar ${task.title}`}
+                                        title="Editar tarea"
+                                    >
+                                        edit
+                                    </button>
                                     <DeleteTask courseId={courseId} taskId={task.id} isOverdue={isOverdue} />
                                 </div>
                             </li>
@@ -123,6 +92,13 @@ export function TaskList({ courseId }: TaskListProps) {
                     task={selectedTask}
                     courseId={courseId}
                     onClose={() => setSelectedTask(null)}
+                />
+            )}
+            {editingTask && (
+                <TaskEdit
+                    task={editingTask}
+                    courseId={courseId}
+                    onClose={() => setEditingTask(null)}
                 />
             )}
         </>

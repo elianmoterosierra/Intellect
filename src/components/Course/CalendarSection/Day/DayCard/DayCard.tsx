@@ -5,7 +5,7 @@ import { EMPTY_TASKS } from '../../../../../Hooks/useMonthDay';
 import { useTaskStore } from '../../../../../store/taskStorage';
 import { useAuthStore } from '../../../../../store/AuthStore';
 import { DetailsModal } from '../../../Common/DetailsModal/DetailsModal';
-import { TIME_OPTIONS, TIME_SLOTS, fromDatabaseTime, isSameLocalDay } from '../../../../../utils/taskSchedule';
+import { TIME_OPTIONS, TIME_SLOTS, fromDatabaseTime, isSameLocalDay, timeToMinutes } from '../../../../../utils/taskSchedule';
 import { useTaskScheduleStore } from '../../../../../store/taskScheduleStorage';
 import { EMPTY_SUBJECTS, useSubjectStore } from '../../../../../store/subjectStorage';
 import { getSubjectWeekday } from '../../../../../utils/subjectSchedule';
@@ -14,6 +14,55 @@ import type { CalendarDay, Subject, SubjectColor, SubjectSchedule, TaskWithCompl
 
 const EMPTY_SCHEDULES: Readonly<Record<string, { startTime: string; endTime: string }>> = Object.freeze({});
 const RANDOM_COLORS = ['weekly-task-pink', 'weekly-task-purple', 'weekly-task-blue', 'weekly-task-gray', 'weekly-task-blue-2', 'weekly-task-yellow-2'] as const;
+const RECESS_RANGES = [
+    { startTime: '10:00 AM', endTime: '10:30 AM' },
+    { startTime: '1:00 PM', endTime: '1:50 PM' },
+] as const;
+
+type SubjectScheduleSegment = {
+    originalSchedule: SubjectSchedule;
+    startTime: string;
+    endTime: string;
+    index: number;
+};
+
+function splitScheduleAtRecess(schedule: SubjectSchedule): SubjectScheduleSegment[] {
+    let segments: Array<Omit<SubjectScheduleSegment, 'index'>> = [{
+        originalSchedule: schedule,
+        startTime: schedule.startTime,
+        endTime: schedule.endTime,
+    }];
+
+    for (const recess of RECESS_RANGES) {
+        const recessStart = timeToMinutes(recess.startTime);
+        const recessEnd = timeToMinutes(recess.endTime);
+        const nextSegments: Array<Omit<SubjectScheduleSegment, 'index'>> = [];
+
+        for (const segment of segments) {
+            const segmentStart = timeToMinutes(segment.startTime);
+            const segmentEnd = timeToMinutes(segment.endTime);
+            const overlapsRecess = segmentStart < recessEnd && recessStart < segmentEnd;
+
+            if (!overlapsRecess) {
+                nextSegments.push(segment);
+                continue;
+            }
+
+            if (segmentStart < recessStart) {
+                nextSegments.push({ ...segment, endTime: recess.startTime });
+            }
+            if (segmentEnd > recessEnd) {
+                nextSegments.push({ ...segment, startTime: recess.endTime });
+            }
+        }
+
+        segments = nextSegments;
+    }
+
+    return segments
+        .filter((segment) => timeToMinutes(segment.startTime) < timeToMinutes(segment.endTime))
+        .map((segment, index) => ({ ...segment, index }));
+}
 
 const typeStyles: Record<CalendarDay['type'], string> = {
     past: 'opacity-60 bg-muted border-line',
@@ -108,19 +157,21 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId, weekl
     const weekday = getSubjectWeekday(cardDate);
     const daySubjects = subjects.flatMap((subject) => subject.schedules
         .filter((schedule) => schedule.weekday === weekday)
-        .map((schedule) => ({ subject, schedule })));
+        .flatMap((schedule) => splitScheduleAtRecess(schedule)
+            .map((segment) => ({ subject, segment }))));
     const modalTasks = selectedSubject
         ? tasks.filter((task) => task.subjectId === selectedSubject.subject.id)
         : tasks;
+
+    function openDayModal() {
+        setSelectedSubject(null);
+        setIsModalOpen(true);
+    }
 
     const weeklyCard = (
         <div
             className={`weekly-day-card ${type === 'today' ? 'weekly-day-card-today' : ''}`}
             data-version={dataVersion}
-            onClick={() => {
-                setSelectedSubject(null);
-                setIsModalOpen(true);
-            }}
             data-today={isToday ? '' : undefined}
         >
             {TIME_SLOTS.map((slot, index) => (
@@ -131,36 +182,45 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId, weekl
                     aria-hidden="true"
                 />
             ))}
-            {daySubjects.map(({ subject, schedule }) => {
-                const startRow = TIME_OPTIONS.indexOf(schedule.startTime as typeof TIME_OPTIONS[number]);
-                const endRow = TIME_OPTIONS.indexOf(schedule.endTime as typeof TIME_OPTIONS[number]);
+            {daySubjects.map(({ subject, segment }) => {
+                const startRow = TIME_OPTIONS.indexOf(segment.startTime as typeof TIME_OPTIONS[number]);
+                const endRow = TIME_OPTIONS.indexOf(segment.endTime as typeof TIME_OPTIONS[number]);
                 if (startRow < 0 || endRow <= startRow) return null;
                 const rowSpan = endRow - startRow;
-                const subjectTasks = tasks.filter((task) => task.subjectId === subject.id);
+                const subjectTasks = segment.index === 0
+                    ? tasks.filter((task) => task.subjectId === subject.id)
+                    : [];
                 const pendingCount = subjectTasks.filter((task) => !task.completed).length;
 
                 return (
                     <div
-                        key={`${subject.id}-${schedule.id}`}
+                        key={`${subject.id}-${segment.originalSchedule.id}-${segment.index}`}
                         className={`weekly-subject-block subject-${subject.color as SubjectColor}`}
                         style={{ gridRow: `${startRow + 1} / span ${rowSpan}` }}
                         onClick={(event) => {
                             event.stopPropagation();
-                            setSelectedSubject({ subject, schedule });
+                            setSelectedSubject({ subject, schedule: segment.originalSchedule });
                             setIsModalOpen(true);
                         }}
-                        title={`${subject.name} · ${schedule.startTime} – ${schedule.endTime}`}
+                        title={`${subject.name} · ${segment.startTime} – ${segment.endTime}`}
                     >
-                        <div className="weekly-subject-heading">
-                            <strong>{subject.name}</strong>
-                            {pendingCount > 0 && <span className="weekly-subject-count">{pendingCount}</span>}
-                        </div>
+                        {segment.index === 0 && (
+                            <div className="weekly-subject-heading">
+                                <strong>{subject.name}</strong>
+                                {pendingCount > 0 && <span className="weekly-subject-count">{pendingCount}</span>}
+                            </div>
+                        )}
 
-                        {subjectTasks.map((task) => (
-                            <span key={task.id} className={`weekly-subject-task ${task.completed ? 'weekly-subject-task-completed' : ''}`}>
-                                {task.title}
-                            </span>
-                        ))}
+                        {segment.index === 0 && subjectTasks.length > 0 && (
+                            <>
+                                <span className="weekly-subject-tasks-label">Tareas</span>
+                                {subjectTasks.map((task) => (
+                                    <span key={task.id} className={`weekly-subject-task ${task.completed ? 'weekly-subject-task-completed' : ''}`}>
+                                        {task.title}
+                                    </span>
+                                ))}
+                            </>
+                        )}
                     </div>
                 );
             })}
@@ -194,11 +254,8 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId, weekl
 
     const regularCard = (
         <div
-            className={`relative rounded-xl border p-3 flex flex-col gap-1.5 cursor-pointer transition-all duration-200 ease-out hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 aspect-square md:aspect-auto ${typeStyles[type] ?? typeStyles.future} ${type === 'past' || type === 'future' ? 'border-line' : ''}`}
-            onClick={() => {
-                setSelectedSubject(null);
-                setIsModalOpen(true);
-            }}
+            className={`relative rounded-xl border p-3 flex flex-col gap-1.5 ${tasks.length > 0 ? 'cursor-pointer hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0' : 'cursor-default'} transition-all duration-200 ease-out aspect-square md:aspect-auto ${typeStyles[type] ?? typeStyles.future} ${type === 'past' || type === 'future' ? 'border-line' : ''}`}
+            onClick={tasks.length > 0 ? openDayModal : undefined}
             data-today={isToday ? '' : undefined}
         >
             <div className={`flex justify-end items-center rounded-t-[10px] -mx-3 -mt-3 px-3 pt-3 pb-1.5 ${isToday ? 'bg-gradient-to-br from-amber-500 to-amber-600' : isTomorrow ? 'bg-gradient-to-br from-[#0058be] to-[#0041a8]' : isWeekend ? 'bg-gradient-to-br from-green-500 to-green-600' : ''}`}>

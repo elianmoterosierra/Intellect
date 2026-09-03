@@ -617,6 +617,7 @@ body {
     position: absolute;
     left: calc(76px + 16px);
     right: 0;
+    pointer-events: auto;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1453,6 +1454,7 @@ body {
     font-size: 11px;
     font-weight: 700;
     line-height: 1.2;
+    text-align: left;
 }
 
 .weekly-subject-heading {
@@ -1461,13 +1463,31 @@ body {
     justify-content: space-between;
     width: 100%;
     gap: 6px;
+    text-align: left;
+}
+
+.weekly-subject-heading strong {
+    font-size: 15px;
+    line-height: 1.15;
 }
 
 @media (min-width: 768px) {
     .weekly-subject-heading strong {
-        font-size: 13px;
-        line-height: 1.15;
+        font-size: 15px;
     }
+}
+
+.weekly-subject-tasks-label {
+    display: block;
+    width: 100%;
+    margin-top: 5px;
+    color: currentColor;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    line-height: 1.1;
+    text-align: left;
+    text-transform: uppercase;
 }
 
 .weekly-subject-count {
@@ -1495,15 +1515,26 @@ body {
 }
 
 .weekly-subject-task {
+    position: relative;
     display: block;
     width: 100%;
     overflow: hidden;
-    padding-top: 3px;
-    border-top: 1px solid rgb(255 255 255 / 0.3);
-    font-size: 10px;
+    padding: 3px 0 0 10px;
+    font-size: 13px;
     font-weight: 700;
+    text-align: left;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.weekly-subject-task::before {
+    position: absolute;
+    top: 50%;
+    left: 2px;
+    content: '•';
+    font-size: 10px;
+    line-height: 1;
+    transform: translateY(-50%);
 }
 
 .weekly-subject-task-completed {

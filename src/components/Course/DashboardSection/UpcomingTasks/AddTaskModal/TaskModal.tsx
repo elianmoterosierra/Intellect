@@ -35,23 +35,20 @@ export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, s
                 onClick={(event) => event.stopPropagation()}
             >
                 <div
-                    className="shrink-0 relative flex items-center gap-5 px-7 py-7 text-white"
+                    className="relative flex shrink-0 items-center gap-3 px-6 py-5 text-white"
                     style={{ background: 'linear-gradient(135deg, #0058be 0%, #2170e4 100%)' }}
                 >
-                    <span className="text-6xl font-black leading-none tracking-tight">+</span>
-                    <div className="flex flex-col">
-                        <h3 className="text-xl font-bold leading-6">Nueva tarea</h3>
+                    <div className="min-w-0 flex-1 text-left">
+                        <h3 className="text-lg font-bold leading-6">Nueva tarea</h3>
                         <p className="mt-1 text-sm font-medium text-white/80">Organiza tu próximo pendiente</p>
                     </div>
 
-                    <button
-                        type="button"
-                        onClick={closeModal}
-                        className="absolute right-5 top-5 rounded-full p-1 text-white/75 transition-colors hover:bg-white/15 hover:text-white"
-                        aria-label="Cerrar formulario"
-                    >
-                        <span className="material-symbols-outlined block text-2xl">close</span>
-                    </button>
+                    <div className="flex shrink-0 items-center gap-2">
+                        <span className="text-4xl font-black leading-none tracking-tight"></span>
+                        <button type="button" onClick={closeModal} className="rounded-full p-1 text-white/75 transition-colors hover:bg-white/15 hover:text-white" aria-label="Cerrar formulario">
+                            <span className="material-symbols-outlined block text-2xl">close</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div className="shrink-0 px-7 py-5 border-b border-line-soft">
@@ -81,6 +78,21 @@ export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, s
                             className="w-full rounded-xl border border-line bg-muted px-5 py-3 text-[15px] text-ink outline-none transition-all placeholder:text-ink-faint focus:border-brand focus:ring-2 focus:ring-brand/25 resize-none max-h-[160px] overflow-y-auto"
                             rows={2}
                         />
+                        {(subtitle.length > 0 || error) && (
+                            <div className="flex justify-between items-center">
+                                <span className={`text-xs transition-all ${subtitle.length > 2000
+                                    ? 'text-red-500 font-semibold'
+                                    : 'text-ink-faint'
+                                    }`}>
+                                    {subtitle.length}/2000 caracteres
+                                </span>
+                                {subtitle.length > 2000 && (
+                                    <span className="text-xs text-red-500">
+                                        Te has excedido por {subtitle.length - 2000} caracteres
+                                    </span>
+                                )}
+                            </div>
+                        )}
 
                         <label className="flex flex-col gap-1.5 text-xs font-semibold text-ink-soft">
                             Materia
@@ -100,21 +112,7 @@ export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, s
                             </select>
                         </label>
 
-                        {(subtitle.length > 0 || error) && (
-                            <div className="flex justify-between items-center">
-                                <span className={`text-xs transition-all ${subtitle.length > 2000
-                                    ? 'text-red-500 font-semibold'
-                                    : 'text-ink-faint'
-                                    }`}>
-                                    {subtitle.length}/2000 caracteres
-                                </span>
-                                {subtitle.length > 2000 && (
-                                    <span className="text-xs text-red-500">
-                                        Te has excedido por {subtitle.length - 2000} caracteres
-                                    </span>
-                                )}
-                            </div>
-                        )}
+
 
                         <div className="relative">
                             <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-ink-faint">calendar_month</span>
