@@ -29,7 +29,7 @@ export const AddTask = ({ showForm, setShowForm, form, setForm, handleSubmit, di
                     <span className="material-symbols-outlined text-base leading-none">
                         {disabled ? "block" : "add"}
                     </span>
-                    {disabled ? "Agregar tarea (No disponible)" : "Agregar tarea"}
+                    Agregar tarea
                 </button>
             ) : (
                 <FormAddTask form={form} setForm={setForm} handleSubmit={handleSubmit} setShowForm={setShowForm} error={error} />

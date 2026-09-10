@@ -4,7 +4,7 @@ Aplicación web de gestión académica creada con React, Vite y Supabase. Permit
 
 ## Funcionalidades
 
-- Registro, inicio y cierre de sesión seguro mediante **Supabase Auth** y sincronización de perfiles en la tabla `public.usuarios`.
+- Inicio y cierre de sesión seguro mediante **Supabase Auth** usando únicamente Google OAuth; el acceso con email y contraseña no se ofrece en la interfaz. Los perfiles se sincronizan en la tabla `public.usuarios`.
 - Un curso seleccionado por cada usuario (sincronizado en `usuarios.selected_course_id`).
 - Modal de seguridad (`CourseAccessModal`) que solicita un código de verificación (`code_verification`) para validar y autorizar la unión de un usuario a un curso.
 - Catálogo de cursos cargado en tiempo real desde Supabase (`public.cursos`) en la página de selección; `data.ts` se conserva como referencia estática para el detalle del dashboard.
@@ -13,11 +13,13 @@ Aplicación web de gestión académica creada con React, Vite y Supabase. Permit
 - El registro de membresías es idempotente: si el usuario ya pertenece al curso, no se genera
   un conflicto `409` ni se modifica su rol actual.
 - Solo un admin o el manager del curso puede ver y usar las acciones de crear, editar o eliminar tareas.
-- Materias recurrentes: admins y managers pueden crear, editar y eliminar materias con profesor, descripción, color elegido y varios horarios semanales sin solapamientos; se guardan en `public.subjects` y `public.subject_schedules` y se renderizan en el calendario.
+- Materias recurrentes: admins y managers pueden crear, editar y eliminar materias con profesor, descripción, color elegido, varios horarios semanales sin solapamientos y un enlace opcional de Google Meet; se guardan en `public.subjects` y `public.subject_schedules` y se renderizan en el calendario.
 - El formulario nuevo de tareas permite seleccionar una materia y una fecha válida para esa materia; las tareas mantienen `dueDate` para expiración y guardan la relación mediante `tasks.subject_id`.
 - Modal único de creación de tareas (`AddTaskModal/TaskModal.tsx`) reusado desde el dashboard y la sección "Agregar Tareas".
 - Descripción con textarea de auto-resize hasta 6 líneas, contador de caracteres en vivo y botón Guardar bloqueado al superar el límite de 2000 caracteres en el modal de creación.
 - Sección dedicada para la visualización y gestión de tareas (`AddTaskSection`), con filtros A-Z, Z-A y más recientes.
+- En `TaskList`, admins y managers pueden ver los contadores de usuarios que completaron o tienen pendiente cada tarea; cada contador abre un globo con los nombres correspondientes.
+- La sección `Ver miembros` (`ViewAllMemberSection`) permite a admins y managers consultar los miembros del curso, sus emails, tareas completadas y tareas vencidas, con orden A-Z, Z-A y más recientes.
 - Sección protegida `Gestionar materias` para listar, crear, editar y eliminar materias sin duplicar esa gestión dentro de `AddTaskSection`.
 - Edición de tareas mediante `TaskEdit` y eliminación desde `AddTaskSection`, con confirmación previa en `ConfirnDelete/ConfirmDelete.tsx`.
 - Modal de detalle de tarea (`Common/DetailsModal`) integrado en todos los listados, con estado `completed` en vivo desde el store.
@@ -26,23 +28,29 @@ Aplicación web de gestión académica creada con React, Vite y Supabase. Permit
 - Resumen automático de tareas completadas, pendientes y progreso.
 - Notificaciones dinámicas para tareas pendientes **no vencidas**, ordenadas por fecha de entrega (urgentes si vencen hoy o mañana).
 - "Próximas Tareas" muestra como máximo cuatro tareas pendientes no vencidas; el enlace a todas las pendientes indica cuántas tareas adicionales existen.
-- `PendingTasksModal` muestra todas las tareas pendientes desde el dashboard mobile y desktop.
+- `PendingTasksModal` muestra todas las tareas desde el dashboard mobile y desktop mediante cuatro filtros: todas, pendientes, vencidas y completadas. Las pendientes se ordenan por cercanía; las vencidas y completadas, de más reciente a más antigua.
+- `TaskFilters` es el componente externo de filtros del modal y muestra el contador de cada estado; en pantallas pequeñas permite que los filtros se distribuyan en varias líneas.
+- `DashboardCalendar` aparece debajo de `UpcomingTasks` y muestra las materias recurrentes del día seleccionado dentro de la semana actual, con navegación entre lunes y viernes, horario, profesor y un icono SVG clickeable para abrir Google Meet cuando existe un enlace válido.
+- `RemainingTasks` es el componente externo que muestra el contador de tareas adicionales junto al enlace del dashboard.
 - Estado visual para tareas vencidas: fondo rojo y texto blanco.
 - Agenda semanal de lunes a viernes que muestra las tareas según su fecha de entrega y horario. Al hacer clic en una tarea se abre su detalle.
 - Navegación por semanas con botón "Hoy" en desktop y mobile.
-- Franjas horarias de 7:30 AM a 3:30 PM; las tareas ocupan visualmente desde su inicio hasta su hora final.
+- El calendario utiliza cuatro bloques académicos: 8:00–9:00 AM, 9:30–10:30 AM, 11:00 AM–12:00 PM y 2:00–3:00 PM.
 - Validación de horarios obligatorios y bloqueo de tareas que se solapan en el mismo día.
 - En desktop se muestran las cinco columnas laborales; en mobile existe scroll horizontal entre días y vertical entre franjas, con el eje horario y el encabezado fijados. El calendario usa un bloqueo del eje dominante para evitar desplazamientos diagonales y conserva inercia suave al finalizar un swipe rápido.
 - DayCard conserva colores por estado: completadas verdes, tareas del día rojas, tareas de mañana amarillas y tareas normales aleatorias.
 - Límites de texto por contexto (títulos truncados según la ubicación).
 - Guard de autenticación con `DashBoardProtected` que redirige a `/` si no hay sesión.
+- Guard de entrada con `CourseEntryRedirect`: al abrir directamente o recargar `/` o `/course`, un usuario con curso seleccionado va a `/course-dashboard/:courseId`; la navegación interna desde el sidebar mantiene el acceso a Home y selección de curso.
 - Menú hamburguesa para navegación mobile con enlaces y auth-gating.
 - Sidebar desktop colapsable por defecto: al recibir foco o hover muestra las etiquetas y al perderlo vuelve a mostrar solo iconos.
 - Perfil de usuario editable: nombre, email y contraseña con flujo de confirmación en 2 pasos.
 - Confirmación en 2 pasos al abandonar un curso, con protección contra borrado accidental.
 - Modal de ajustes (`SettingsModal`) con vista "Acerca de" mostrando versión y tecnologías.
 - Diseño responsive: navegación completa en escritorio y menú compacto en pantallas pequeñas.
+- El dashboard agrupa `UpcomingTasks` y `DashboardCalendar` en la columna izquierda; `TaskSummary` se alinea al inicio y conserva su altura natural aunque aumente el contenido de esa columna.
 - Home separa sus tarjetas de gestión y estudiantes en componentes específicos y ofrece una modal de política de privacidad desde el footer.
+- Los nombres de materias se muestran con la primera letra en mayúscula y los nombres de profesores con cada palabra capitalizada, tanto para datos existentes como al guardar nuevos cambios.
 
 ## Tecnologías
 
@@ -73,16 +81,17 @@ Las páginas principales, secciones y el calendario se cargan con `React.lazy()`
 
 ### Autenticación y Perfil — `src/store/AuthStore.ts`
 
-Gestiona las credenciales mediante **Supabase Auth** y el perfil en la tabla `public.usuarios`:
+Gestiona la sesión mediante **Supabase Auth** y el perfil en la tabla `public.usuarios`. La interfaz de acceso (`FormSection` y `Login`) solo muestra el botón de Google; no hay formularios de login o registro con email y contraseña.
 
-- `login({ email, password })`: autenticación JWT vía `supabase.auth.signInWithPassword`.
-- `register({ name, email, password })`: crea la cuenta con `supabase.auth.signUp` e inserta la fila en `usuarios` (`id`, `name`, `gmail`) cuando Supabase devuelve una sesión.
+- `loginWithGoogle()`: inicia el flujo OAuth de Google mediante `supabase.auth.signInWithOAuth` y vuelve a `/course`. El flujo sirve tanto para usuarios existentes como para crear una cuenta nueva.
+- `AuthStore` no expone métodos `login` ni `register`; el único método de autenticación de entrada es `loginWithGoogle`.
 - `logout()`: revoca la sesión con `supabase.auth.signOut()`.
 - `restoreSession()`: sincroniza la sesión al arrancar la app o ante eventos de `onAuthStateChange`.
 - `setSelectedCourse(courseId)`: actualiza `usuarios.selected_course_id`.
 - `toggleTaskStatus(courseId, taskId)`: conmuta el estado de completado en `usuarios.task_status`.
-- `updateUser(field, value)`: actualiza el nombre en `usuarios` y sincroniza email o contraseña en `supabase.auth.updateUser`.
+- `updateUser(field, value)`: actualiza el nombre en `usuarios` y sincroniza email o contraseña en `supabase.auth.updateUser` cuando corresponde.
 - `fetchProfile(userId)`: carga el perfil y sus filas de `course_members`, y construye `user.courseRoles`.
+- La configuración de Google OAuth y las URLs de redirección viven en Supabase/Google Cloud; no se implementan endpoints propios de correo.
 
 Cada perfil guarda su progreso individual en el campo jsonb `usuarios.task_status` (mapeado a `user.taskStatusByCourse`):
 
@@ -153,12 +162,42 @@ Persiste las definiciones de tareas en la tabla `public.tasks` de Supabase:
 - Cada materia puede tener varios horarios en distintos días o varias franjas el mismo día.
 - `src/utils/subjectSchedule.ts` reutiliza `rangesOverlap` para rechazar horarios solapados entre materias del mismo curso.
 - `DayCard` pinta cada horario de materia en la cuadrícula semanal, por lo que una materia se repite automáticamente cada semana.
+- El dashboard reutiliza los mismos horarios para `DashboardCalendar`, que presenta una vista compacta de las materias de lunes a viernes sin duplicar datos.
 - Los managers del curso y los admins universales gestionan materias desde `ManageSubjectsSection`; `SubjectModal` se reutiliza para alta y edición.
 - `updateSubject(subject)` actualiza los datos de la materia y reemplaza sus horarios en Supabase, conservando la validación de conflictos.
 - `loadSubjects(courseId)` carga únicamente las materias y horarios del curso indicado después de restaurar la sesión.
+- `subjects.meeting_url` es opcional; `SubjectModal` solo acepta enlaces HTTPS cuyo host sea exactamente `meet.google.com`. La URL se muestra como un icono `GoogleMeet` en `DashboardCalendar` y `DayModal`, con acceso para todos los usuarios y ubicación debajo del control de tareas para admins/managers.
+- `capitalizeSubjectName` y `capitalizePersonName` normalizan los nombres de materias y profesores al cargar datos existentes y al guardar desde `SubjectModal`.
 - Las horas de PostgreSQL (`HH:mm:ss`) se convierten al formato de la cuadrícula (`h:mm AM/PM`) antes de renderizar.
+- Cada horario de materia debe coincidir con uno de los cuatro bloques académicos vigentes; se mantienen la validación de solapamientos y la posibilidad de registrar varios horarios por materia.
 - Las tareas nuevas envían `subject_id` a `public.tasks` y conservan `due_date` para su expiración.
 - `supabase/add_subject_id_to_tasks.sql` prepara la relación tarea-materia; `supabase/add_subject_metadata.sql` completa `teacher` y `description` si se creó la tabla con el primer script.
+
+### Miembros del curso — `src/store/courseMemberStorage.ts`
+
+- `ViewAllMemberSection` se muestra como `Ver miembros` en el sidebar y el menú hamburguesa únicamente para admins y managers del curso.
+- La sección es de consulta y muestra nombre, email, tareas completadas y tareas vencidas.
+- `MemberSortControls` ordena por A-Z, Z-A o `Más recientes`, usando `course_members.created_at`.
+- Los conteos se calculan en Supabase mediante `get_course_members_summary`, definido en `supabase/course_members_summary.sql`; la función valida el rol antes de devolver datos.
+- Las tareas vencidas son tareas cuya fecha ya pasó y que no están completadas, manteniendo la misma regla del dashboard.
+- Debe ejecutarse `supabase/course_members_summary.sql` en el proyecto de Supabase antes de usar esta sección.
+
+#### Historial del horario anterior
+
+Antes del horario vigente, el calendario y los formularios de materias utilizaban estas franjas:
+
+- 7:30–8:20 AM
+- 8:20–9:10 AM
+- 9:10–10:00 AM
+- 10:00–10:30 AM — recreo
+- 10:30–11:20 AM
+- 11:20 AM–12:10 PM
+- 12:10–1:00 PM
+- 1:00–1:50 PM — recreo
+- 1:50–2:40 PM
+- 2:40–3:30 PM
+
+La lógica anterior de `SubjectModal` permitía agregar varios horarios por materia, seleccionaba las horas desde `TIME_OPTIONS`, calculaba las horas finales posteriores con `getTimeOptionsAfter` y rechazaba horarios solapados mediante `rangesOverlap`. Esta referencia se conserva para poder restaurar el catálogo anterior de horas si vuelve a ser necesario.
 
 ### UI — `src/store/uiStore.ts`
 
@@ -249,11 +288,11 @@ El calendario usa las tareas compartidas de `taskStorage.ts`, combina su estado 
 
 - `CalendarSection.tsx` administra una sola semana laboral y navega con las flechas o el botón "Hoy".
 - `Day.tsx` construye las columnas de lunes a viernes.
-- `DayCard.tsx` dibuja diez filas horarias y extiende cada tarea mediante `grid-row` según `startTime` y `endTime`.
+- `DayCard.tsx` dibuja cuatro filas horarias y extiende cada tarea mediante `grid-row` según `startTime` y `endTime`.
 - Desktop muestra las cinco columnas completas.
 - Mobile usa scroll horizontal para los días y vertical para las horas; el encabezado de días y la columna de horas permanecen visibles durante el desplazamiento. `useAxisLockedScroll.ts` controla los gestos táctiles con `Pointer Events`: después de un umbral inicial elige el eje dominante, actualiza únicamente `scrollLeft` o `scrollTop` y aplica momentum al soltar.
 - Las materias recurrentes comparten la cuadrícula con las tareas normales; cada horario se posiciona por `grid-row` usando el día de la semana y sus horas configuradas.
-- Si un horario de materia atraviesa un recreo, `DayCard` lo divide en segmentos superiores e inferiores con bordes redondeados y mantiene ambos segmentos seleccionables.
+- Los espacios vacíos de `DayCard` no abren `DayModal`; solo las materias, tareas o días con contenido responden al clic.
 - Las tareas vencidas de días anteriores no se renderizan en la agenda semanal.
 - Las tareas sin horario no se renderizan en la agenda semanal hasta que exista una migración o edición de horario.
 - `DayCard` trunca títulos según el contexto y muestra el detalle completo al seleccionar una tarea.
@@ -319,9 +358,11 @@ src/
 ├── store/
 │   ├── AuthStore.ts          # Autenticación Supabase + perfil usuarios
 │   ├── courseStore.ts        # Sincronización del curso activo
+│   ├── courseMemberStorage.ts # Miembros del curso y conteos de tareas
 │   ├── subjectStorage.ts     # Materias y horarios recurrentes en Supabase
 │   ├── taskStorage.ts        # CRUD de tareas compartidas en Supabase
 │   ├── taskScheduleStorage.ts # Horarios temporales en memoria
+│   ├── taskProgressStorage.ts # Progreso por tarea para admins/managers
 │   ├── themeStore.ts         # Dark mode (clase .dark + persistencia en localStorage)
 │   └── uiStore.ts            # Control de apertura/cierre de modales
 ├── utils/
@@ -386,9 +427,18 @@ src/
         │   └── TaskList/TaskList.tsx
         ├── ManageSubjectsSection/
         │   ├── ManageSubjectsSection.tsx
-        │   └── SubjectEditModal.tsx
+        │   ├── SubjectEditModal.tsx
+        │   ├── SubjectSectionHeader.tsx
+        │   ├── SubjectSortControls.tsx
+        │   └── SubjectTable.tsx
+        ├── ViewAllMemberSection/
+        │   ├── ViewAllMemberSection.tsx
+        │   ├── MemberSectionHeader.tsx
+        │   ├── MemberSortControls.tsx
+        │   └── MemberTable.tsx
         ├── DashboardSection/
         │   ├── Dashboard.tsx
+        │   ├── DashboardCalendar/DashboardCalendar.tsx
         │   ├── Header/HeaderDashboard.tsx
         │   ├── SideNav/SideNav.tsx
         │   ├── TaskSummary/TaskSummary.tsx
@@ -396,10 +446,12 @@ src/
         │   ├── AppBar(mobile)/CourseHamburgerMenu.tsx
         │   ├── AppBar(mobile)/SearchDropdown.tsx     # Búsqueda de tareas con autocompletado
         │   ├── PendingTasksModal/PendingTasksModal.tsx
+        │   ├── PendingTasksModal/TaskFilters/TaskFilters.tsx
         │   └── UpcomingTasks/
         │       ├── UpcomingTasks.tsx
         │       ├── AddTask/AddTaskButton.tsx
         │       ├── AddTaskModal/TaskModal.tsx
+        │       ├── RemainingTasks/RemainingTasks.tsx
         │       └── TaskItem/TaskItem.tsx
         └── CalendarSection/
             ├── CalendarSection.tsx

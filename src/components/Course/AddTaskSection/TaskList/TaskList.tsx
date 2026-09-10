@@ -1,10 +1,13 @@
 import { useTaskStore } from "../../../../store/taskStorage";
 import { useAuthStore } from "../../../../store/AuthStore";
 import { getTaskStatusConfig } from "../../../../utils/taskStatus";
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { DeleteTask } from "../DeleteTaskButton/DeleteTask";
 import { TaskEdit } from "../TaskEdit/TaskEdit";
 import { DetailsModal } from "../../Common/DetailsModal/DetailsModal";
+import { TaskProgressPopover } from './TaskProgressPopover';
+import { useTaskProgressStore } from '../../../../store/taskProgressStorage';
+import { canManageCourse } from '../../../../utils/permission';
 import type { TaskWithCompleted } from "../../../../types";
 
 type TaskListProps = {
@@ -17,8 +20,10 @@ export type TaskSortMode = 'asc' | 'desc' | 'recent';
 export function TaskList({ courseId, sortMode = 'recent' }: TaskListProps) {
     const tasksByCourse = useTaskStore((state) => state.tasksByCourse);
     const user = useAuthStore((state) => state.user);
+    const fetchTaskProgress = useTaskProgressStore((state) => state.fetchTaskProgress);
     const [selectedTask, setSelectedTask] = useState<TaskWithCompleted | null>(null);
     const [editingTask, setEditingTask] = useState<TaskWithCompleted | null>(null);
+    const canViewProgress = canManageCourse(user, courseId);
 
     const tasks = useMemo<TaskWithCompleted[]>(() => {
         const rawTasks = tasksByCourse?.[courseId] ?? [];
@@ -43,6 +48,11 @@ export function TaskList({ courseId, sortMode = 'recent' }: TaskListProps) {
         return sorted;
     }, [sortMode, tasks]);
 
+    useEffect(() => {
+        if (!canViewProgress) return;
+        void Promise.all(orderedTasks.map((task) => fetchTaskProgress(courseId, task.id)));
+    }, [canViewProgress, courseId, fetchTaskProgress, orderedTasks]);
+
 
     return (
         <>
@@ -59,7 +69,7 @@ export function TaskList({ courseId, sortMode = 'recent' }: TaskListProps) {
                         return (
                             <li
                                 key={task.id}
-                                className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-t px-4 py-4 transition-colors duration-200 group cursor-pointer first:border-t-0 sm:px-6 ${isOverdue
+                                className={`grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-4 border-t px-4 py-4 transition-colors duration-200 group cursor-pointer first:border-t-0 sm:px-6 ${isOverdue
                                     ? 'bg-danger border-danger text-white hover:bg-danger'
                                     : 'border-line hover:bg-muted'
                                     }`}
@@ -68,6 +78,13 @@ export function TaskList({ courseId, sortMode = 'recent' }: TaskListProps) {
                                 <p className={`min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-left text-sm font-semibold ${isOverdue ? 'text-white' : 'text-ink'}`}>
                                     {task.title}
                                 </p>
+
+                                {canViewProgress ? (
+                                    <div className="flex items-center gap-1.5" onClick={(event) => event.stopPropagation()}>
+                                        <TaskProgressPopover courseId={courseId} taskId={task.id} kind="completed" />
+                                        <TaskProgressPopover courseId={courseId} taskId={task.id} kind="pending" />
+                                    </div>
+                                ) : <span />}
 
                                 <div className="flex items-center gap-1.5" onClick={(event) => event.stopPropagation()}>
                                     <button

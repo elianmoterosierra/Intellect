@@ -25,9 +25,10 @@ type TaskItemProps = {
     task: TaskWithCompleted;
     courseId: number;
     canManageCourse: boolean;
+    compact?: boolean;
 };
 
-export function TaskItem({ task, courseId, canManageCourse }: TaskItemProps) {
+export function TaskItem({ task, courseId, canManageCourse, compact = false }: TaskItemProps) {
     const toggleTaskStatus = useAuthStore((state) => state.toggleTaskStatus);
     const [showDetails, setShowDetails] = useState(false);
     const isMobile = useMediaQuery('(max-width: 767px)');
@@ -47,7 +48,7 @@ export function TaskItem({ task, courseId, canManageCourse }: TaskItemProps) {
     return (
         <>
             <li
-                className={`px-6 py-4 flex items-center gap-6 border-t first:border-t-0 transition-colors duration-200 group cursor-pointer ${
+                className={`${compact ? 'mx-4 my-2 rounded-lg border border-line-soft bg-muted/45 px-3 py-3' : 'px-6 py-4 border-t first:border-t-0'} flex items-center ${compact ? 'gap-3' : 'gap-6'} transition-colors duration-200 group cursor-pointer ${
                     isOverdue
                         ? 'bg-danger border-danger hover:bg-danger text-white'
                         : 'border-line hover:bg-muted'
@@ -57,7 +58,7 @@ export function TaskItem({ task, courseId, canManageCourse }: TaskItemProps) {
                 {/* Checkbox */}
                 <button
                     onClick={handleToggle}
-                    className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all duration-200 bg-transparent
+                    className={`flex-shrink-0 ${compact ? 'h-7 w-7' : 'h-8 w-8'} rounded-full border-2 flex items-center justify-center cursor-pointer transition-all duration-200 bg-transparent
                         ${done
                             ? 'border-green-600 bg-green-600'
                             : isOverdue
@@ -72,12 +73,12 @@ export function TaskItem({ task, courseId, canManageCourse }: TaskItemProps) {
 
                 {/* Info */}
                 <div className="flex-1 min-w-0 text-left">
-                    <p className={`text-base leading-6 font-semibold overflow-hidden text-ellipsis whitespace-nowrap ${done ? 'text-ink-faint line-through' : isOverdue ? 'text-white' : 'text-ink'}`}>{task.title.length > maxTitle ? task.title.slice(0, maxTitle) + '…' : task.title}</p>
+                    <p className={`${compact ? 'text-xs md:text-base' : 'text-base'} leading-6 font-semibold overflow-hidden text-ellipsis whitespace-nowrap ${done ? 'text-ink-faint line-through' : isOverdue ? 'text-white' : 'text-ink'}`}>{task.title.length > maxTitle ? task.title.slice(0, maxTitle) + '…' : task.title}</p>
                 </div>
 
                 {/* Badge */}
                 <div className="flex-shrink-0">
-                    <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-xs leading-4 tracking-wide font-semibold ${
+                    <span className={`inline-flex items-center rounded-full leading-4 tracking-wide font-semibold ${compact ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-0.5 text-xs'} ${
                         isOverdue ? 'bg-white/15 text-white border border-white/30' : badgeStyles[badgeVariant]
                     }`}>
                         {isOverdue ? 'Vencida' : task.hour}
@@ -85,7 +86,7 @@ export function TaskItem({ task, courseId, canManageCourse }: TaskItemProps) {
                 </div>
 
                 {canManageCourse && (
-                    <DeleteTask courseId={courseId} taskId={task.id} isOverdue={isOverdue} />
+                    <DeleteTask courseId={courseId} taskId={task.id} isOverdue={isOverdue} compact={compact} />
                 )}
             </li>
 

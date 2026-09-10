@@ -28,6 +28,28 @@ export type Task = {
 
 export type TaskWithCompleted = Task & { completed: boolean };
 
+export type TaskProgressUser = {
+    id: string;
+    name: string;
+};
+
+export type TaskProgressSummary = {
+    total: number;
+    completedCount: number;
+    pendingCount: number;
+    completedUsers: TaskProgressUser[];
+    pendingUsers: TaskProgressUser[];
+};
+
+export type CourseMemberSummary = {
+    id: string;
+    name: string;
+    email: string;
+    completedTasks: number;
+    overdueTasks: number;
+    joinedAt: string;
+};
+
 export type SubjectColor = 'blue' | 'purple' | 'pink' | 'yellow' | 'green' | 'orange';
 
 export type SubjectWeekday = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday';
@@ -45,6 +67,7 @@ export type Subject = {
     name: string;
     teacher: string;
     description: string;
+    meetingUrl?: string;
     color: SubjectColor;
     schedules: SubjectSchedule[];
     createdAt: string;
@@ -71,7 +94,6 @@ export type AuthState = {
 };
 
 export type LoginResult = { success: boolean; user?: User; error?: string };
-export type RegisterResult = LoginResult;
 
 export type CourseId = string | number;
 

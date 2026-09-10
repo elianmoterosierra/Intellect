@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { TIME_OPTIONS } from '../../../../../../utils/taskSchedule';
+import { TIME_SLOTS } from '../../../../../../utils/taskSchedule';
 
 import type { TaskForm } from "../DayModal";
 
@@ -41,13 +41,13 @@ export function FormAddTask({ form, setForm, handleSubmit, setShowForm, error }:
             />
 
             <div className="grid grid-cols-2 gap-2">
-                <select required value={form.startTime} onChange={(e) => setForm(f => ({ ...f, startTime: e.target.value }))} className="w-full rounded-xl border border-line-soft bg-muted px-3 py-2.5 text-base md:text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand/30">
+                <select required value={form.startTime} onChange={(e) => setForm(f => ({ ...f, startTime: e.target.value, endTime: TIME_SLOTS.find((slot) => slot.start === e.target.value)?.end ?? '' }))} className="w-full rounded-xl border border-line-soft bg-muted px-3 py-2.5 text-base md:text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand/30">
                     <option value="">Inicio</option>
-                    {TIME_OPTIONS.slice(0, -1).map((time) => <option key={time} value={time}>{time}</option>)}
+                    {TIME_SLOTS.map((slot) => <option key={slot.start} value={slot.start}>{slot.start}</option>)}
                 </select>
                 <select required value={form.endTime} onChange={(e) => setForm(f => ({ ...f, endTime: e.target.value }))} className="w-full rounded-xl border border-line-soft bg-muted px-3 py-2.5 text-base md:text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand/30">
                     <option value="">Fin</option>
-                    {TIME_OPTIONS.slice(1).map((time) => <option key={time} value={time}>{time}</option>)}
+                    {TIME_SLOTS.filter((slot) => slot.start === form.startTime).map((slot) => <option key={slot.end} value={slot.end}>{slot.end}</option>)}
                 </select>
             </div>
 

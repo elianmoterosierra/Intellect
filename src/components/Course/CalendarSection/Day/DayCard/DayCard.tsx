@@ -5,7 +5,7 @@ import { EMPTY_TASKS } from '../../../../../Hooks/useMonthDay';
 import { useTaskStore } from '../../../../../store/taskStorage';
 import { useAuthStore } from '../../../../../store/AuthStore';
 import { DetailsModal } from '../../../Common/DetailsModal/DetailsModal';
-import { TIME_OPTIONS, TIME_SLOTS, fromDatabaseTime, isSameLocalDay, timeToMinutes } from '../../../../../utils/taskSchedule';
+import { TIME_SLOTS, fromDatabaseTime, isSameLocalDay } from '../../../../../utils/taskSchedule';
 import { useTaskScheduleStore } from '../../../../../store/taskScheduleStorage';
 import { EMPTY_SUBJECTS, useSubjectStore } from '../../../../../store/subjectStorage';
 import { getSubjectWeekday } from '../../../../../utils/subjectSchedule';
@@ -14,11 +14,6 @@ import type { CalendarDay, Subject, SubjectColor, SubjectSchedule, TaskWithCompl
 
 const EMPTY_SCHEDULES: Readonly<Record<string, { startTime: string; endTime: string }>> = Object.freeze({});
 const RANDOM_COLORS = ['weekly-task-pink', 'weekly-task-purple', 'weekly-task-blue', 'weekly-task-gray', 'weekly-task-blue-2', 'weekly-task-yellow-2'] as const;
-const RECESS_RANGES = [
-    { startTime: '10:00 AM', endTime: '10:30 AM' },
-    { startTime: '1:00 PM', endTime: '1:50 PM' },
-] as const;
-
 type SubjectScheduleSegment = {
     originalSchedule: SubjectSchedule;
     startTime: string;
@@ -26,42 +21,17 @@ type SubjectScheduleSegment = {
     index: number;
 };
 
-function splitScheduleAtRecess(schedule: SubjectSchedule): SubjectScheduleSegment[] {
-    let segments: Array<Omit<SubjectScheduleSegment, 'index'>> = [{
+function getScheduleSegments(schedule: SubjectSchedule): SubjectScheduleSegment[] {
+    return [{
         originalSchedule: schedule,
         startTime: schedule.startTime,
         endTime: schedule.endTime,
+        index: 0,
     }];
+}
 
-    for (const recess of RECESS_RANGES) {
-        const recessStart = timeToMinutes(recess.startTime);
-        const recessEnd = timeToMinutes(recess.endTime);
-        const nextSegments: Array<Omit<SubjectScheduleSegment, 'index'>> = [];
-
-        for (const segment of segments) {
-            const segmentStart = timeToMinutes(segment.startTime);
-            const segmentEnd = timeToMinutes(segment.endTime);
-            const overlapsRecess = segmentStart < recessEnd && recessStart < segmentEnd;
-
-            if (!overlapsRecess) {
-                nextSegments.push(segment);
-                continue;
-            }
-
-            if (segmentStart < recessStart) {
-                nextSegments.push({ ...segment, endTime: recess.startTime });
-            }
-            if (segmentEnd > recessEnd) {
-                nextSegments.push({ ...segment, startTime: recess.endTime });
-            }
-        }
-
-        segments = nextSegments;
-    }
-
-    return segments
-        .filter((segment) => timeToMinutes(segment.startTime) < timeToMinutes(segment.endTime))
-        .map((segment, index) => ({ ...segment, index }));
+function getSlotIndex(startTime: string, endTime: string): number {
+    return TIME_SLOTS.findIndex((slot) => slot.start === startTime && slot.end === endTime);
 }
 
 const typeStyles: Record<CalendarDay['type'], string> = {
@@ -150,14 +120,13 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId, weekl
     const weeklyTasks = tasks.filter((task) => {
         const schedule = getTaskSchedule(task);
         if (!schedule) return false;
-        return TIME_OPTIONS.includes(schedule.startTime as typeof TIME_OPTIONS[number])
-            && TIME_OPTIONS.includes(schedule.endTime as typeof TIME_OPTIONS[number]);
+        return getSlotIndex(schedule.startTime, schedule.endTime) >= 0;
     });
 
     const weekday = getSubjectWeekday(cardDate);
     const daySubjects = subjects.flatMap((subject) => subject.schedules
         .filter((schedule) => schedule.weekday === weekday)
-        .flatMap((schedule) => splitScheduleAtRecess(schedule)
+        .flatMap((schedule) => getScheduleSegments(schedule)
             .map((segment) => ({ subject, segment }))));
     const modalTasks = selectedSubject
         ? tasks.filter((task) => task.subjectId === selectedSubject.subject.id)
@@ -183,10 +152,8 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId, weekl
                 />
             ))}
             {daySubjects.map(({ subject, segment }) => {
-                const startRow = TIME_OPTIONS.indexOf(segment.startTime as typeof TIME_OPTIONS[number]);
-                const endRow = TIME_OPTIONS.indexOf(segment.endTime as typeof TIME_OPTIONS[number]);
-                if (startRow < 0 || endRow <= startRow) return null;
-                const rowSpan = endRow - startRow;
+                const slotIndex = getSlotIndex(segment.startTime, segment.endTime);
+                if (slotIndex < 0) return null;
                 const subjectTasks = segment.index === 0
                     ? tasks.filter((task) => task.subjectId === subject.id)
                     : [];
@@ -196,7 +163,7 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId, weekl
                     <div
                         key={`${subject.id}-${segment.originalSchedule.id}-${segment.index}`}
                         className={`weekly-subject-block subject-${subject.color as SubjectColor}`}
-                        style={{ gridRow: `${startRow + 1} / span ${rowSpan}` }}
+                        style={{ gridRow: slotIndex + 1 }}
                         onClick={(event) => {
                             event.stopPropagation();
                             setSelectedSubject({ subject, schedule: segment.originalSchedule });
@@ -227,16 +194,14 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId, weekl
             {weeklyTasks.map((task) => {
                 const schedule = getTaskSchedule(task);
                 if (!schedule) return null;
-                const startRow = TIME_OPTIONS.indexOf(schedule.startTime as typeof TIME_OPTIONS[number]);
-                const endRow = TIME_OPTIONS.indexOf(schedule.endTime as typeof TIME_OPTIONS[number]);
-                if (startRow < 0 || endRow <= startRow) return null;
-                const rowSpan = endRow - startRow;
+                const slotIndex = getSlotIndex(schedule.startTime, schedule.endTime);
+                if (slotIndex < 0) return null;
                 return (
                     <button
                         type="button"
                         key={task.id}
                         className={`weekly-task-block ${getTaskColor(task)}`}
-                        style={{ gridRow: `${startRow + 1} / span ${rowSpan}` }}
+                        style={{ gridRow: slotIndex + 1 }}
                         onClick={(event) => {
                             event.stopPropagation();
                             setSelectedSubject(null);

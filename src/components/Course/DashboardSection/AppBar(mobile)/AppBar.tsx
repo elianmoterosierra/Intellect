@@ -11,6 +11,7 @@ const SECTION_LABELS: Record<SectionKey, string> = {
     calendar: 'Calendario',
     'Agregar Tareas': 'Tareas',
     'Gestionar materias': 'Materias',
+    viewAllMember: 'Miembros',
 };
 
 type AppBarProps = {

@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
-import { getTimeOptionsAfter, rangesOverlap, TIME_OPTIONS } from '../../../../utils/taskSchedule';
+import { getTimeOptionsAfter, rangesOverlap, TIME_SLOTS } from '../../../../utils/taskSchedule';
 import { EMPTY_SUBJECTS, useSubjectStore } from '../../../../store/subjectStorage';
 import { hasSubjectScheduleConflict } from '../../../../utils/subjectSchedule';
+import { isGoogleMeetUrl } from '../../../../utils/meetingLink';
 import { useModalAnimation } from '../../../../Hooks/useModalAnimation';
+import { capitalizePersonName, capitalizeSubjectName } from '../../../../utils/subjectName';
 import type { Subject, SubjectColor, SubjectSchedule, SubjectWeekday } from '../../../../types';
 
 type SubjectModalProps = {
@@ -28,20 +30,12 @@ const COLORS: Array<{ value: SubjectColor; label: string; className: string }> =
     { value: 'orange', label: 'Naranja', className: 'bg-orange-500' },
 ];
 
-const RECESS_RANGES = [
-    { startTime: '10:00 AM', endTime: '10:30 AM' },
-    { startTime: '1:00 PM', endTime: '1:50 PM' },
-] as const;
-
-const RECESS_START_TIMES: ReadonlySet<string> = new Set(RECESS_RANGES.map((range) => range.startTime));
-const RECESS_END_TIMES: ReadonlySet<string> = new Set(RECESS_RANGES.map((range) => range.endTime));
-
 function createSchedule(): SubjectSchedule {
     return {
         id: crypto.randomUUID(),
         weekday: 'monday',
-        startTime: TIME_OPTIONS[0],
-        endTime: TIME_OPTIONS[1],
+        startTime: TIME_SLOTS[0].start,
+        endTime: TIME_SLOTS[0].end,
     };
 }
 
@@ -51,6 +45,7 @@ export function SubjectModal({ courseId, onClose, subject }: SubjectModalProps) 
     const existingSubjects = useSubjectStore((state) => state.subjectsByCourse[String(courseId)] ?? EMPTY_SUBJECTS);
     const [name, setName] = useState(subject?.name ?? '');
     const [teacher, setTeacher] = useState(subject?.teacher ?? '');
+    const [meetingUrl, setMeetingUrl] = useState(subject?.meetingUrl ?? '');
     const [color, setColor] = useState<SubjectColor>(subject?.color ?? 'blue');
     const [schedules, setSchedules] = useState<SubjectSchedule[]>(subject?.schedules ?? [createSchedule()]);
     const [error, setError] = useState('');
@@ -87,11 +82,17 @@ export function SubjectModal({ courseId, onClose, subject }: SubjectModalProps) 
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        const trimmedName = name.trim();
-        const trimmedTeacher = teacher.trim();
+        const trimmedName = capitalizeSubjectName(name);
+        const trimmedTeacher = capitalizePersonName(teacher);
+        const trimmedMeetingUrl = meetingUrl.trim();
 
         if (!trimmedName || !trimmedTeacher) {
             setError('Completa el nombre y el profesor.');
+            return;
+        }
+
+        if (trimmedMeetingUrl && !isGoogleMeetUrl(trimmedMeetingUrl)) {
+            setError('El enlace debe ser una URL válida de Google Meet.');
             return;
         }
 
@@ -105,11 +106,11 @@ export function SubjectModal({ courseId, onClose, subject }: SubjectModalProps) 
             return;
         }
 
-        const startsOrEndsAtRecessBoundary = schedules.some((schedule) => (
-            RECESS_START_TIMES.has(schedule.startTime) || RECESS_END_TIMES.has(schedule.endTime)
-        ));
-        if (startsOrEndsAtRecessBoundary) {
-            setError('Ese horario está reservado para el recreo.');
+        const hasInvalidTimeSlot = schedules.some((schedule) => !TIME_SLOTS.some((slot) => (
+            slot.start === schedule.startTime && slot.end === schedule.endTime
+        )));
+        if (hasInvalidTimeSlot) {
+            setError('Selecciona uno de los bloques horarios disponibles.');
             return;
         }
 
@@ -131,6 +132,7 @@ export function SubjectModal({ courseId, onClose, subject }: SubjectModalProps) 
             name: trimmedName,
             teacher: trimmedTeacher,
             description: '',
+            ...(trimmedMeetingUrl ? { meetingUrl: trimmedMeetingUrl } : {}),
             color,
             schedules,
             createdAt: subject?.createdAt ?? new Date().toISOString(),
@@ -170,6 +172,20 @@ export function SubjectModal({ courseId, onClose, subject }: SubjectModalProps) 
                         <input value={teacher} onChange={(event) => setTeacher(event.target.value)} className="rounded-xl border border-line bg-muted px-4 py-3 text-base text-ink outline-none focus:border-brand md:text-sm" placeholder="Nombre del profesor" />
                     </label>
 
+                    <label className="flex flex-col gap-1.5 text-left text-sm font-semibold text-ink">
+                        Enlace de reunión virtual <span className="font-normal text-ink-soft">(opcional)</span>
+                        <input
+                            type="url"
+                            value={meetingUrl}
+                            onChange={(event) => setMeetingUrl(event.target.value)}
+                            className="rounded-xl border border-line bg-muted px-4 py-3 text-base text-ink outline-none focus:border-brand md:text-sm"
+                            placeholder="https://meet.google.com/..."
+                            inputMode="url"
+                            autoComplete="url"
+                        />
+                        <span className="text-xs font-normal text-ink-soft">Solo se aceptan enlaces de Google Meet.</span>
+                    </label>
+
                     <fieldset>
                         <legend className="mb-2 text-left text-sm font-semibold text-ink">Color de la materia</legend>
                         <div className="grid grid-cols-3 gap-2">
@@ -200,7 +216,7 @@ export function SubjectModal({ courseId, onClose, subject }: SubjectModalProps) 
                                         {WEEKDAYS.map((weekday) => <option key={weekday.value} value={weekday.value}>{weekday.label}</option>)}
                                     </select>
                                     <select value={schedule.startTime} onChange={(event) => updateSchedule(schedule.id, { startTime: event.target.value, endTime: getTimeOptionsAfter(event.target.value)[0] ?? '' })} className="rounded-lg border border-line bg-surface px-3 py-2.5 text-base text-ink md:text-sm">
-                                        {TIME_OPTIONS.slice(0, -1).map((time) => <option key={time} value={time}>{time}</option>)}
+                                        {TIME_SLOTS.map((slot) => <option key={slot.start} value={slot.start}>{slot.start}</option>)}
                                     </select>
                                     <select value={schedule.endTime} onChange={(event) => updateSchedule(schedule.id, { endTime: event.target.value })} className="rounded-lg border border-line bg-surface px-3 py-2.5 text-base text-ink md:text-sm">
                                         {(availableEndTimes[index] ?? []).map((time) => <option key={time} value={time}>{time}</option>)}

@@ -11,6 +11,7 @@ const navItems: Array<{ key: SectionKey; icon: string; label: string }> = [
     { key: COURSE_SECTIONS.CALENDAR, icon: 'calendar_month', label: 'Calendario' },
     { key: COURSE_SECTIONS.ADD_TASKS, icon: 'assignment', label: 'Agregar Tareas' },
     { key: COURSE_SECTIONS.MANAGE_SUBJECTS, icon: 'menu_book', label: 'Gestionar materias' },
+    { key: COURSE_SECTIONS.VIEW_ALL_MEMBER, icon: 'person', label: 'Ver miembros' },
 ];
 
 type CourseHamburgerMenuProps = {
@@ -28,7 +29,9 @@ export function CourseHamburgerMenu({ activeSection, onSectionChange, canManageT
     const visibleItems = canManageTasks
         ? navItems
         : navItems.filter((item) => (
-            item.key !== COURSE_SECTIONS.ADD_TASKS && item.key !== COURSE_SECTIONS.MANAGE_SUBJECTS
+            item.key !== COURSE_SECTIONS.ADD_TASKS
+            && item.key !== COURSE_SECTIONS.MANAGE_SUBJECTS
+            && item.key !== COURSE_SECTIONS.VIEW_ALL_MEMBER
         ));
 
     function handleSectionChange(section: SectionKey) {

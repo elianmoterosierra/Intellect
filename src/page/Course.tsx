@@ -14,11 +14,13 @@ import { Perfil } from '../components/Perfil/Perfil';
 import { useUIStore } from '../store/uiStore';
 import type { TaskWithCompleted } from '../types';
 import { canManageCourse } from '../utils/permission';
+import { COURSE_SECTIONS } from '../utils/courseSections';
 
 const CalendarSection = lazy(() => import('../components/Course/CalendarSection/CalendarSection'));
 const Dashboard = lazy(() => import('../components/Course/DashboardSection/Dashboard'));
 const AddTaskSection = lazy(() => import('../components/Course/AddTaskSection/AddTaskSection'));
 const ManageSubjectsSection = lazy(() => import('../components/Course/ManageSubjectsSection/ManageSubjectsSection'));
+const ViewAllMemberSection = lazy(() => import('../components/Course/ViewAllMemberSection/ViewAllMemberSection'));
 
 export default function Course() {
   const { courseId } = useParams();
@@ -112,6 +114,12 @@ export default function Course() {
           {activeSection === 'Gestionar materias' && canManageTasks && (
             <Suspense fallback={<div className="p-10 text-center text-ink-soft">Cargando materias...</div>}>
               <ManageSubjectsSection courseId={course.id} />
+            </Suspense>
+          )}
+
+          {activeSection === COURSE_SECTIONS.VIEW_ALL_MEMBER && canManageTasks && (
+            <Suspense fallback={<div className="p-10 text-center text-ink-soft">Cargando miembros...</div>}>
+              <ViewAllMemberSection courseId={course.id} />
             </Suspense>
           )}
 

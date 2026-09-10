@@ -17,6 +17,7 @@ const sections = [
     { key: COURSE_SECTIONS.CALENDAR, icon: 'calendar_month', label: 'Calendario' },
     { key: COURSE_SECTIONS.ADD_TASKS, icon: 'assignment', label: 'Agregar Tareas' },
     { key: COURSE_SECTIONS.MANAGE_SUBJECTS, icon: 'menu_book', label: 'Gestionar materias' },
+    { key: COURSE_SECTIONS.VIEW_ALL_MEMBER, icon: 'person', label: 'Ver miembros' },
 ];
 
 type SideNavProps = {
@@ -37,7 +38,9 @@ export function SideNav({ courseId, activeSection, onSectionChange, canManageCou
     const visibleSections = canManageCourse
         ? sections
         : sections.filter((section) => (
-            section.key !== COURSE_SECTIONS.ADD_TASKS && section.key !== COURSE_SECTIONS.MANAGE_SUBJECTS
+            section.key !== COURSE_SECTIONS.ADD_TASKS
+            && section.key !== COURSE_SECTIONS.MANAGE_SUBJECTS
+            && section.key !== COURSE_SECTIONS.VIEW_ALL_MEMBER
         ));
 
     function expandSidebar() {

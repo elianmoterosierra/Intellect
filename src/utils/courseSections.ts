@@ -7,6 +7,7 @@ export const COURSE_SECTIONS = {
     CALENDAR: 'calendar',
     ADD_TASKS: 'Agregar Tareas',
     MANAGE_SUBJECTS: 'Gestionar materias',
+    VIEW_ALL_MEMBER: 'viewAllMember',
 } as const;
 
 export type SectionKey = (typeof COURSE_SECTIONS)[keyof typeof COURSE_SECTIONS];

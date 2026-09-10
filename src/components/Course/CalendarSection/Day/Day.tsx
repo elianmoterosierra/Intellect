@@ -52,10 +52,6 @@ export function Day({ courseId, currentMonth, currentYear, desktopWorkweek = fal
                     {weekdays.map((day) => (
                         <DayCard key={day.id} courseId={courseId} day={day} year={day.date.getFullYear()} month={day.date.getMonth()} weekly dataVersion={dataVersion} />
                     ))}
-                    <div className="calendar-recess-overlay" aria-label="Horarios de recreo">
-                        <div className="calendar-recess-band calendar-recess-band-morning">Recreo</div>
-                        <div className="calendar-recess-band calendar-recess-band-afternoon">Recreo</div>
-                    </div>
                 </div>
             </div>
         );

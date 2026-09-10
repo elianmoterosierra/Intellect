@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router'
 import { Layout } from './components/Layout/Layout'
 import DashBoardProtected from './ProtectedRoutes/DashBoardProtected'
+import CourseEntryRedirect from './ProtectedRoutes/CourseEntryRedirect'
 import { useThemeStore } from './store/themeStore'
 import { useAuthStore } from './store/AuthStore'
 import { supabase } from './lib/supabase'
@@ -17,7 +18,7 @@ const Course = lazy(() => import('./page/Course'))
 
 
 function App() {
-    useEffect(() => {
+  useEffect(() => {
     useThemeStore.getState().initTheme()
 
     const restoreAndLoadData = async () => {
@@ -56,11 +57,19 @@ function App() {
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route element={<Layout />}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/course" element={<DashBoardProtected><CoursePage /></DashBoardProtected>} />
+            <Route path="/" element={<CourseEntryRedirect><HomePage /></CourseEntryRedirect>} />
+            <Route path="/course" element={<CourseEntryRedirect><DashBoardProtected><CoursePage /></DashBoardProtected></CourseEntryRedirect>} />
 
           </Route>
           <Route path="/course-dashboard/:courseId" element={<DashBoardProtected><Course /></DashBoardProtected>} />
+
+          <Route path="*" element={
+            <>
+              <h1 className='text-5xl font-bold text-center mt-32'>404 - Pagina No Encontrada</h1>
+              <button onClick={() => window.history.back()} className="text-center mt-4">Volver</button>
+            </>
+
+          } />
         </Routes>
       </Suspense>
     </BrowserRouter>

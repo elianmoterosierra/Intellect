@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
+import { capitalizePersonName, capitalizeSubjectName } from '../utils/subjectName';
 import { fromDatabaseTime } from '../utils/taskSchedule';
 import type { Subject, SubjectColor, SubjectSchedule, SubjectWeekday } from '../types';
 
@@ -13,6 +14,7 @@ type SubjectRow = {
     name: string;
     teacher: string;
     description: string;
+    meeting_url: string | null;
     color: SubjectColor;
     created_at: string;
 };
@@ -74,9 +76,10 @@ function rowsToSubjects(subjectRows: SubjectRow[], scheduleRows: SubjectSchedule
         const subject: Subject = {
             id: row.id,
             courseId: row.course_id,
-            name: row.name,
-            teacher: row.teacher,
+            name: capitalizeSubjectName(row.name),
+            teacher: capitalizePersonName(row.teacher),
             description: row.description,
+            ...(row.meeting_url ? { meetingUrl: row.meeting_url } : {}),
             color: row.color,
             schedules: schedulesBySubject[row.id] ?? [],
             createdAt: row.created_at,
@@ -112,7 +115,7 @@ export const useSubjectStore = create<SubjectStore>((set) => ({
 
         const { data: subjectRows, error: subjectsError } = await supabase
             .from('subjects')
-            .select('id, course_id, name, teacher, description, color, created_at')
+            .select('id, course_id, name, teacher, description, meeting_url, color, created_at')
             .eq('course_id', courseId)
             .order('created_at');
 
@@ -151,10 +154,11 @@ export const useSubjectStore = create<SubjectStore>((set) => ({
                 name: subject.name,
                 teacher: subject.teacher,
                 description: subject.description,
+                meeting_url: subject.meetingUrl ?? null,
                 color: subject.color,
                 created_at: subject.createdAt,
             })
-            .select('id, course_id, name, teacher, description, color, created_at')
+            .select('id, course_id, name, teacher, description, meeting_url, color, created_at')
             .single();
 
         if (subjectError || !subjectRow) {
@@ -201,11 +205,12 @@ export const useSubjectStore = create<SubjectStore>((set) => ({
                 name: subject.name,
                 teacher: subject.teacher,
                 description: subject.description,
+                meeting_url: subject.meetingUrl ?? null,
                 color: subject.color,
             })
             .eq('id', subject.id)
             .eq('course_id', subject.courseId)
-            .select('id, course_id, name, teacher, description, color, created_at')
+            .select('id, course_id, name, teacher, description, meeting_url, color, created_at')
             .single();
 
         if (subjectError || !subjectRow) {

@@ -4,26 +4,21 @@ export type TaskSchedule = {
 };
 
 export const TIME_OPTIONS = [
-    '7:30 AM', '8:20 AM', '9:10 AM', '10:00 AM', '10:30 AM',
-    '11:20 AM', '12:10 PM', '1:00 PM', '1:50 PM', '2:40 PM', '3:30 PM',
+    '8:00 AM', '9:00 AM', '9:30 AM', '10:30 AM',
+    '11:00 AM', '12:00 PM', '2:00 PM', '3:00 PM',
 ] as const;
 
 export const TIME_SLOTS = [
-    { start: '7:30 AM', end: '8:20 AM' },
-    { start: '8:20 AM', end: '9:10 AM' },
-    { start: '9:10 AM', end: '10:00 AM' },
-    { start: '10:00 AM', end: '10:30 AM' },
-    { start: '10:30 AM', end: '11:20 AM' },
-    { start: '11:20 AM', end: '12:10 PM' },
-    { start: '12:10 PM', end: '1:00 PM' },
-    { start: '1:00 PM', end: '1:50 PM' },
-    { start: '1:50 PM', end: '2:40 PM' },
-    { start: '2:40 PM', end: '3:30 PM' },
+    { start: '8:00 AM', end: '9:00 AM' },
+    { start: '9:30 AM', end: '10:30 AM' },
+    { start: '11:00 AM', end: '12:00 PM' },
+    { start: '2:00 PM', end: '3:00 PM' },
 ] as const;
 
 export function getTimeOptionsAfter(startTime: string): readonly string[] {
-    const startIndex = TIME_OPTIONS.indexOf(startTime as typeof TIME_OPTIONS[number]);
-    return startIndex < 0 ? TIME_OPTIONS : TIME_OPTIONS.slice(startIndex + 1);
+    return TIME_SLOTS
+        .filter((slot) => slot.start === startTime)
+        .map((slot) => slot.end);
 }
 
 export function timeToMinutes(time: string): number {

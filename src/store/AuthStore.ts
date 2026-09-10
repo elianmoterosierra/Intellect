@@ -5,7 +5,6 @@ import type {
     AuthState,
     CourseRole,
     LoginResult,
-    RegisterResult,
     TaskStatusMap,
     User,
 } from '../types';
@@ -33,9 +32,7 @@ function mapRow(row: UsuarioRow, courseRoles: Record<string, CourseRole> = {}): 
 }
 
 interface AuthActions {
-    login: (credentials: { email: string; password: string }) => Promise<LoginResult>;
     loginWithGoogle: () => Promise<LoginResult>;
-    register: (data: { name: string; email: string; password: string }) => Promise<RegisterResult>;
     updateUser: (field: EditableUserField, value: string) => Promise<boolean>;
     setSelectedCourse: (courseId: number | null) => Promise<boolean>;
     setSelectedCourseLocal: (courseId: number | null) => void;
@@ -81,31 +78,6 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
     sessionReady: false,
     user: null,
 
-    login: async ({ email, password }) => {
-        const normalizedEmail = email.trim().toLowerCase();
-
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email: normalizedEmail,
-            password,
-        });
-
-        if (error || !data.user) {
-            return { success: false, error: "Email o contraseña incorrectos." };
-        }
-
-        let user = await get().fetchProfile(data.user.id);
-        if (!user) {
-            await ensureProfile(data.user.id, data.user.email, data.user.user_metadata as Record<string, unknown>);
-            user = await get().fetchProfile(data.user.id);
-        }
-        if (!user) {
-            return { success: false, error: "No se encontró el perfil del usuario." };
-        }
-
-        set({ isLoggedIn: true, user });
-        return { success: true, user };
-    },
-
     loginWithGoogle: async () => {
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
@@ -120,56 +92,6 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
         }
 
         return { success: true };
-    },
-
-    register: async ({ name, email, password }) => {
-        const normalizedEmail = email.trim().toLowerCase();
-
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-            email: normalizedEmail,
-            password,
-        });
-
-        if (signUpError || !signUpData.user) {
-            console.error('[signUp] error:', signUpError?.status, signUpError?.code, signUpError?.message ?? signUpError);
-            if (signUpError?.status === 429 || signUpError?.code === "over_email_send_rate_limit") {
-                return {
-                    success: false,
-                    error: "Se alcanzó el límite de registros por hora del proyecto. Vuelve a intentarlo en la próxima hora.",
-                };
-            }
-
-            return { success: false, error: signUpError?.message ?? "Error al crear la cuenta." };
-        }
-
-        if (!signUpData.session) {
-            return {
-                success: false,
-                error: 'Cuenta creada. Revisa tu correo para confirmar la cuenta antes de iniciar sesión.',
-            };
-        }
-
-        const { data, error } = await supabase
-            .from("usuarios")
-            .insert([{
-                id: signUpData.user.id,
-                name: name.trim(),
-                gmail: normalizedEmail,
-
-                task_status: {},
-                selected_course_id: null,
-            }])
-            .select("*")
-            .limit(1)
-            .single();
-
-        if (error || !data) {
-            return { success: false, error: "Error al registrar usuario." };
-        }
-
-        const user = mapRow(data as UsuarioRow);
-        set({ isLoggedIn: true, user });
-        return { success: true, user };
     },
 
     setSelectedCourse: async (courseId) => {

@@ -41,10 +41,13 @@ export default function AddTaskSection({ courseId }: AddTaskSectionProps) {
                     ))}
                 </div>
 
-                <div className="overflow-hidden rounded-xl border border-line bg-surface shadow-sm">
-                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-line bg-muted/50 px-4 py-3 text-left sm:px-6">
+                <div className="overflow-visible rounded-xl border border-line bg-surface shadow-sm">
+                    <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-4 border-b border-line bg-muted/50 px-4 py-3 text-left sm:px-6">
                         <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">
                             Tarea
+                        </h3>
+                        <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">
+                            Progreso
                         </h3>
                         <h3 className="pr-1 text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">
                             Acciones

@@ -5,8 +5,10 @@ import { canManageCourse } from "../../../../../utils/permission";
 import type { CalendarDay, Subject, SubjectSchedule, Task, TaskWithCompleted } from "../../../../../types";
 import { useAuthStore } from "../../../../../store/AuthStore";
 import { useTaskScheduleStore } from "../../../../../store/taskScheduleStorage";
-import { getTimeOptionsAfter } from "../../../../../utils/taskSchedule";
-import { rangesOverlap } from "../../../../../utils/taskSchedule";
+import { rangesOverlap, TIME_SLOTS } from "../../../../../utils/taskSchedule";
+import { isGoogleMeetUrl } from "../../../../../utils/meetingLink";
+import { GoogleMeet } from "../../../../../components/Form/GoogleMeet";
+import { useModalAnimation } from "../../../../../Hooks/useModalAnimation";
 
 export type TaskForm = { title: string; description: string; startTime: string; endTime: string };
 
@@ -32,15 +34,25 @@ export function DayModal({ day, subject, tasks, courseId, year, month, onClose, 
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState<TaskForm>({ title: '', description: '', startTime: '', endTime: '' });
     const [formError, setFormError] = useState('');
-    const [closing, setClosing] = useState(false);
     const { user } = useAuthStore();
     const canManage = canManageCourse(user, courseId);
     const setTaskSchedule = useTaskScheduleStore((state) => state.setTaskSchedule);
-
-    const handleClose = () => {
-        setClosing(true);
-        setTimeout(onClose, 260);
-    };
+    const {
+        handleClose,
+        overlayClass,
+        modalClass,
+        animationStyle,
+    } = useModalAnimation({
+        onClose,
+        duration: 260,
+        enterModalClass: 'animate-fadeIn',
+        exitModalClass: 'animate-modalOut',
+        enterOverlayClass: 'animate-overlayIn',
+        exitOverlayClass: 'animate-overlayOut',
+    });
+    const meetingUrl = subject?.meetingUrl && isGoogleMeetUrl(subject.meetingUrl)
+        ? subject.meetingUrl
+        : null;
 
     const handleOverlay = (e: React.MouseEvent<HTMLDivElement>) => {
         e.stopPropagation();
@@ -61,7 +73,7 @@ export function DayModal({ day, subject, tasks, courseId, year, month, onClose, 
             setFormError('La descripción no puede superar los 2000 caracteres.');
             return;
         }
-        if (!form.startTime || !form.endTime || !getTimeOptionsAfter(form.startTime).includes(form.endTime)) {
+        if (!TIME_SLOTS.some((slot) => slot.start === form.startTime && slot.end === form.endTime)) {
             setFormError('Selecciona un rango horario válido.');
             return;
         }
@@ -119,15 +131,15 @@ export function DayModal({ day, subject, tasks, courseId, year, month, onClose, 
         <div
             className={`fixed inset-0 z-[200] flex items-center justify-center p-4
                         bg-black/50 backdrop-blur-sm
-                        ${closing ? 'animate-overlayOut' : 'animate-overlayIn'}`}
+                        ${overlayClass}`}
             onClick={handleOverlay}
             style={{ '--tw-bg-opacity': 1 } as React.CSSProperties}
         >
             <div
                 className={`relative w-full max-w-md rounded-2xl shadow-2xl overflow-hidden
                             bg-surface border border-line-soft
-                            ${closing ? 'animate-modalOut' : 'animate-fadeIn'}`}
-                style={{ animationDuration: closing ? '0.26s' : '0.32s' }}
+                            ${modalClass}`}
+                style={animationStyle}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* ── Header ── */}
@@ -140,59 +152,65 @@ export function DayModal({ day, subject, tasks, courseId, year, month, onClose, 
                             : 'bg-gradient-to-br from-muted to-muted-strong'
                     }`}>
                     {isHighlighted && (
-                        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_80%_20%,#fff,transparent)]" />
+                        <div className="pointer-events-none absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_80%_20%,#fff,transparent)]" />
                     )}
 
-                    <button
-                        onClick={handleClose}
-                        onTouchEnd={(e) => { e.preventDefault(); handleClose(); }}
-                        className={`absolute top-4 right-4 rounded-full p-1.5 cursor-pointer transition-colors ${isHighlighted
-                            ? 'text-white/70 hover:text-white hover:bg-white/20'
-                            : 'text-ink-soft hover:bg-muted-strong'
-                            }`}
-                    >
-                        <span className="material-symbols-outlined text-xl leading-none">close</span>
-                    </button>
-
-                    <div className="flex items-end gap-3">
-                        <span className={`${subject ? 'max-w-[220px] text-3xl break-words' : 'text-6xl'} font-black leading-none ${isHighlighted ? 'text-white' : 'text-ink'
-                            }`}>
-                            {subject?.name ?? day.number}
-                        </span>
-                        <div className="flex flex-col mb-1">
-                            <span className={`text-sm font-semibold tracking-wide ${isHighlighted ? 'text-white/90' : 'text-ink-soft'
-                                }`}>
-                                {subject?.teacher ?? day.name}
-                            </span>
-                            <span className={`text-xs ${isHighlighted ? 'text-white/70' : 'text-ink-faint'
-                                }`}>
-                                {getMonthName(year, month)} {year}
-                            </span>
+                    {subject ? (
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="min-w-0 text-left">
+                                <h2 className={`max-w-[280px] break-words text-left text-3xl font-black leading-none ${isHighlighted ? 'text-white' : 'text-ink'}`}>
+                                    {subject.name}
+                                </h2>
+                                {subject.teacher && (
+                                    <p className={`mt-2 text-left text-sm font-semibold tracking-wide ${isHighlighted ? 'text-white/90' : 'text-ink-soft'}`}>
+                                        {subject.teacher}
+                                    </p>
+                                )}
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleClose}
+                                className={`shrink-0 rounded-full p-1.5 transition-colors ${isHighlighted
+                                    ? 'text-white/70 hover:bg-white/20 hover:text-white'
+                                    : 'text-ink-soft hover:bg-muted-strong'
+                                    }`}
+                                aria-label="Cerrar"
+                            >
+                                <span className="material-symbols-outlined text-xl leading-none">close</span>
+                            </button>
                         </div>
-                        {isTomorrow && (
-                            <span className="ml-auto mb-1 text-[10px] font-bold tracking-widest uppercase bg-white/20 text-white px-2 py-0.5 rounded-full border border-white/30">
-                                Mañana
-                            </span>
-                        )}
-                        {isToday && (
-                            <span className="ml-auto mb-1 text-[10px] font-bold tracking-widest uppercase bg-white/20 text-white px-2 py-0.5 rounded-full border border-white/30">
-                                Hoy
-                            </span>
-                        )}
-                        {isWeekend && (
-                            <span className="ml-auto mb-1 text-[10px] font-bold tracking-widest uppercase bg-white/20 text-white px-2 py-0.5 rounded-full border border-white/30">
-                                Finde
-                            </span>
-                        )}
-                        {isPast && (
-                            <span className="ml-auto mb-1 text-[10px] font-bold tracking-widest uppercase bg-muted-strong text-ink-faint px-2 py-0.5 rounded-full">
-                                Pasado
-                            </span>
-                        )}
-                    </div>
+                    ) : (
+                        <>
+                            <button
+                                type="button"
+                                onClick={handleClose}
+                                className={`absolute top-4 right-4 rounded-full p-1.5 cursor-pointer transition-colors ${isHighlighted
+                                    ? 'text-white/70 hover:text-white hover:bg-white/20'
+                                    : 'text-ink-soft hover:bg-muted-strong'
+                                    }`}
+                                aria-label="Cerrar"
+                            >
+                                <span className="material-symbols-outlined text-xl leading-none">close</span>
+                            </button>
+
+                            <div className="flex items-end gap-3">
+                                <span className={`text-6xl font-black leading-none ${isHighlighted ? 'text-white' : 'text-ink'}`}>
+                                    {day.number}
+                                </span>
+                                <div className="mb-1 flex flex-col">
+                                    <span className={`text-sm font-semibold tracking-wide ${isHighlighted ? 'text-white/90' : 'text-ink-soft'}`}>{day.name}</span>
+                                    <span className={`text-xs ${isHighlighted ? 'text-white/70' : 'text-ink-faint'}`}>{getMonthName(year, month)} {year}</span>
+                                </div>
+                                {isTomorrow && <span className="ml-auto mb-1 rounded-full border border-white/30 bg-white/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white">Mañana</span>}
+                                {isToday && <span className="ml-auto mb-1 rounded-full border border-white/30 bg-white/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white">Hoy</span>}
+                                {isWeekend && <span className="ml-auto mb-1 rounded-full border border-white/30 bg-white/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white">Finde</span>}
+                                {isPast && <span className="ml-auto mb-1 rounded-full bg-muted-strong px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-ink-faint">Pasado</span>}
+                            </div>
+                        </>
+                    )}
 
                     {/* Task count pill */}
-                    <div className={`mt-3 inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full ${isHighlighted ? 'bg-white/20 text-white' : 'bg-muted-strong text-ink-soft'
+                    <div className={`mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${subject ? 'mx-auto' : ''} ${isHighlighted ? 'bg-white/20 text-white' : 'bg-muted-strong text-ink-soft'
                         }`}>
                         <span className="material-symbols-outlined text-sm leading-none">task_alt</span>
                         {tasks.length === 0
@@ -204,19 +222,43 @@ export function DayModal({ day, subject, tasks, courseId, year, month, onClose, 
                 {/* ── Task list ── */}
                 <div className="px-6 py-4 max-h-60 overflow-y-auto flex flex-col gap-3">
                     <TaskList tasks={tasks} handleToggle={handleToggle} dayDate={dayDate} onTaskClick={onTaskClick} />
+                    {meetingUrl && !canManage && (
+                        <a
+                            href={meetingUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center justify-center gap-1.5 text-sm font-semibold text-brand hover:underline"
+                        >
+                            <GoogleMeet className="h-5 w-6" />
+                        </a>
+                    )}
                 </div>
 
                 {/* ── Add task form ── */}
                 <div className="px-6 pb-6 border-t border-line-soft pt-4">
-                    {canManage && <AddTask
-                        showForm={showForm}
-                        setShowForm={setShowForm}
-                        form={form}
-                        setForm={setForm}
-                        handleSubmit={handleSubmit}
-                        disabled={isToday || isPast}
-                        error={formError}
-                    />}
+                    {canManage && (
+                        <>
+                            <AddTask
+                                showForm={showForm}
+                                setShowForm={setShowForm}
+                                form={form}
+                                setForm={setForm}
+                                handleSubmit={handleSubmit}
+                                disabled={isToday || isPast}
+                                error={formError}
+                            />
+                            {meetingUrl && (
+                                <a
+                                    href={meetingUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="mt-3 flex items-center justify-center gap-1.5 text-sm font-semibold text-brand hover:underline"
+                                >
+                                    <GoogleMeet className="h-5 w-6" />
+                                </a>
+                            )}
+                        </>
+                    )}
                 </div>
             </div>
         </div>

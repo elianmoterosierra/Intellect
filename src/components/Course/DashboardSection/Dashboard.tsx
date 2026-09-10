@@ -1,6 +1,7 @@
 import { HeaderDashboard } from './Header/HeaderDashboard';
 import { TaskSummary } from './TaskSummary/TaskSummary';
 import { UpcomingTasks } from './UpcomingTasks/UpcomingTasks';
+import { DashboardCalendar } from './DashboardCalendar/DashboardCalendar';
 import { useTaskStore } from '../../../store/taskStorage';
 import { useAuthStore } from '../../../store/AuthStore';
 import { useMemo } from 'react';
@@ -34,8 +35,11 @@ export default function Dashboard({ course, canManageTasks }: DashboardProps) {
     return (
         <div className="p-4 md:p-10">
             <HeaderDashboard />
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 auto-rows-min">
-                <UpcomingTasks tasks={tasks} courseId={course.id} canManageCourse={canManageTasks} />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-12 md:gap-6 auto-rows-min">
+                <div className="order-2 flex flex-col gap-4 md:order-1 md:col-span-8">
+                    <UpcomingTasks tasks={tasks} courseId={course.id} canManageCourse={canManageTasks} />
+                    <DashboardCalendar courseId={course.id} />
+                </div>
                 <TaskSummary tasks={tasks} />
             </div>
         </div>
