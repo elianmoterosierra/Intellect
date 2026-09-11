@@ -50,7 +50,7 @@ export type CourseMemberSummary = {
     joinedAt: string;
 };
 
-export type SubjectColor = 'blue' | 'purple' | 'pink' | 'yellow' | 'green' | 'orange';
+export type SubjectColor = 'blue' | 'purple' | 'pink' | 'yellow' | 'green' | 'orange'| 'white' | 'red' | 'gray';
 
 export type SubjectWeekday = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday';
 

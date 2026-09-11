@@ -6,12 +6,15 @@ type SubjectListProps = {
 };
 
 const colorClasses: Record<SubjectColor, string> = {
-    blue: 'bg-blue-600',
-    purple: 'bg-purple-600',
-    pink: 'bg-pink-500',
-    yellow: 'bg-yellow-400',
-    green: 'bg-green-600',
-    orange: 'bg-orange-500',
+    blue: 'subject-color-blue',
+    purple: 'subject-color-purple',
+    pink: 'subject-color-pink',
+    yellow: 'subject-color-yellow',
+    green: 'subject-color-green',
+    orange: 'subject-color-orange',
+    red: 'subject-color-red',
+    gray: 'subject-color-gray',
+    white: 'subject-color-white',
 };
 
 const weekdayLabels = {

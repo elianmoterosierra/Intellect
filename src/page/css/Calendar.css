@@ -1503,31 +1503,51 @@ body {
 }
 
 .subject-blue {
-    background-color: rgb(var(--blue-600));
+    background-color: rgb(var(--subject-blue));
     color: white;
 }
 
 .subject-purple {
-    background-color: var(--card-purple);
+    background-color: rgb(var(--subject-purple));
     color: white;
 }
 
 .subject-pink {
-    background-color: rgb(var(--red-400));
+    background-color: rgb(var(--subject-pink));
     color: white;
 }
 
 .subject-yellow {
-    background-color: rgb(var(--yellow-400));
-    color: rgb(var(--gray-950));
+    background-color: rgb(var(--subject-yellow));
+    color: rgb(var(--subject-ink));
 }
 
 .subject-green {
-    background-color: rgb(var(--green-600));
+    background-color: rgb(var(--subject-green));
     color: white;
 }
 
 .subject-orange {
-    background-color: rgb(var(--amber-500));
+    background-color: rgb(var(--subject-orange));
     color: white;
+}
+
+.subject-ink {
+    background-color: rgb(var(--subject-ink));
+    color: white;
+}
+
+.subject-red {
+    background-color: rgb(var(--subject-red));
+    color: white;
+}
+
+.subject-gray {
+    background-color: rgb(var(--subject-gray));
+    color: white;
+}
+
+.subject-white {
+    background-color: rgb(var(--subject-white));
+    color: rgb(var(--subject-ink));
 }

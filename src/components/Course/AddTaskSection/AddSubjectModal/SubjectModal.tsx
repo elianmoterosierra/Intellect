@@ -22,12 +22,15 @@ const WEEKDAYS: Array<{ value: SubjectWeekday; label: string }> = [
 ];
 
 const COLORS: Array<{ value: SubjectColor; label: string; className: string }> = [
-    { value: 'blue', label: 'Azul', className: 'bg-blue-600' },
-    { value: 'purple', label: 'Morado', className: 'bg-purple-950' },
-    { value: 'pink', label: 'Rosado', className: 'bg-pink-500' },
-    { value: 'yellow', label: 'Amarillo', className: 'bg-yellow-400' },
-    { value: 'green', label: 'Verde', className: 'bg-green-600' },
-    { value: 'orange', label: 'Naranja', className: 'bg-orange-500' },
+    { value: 'blue', label: 'Azul', className: 'subject-color-blue' },
+    { value: 'purple', label: 'Morado', className: 'subject-color-purple' },
+    { value: 'pink', label: 'Rosado', className: 'subject-color-pink' },
+    { value: 'yellow', label: 'Amarillo', className: 'subject-color-yellow' },
+    { value: 'green', label: 'Verde', className: 'subject-color-green' },
+    { value: 'orange', label: 'Naranja', className: 'subject-color-orange' },
+    { value: 'red', label: 'Rojo', className: 'subject-color-red' },
+    { value: 'gray', label: 'Gris', className: 'subject-color-gray' },
+    { value: 'white', label: 'Blanco', className: 'subject-color-white' },
 ];
 
 function createSchedule(): SubjectSchedule {

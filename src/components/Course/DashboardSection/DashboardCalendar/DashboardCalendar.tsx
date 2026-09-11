@@ -20,12 +20,15 @@ const WEEKDAYS = [
 ] as const;
 
 const SUBJECT_COLORS: Record<SubjectColor, string> = {
-    blue: 'border-blue-500',
-    purple: 'border-purple-500',
-    pink: 'border-pink-500',
-    yellow: 'border-yellow-500',
-    green: 'border-green-500',
-    orange: 'border-orange-500',
+    blue: 'subject-border-blue',
+    purple: 'subject-border-purple',
+    pink: 'subject-border-pink',
+    yellow: 'subject-border-yellow',
+    green: 'subject-border-green',
+    orange: 'subject-border-orange',
+    red: 'subject-border-red',
+    gray: 'subject-border-gray',
+    white: 'subject-border-white',
 };
 
 function formatDate(date: Date): string {
