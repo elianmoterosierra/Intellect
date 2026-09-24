@@ -16,6 +16,7 @@ export type CourseRole = 'student' | 'manager';
 
 export type Task = {
     id: string;
+    createdAt?: string;
     title: string;
     subtitle: string;
     dueDate: string;

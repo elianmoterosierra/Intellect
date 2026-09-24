@@ -227,7 +227,7 @@
   --brand-strong: 0 88 190;
   --brand-hover: 0 74 158;
   --on-brand: 255 255 255;
-  --danger: 186 26 26;
+  --danger: 220 38 38;
 
   /* --- Variables de diseño heredadas --- */
   --text: #6b6375;
@@ -363,7 +363,7 @@
   --brand-strong: 58 111 224;
   --brand-hover: 74 110 214;
   --on-brand: 241 243 248;
-  --danger: 255 125 125;
+  --danger: 185 28 28;
 
   /* --- Variables heredadas (oscuro) --- */
   --text: #9ca3af;
@@ -480,6 +480,17 @@ body {
     border-color: rgb(var(--subject-white));
   }
 }
+
+/* Deben prevalecer sobre border-line-soft para colorear el borde izquierdo. */
+.subject-border-blue { border-left-color: rgb(var(--subject-blue)); }
+.subject-border-purple { border-left-color: rgb(var(--subject-purple)); }
+.subject-border-pink { border-left-color: rgb(var(--subject-pink)); }
+.subject-border-yellow { border-left-color: rgb(var(--subject-yellow)); }
+.subject-border-green { border-left-color: rgb(var(--subject-green)); }
+.subject-border-orange { border-left-color: rgb(var(--subject-orange)); }
+.subject-border-red { border-left-color: rgb(var(--subject-red)); }
+.subject-border-gray { border-left-color: rgb(var(--subject-gray)); }
+.subject-border-white { border-left-color: rgb(var(--subject-white)); }
 
 .subject-modal-scroll {
   scrollbar-width: thin;

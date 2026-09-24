@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { getTimeOptionsAfter, rangesOverlap, TIME_SLOTS } from '../../../../utils/taskSchedule';
+import { getTimeOptionsAfter, rangesOverlap, SUBJECT_TIME_SLOTS } from '../../../../utils/taskSchedule';
 import { EMPTY_SUBJECTS, useSubjectStore } from '../../../../store/subjectStorage';
 import { hasSubjectScheduleConflict } from '../../../../utils/subjectSchedule';
 import { isGoogleMeetUrl } from '../../../../utils/meetingLink';
@@ -37,8 +37,8 @@ function createSchedule(): SubjectSchedule {
     return {
         id: crypto.randomUUID(),
         weekday: 'monday',
-        startTime: TIME_SLOTS[0].start,
-        endTime: TIME_SLOTS[0].end,
+        startTime: SUBJECT_TIME_SLOTS[0].start,
+        endTime: SUBJECT_TIME_SLOTS[0].end,
     };
 }
 
@@ -65,7 +65,7 @@ export function SubjectModal({ courseId, onClose, subject }: SubjectModalProps) 
     });
 
     const availableEndTimes = useMemo(
-        () => schedules.map((schedule) => getTimeOptionsAfter(schedule.startTime)),
+        () => schedules.map((schedule) => getTimeOptionsAfter(schedule.startTime, SUBJECT_TIME_SLOTS)),
         [schedules],
     );
 
@@ -109,7 +109,7 @@ export function SubjectModal({ courseId, onClose, subject }: SubjectModalProps) 
             return;
         }
 
-        const hasInvalidTimeSlot = schedules.some((schedule) => !TIME_SLOTS.some((slot) => (
+        const hasInvalidTimeSlot = schedules.some((schedule) => !SUBJECT_TIME_SLOTS.some((slot) => (
             slot.start === schedule.startTime && slot.end === schedule.endTime
         )));
         if (hasInvalidTimeSlot) {
@@ -218,8 +218,8 @@ export function SubjectModal({ courseId, onClose, subject }: SubjectModalProps) 
                                     <select value={schedule.weekday} onChange={(event) => updateSchedule(schedule.id, { weekday: event.target.value as SubjectWeekday })} className="rounded-lg border border-line bg-surface px-3 py-2.5 text-base text-ink md:text-sm">
                                         {WEEKDAYS.map((weekday) => <option key={weekday.value} value={weekday.value}>{weekday.label}</option>)}
                                     </select>
-                                    <select value={schedule.startTime} onChange={(event) => updateSchedule(schedule.id, { startTime: event.target.value, endTime: getTimeOptionsAfter(event.target.value)[0] ?? '' })} className="rounded-lg border border-line bg-surface px-3 py-2.5 text-base text-ink md:text-sm">
-                                        {TIME_SLOTS.map((slot) => <option key={slot.start} value={slot.start}>{slot.start}</option>)}
+                                    <select value={schedule.startTime} onChange={(event) => updateSchedule(schedule.id, { startTime: event.target.value, endTime: getTimeOptionsAfter(event.target.value, SUBJECT_TIME_SLOTS)[0] ?? '' })} className="rounded-lg border border-line bg-surface px-3 py-2.5 text-base text-ink md:text-sm">
+                                        {SUBJECT_TIME_SLOTS.map((slot) => <option key={slot.start} value={slot.start}>{slot.start}</option>)}
                                     </select>
                                     <select value={schedule.endTime} onChange={(event) => updateSchedule(schedule.id, { endTime: event.target.value })} className="rounded-lg border border-line bg-surface px-3 py-2.5 text-base text-ink md:text-sm">
                                         {(availableEndTimes[index] ?? []).map((time) => <option key={time} value={time}>{time}</option>)}

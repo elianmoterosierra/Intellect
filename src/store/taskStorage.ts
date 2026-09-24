@@ -8,9 +8,10 @@ import type { Task } from '../types';
 type TasksByCourse = Record<string, Task[]>;
 
 
-function rowToTask(row: { id: string; course_id: number; title: string; subtitle: string; due_date: string; hour: string; description?: string | null; subject_id?: string | null; start_time?: string | null; end_time?: string | null }): Task {
+function rowToTask(row: { id: string; course_id: number; title: string; subtitle: string; due_date: string; hour: string; created_at?: string | null; description?: string | null; subject_id?: string | null; start_time?: string | null; end_time?: string | null }): Task {
     return {
         id: row.id,
+        ...(row.created_at ? { createdAt: row.created_at } : {}),
         title: row.title,
         subtitle: row.subtitle,
         dueDate: row.due_date,
@@ -39,7 +40,8 @@ export const useTaskStore = create<TaskStore>((set) => ({
         const { data, error } = await supabase
             .from('tasks')
             .select('*')
-            .order('course_id');
+            .order('course_id')
+            .order('created_at', { ascending: false });
 
         if (error || !data) {
             console.error('Error fetching tasks:', error);
@@ -50,17 +52,7 @@ export const useTaskStore = create<TaskStore>((set) => ({
         for (const row of data) {
             const courseId = String(row.course_id);
             grouped[courseId] ??= [];
-            grouped[courseId].push({
-                id: row.id,
-                title: row.title,
-                subtitle: row.subtitle,
-                dueDate: row.due_date,          // ← snake → camel
-                hour: row.hour,
-                ...(row.description ? { description: row.description } : {}),
-                ...(row.subject_id ? { subjectId: row.subject_id } : {}),
-                ...(row.start_time ? { startTime: row.start_time } : {}),
-                ...(row.end_time ? { endTime: row.end_time } : {}),
-            });
+            grouped[courseId].push(rowToTask(row));
         }
 
 
@@ -69,10 +61,12 @@ export const useTaskStore = create<TaskStore>((set) => ({
     },
     clearTasks: () => set({ tasksByCourse: {} }),
     addTask: async (courseId, task) => {
+        const createdAt = task.createdAt ?? new Date().toISOString();
         const { data, error } = await supabase
             .from('tasks')
             .insert({
                 id: task.id,
+                created_at: createdAt,
                 course_id: Number(courseId),
                 title: task.title,
                 subtitle: task.subtitle,
@@ -153,8 +147,4 @@ export const useTaskStore = create<TaskStore>((set) => ({
             }
         }));
     },
-
-
-
-
 }));

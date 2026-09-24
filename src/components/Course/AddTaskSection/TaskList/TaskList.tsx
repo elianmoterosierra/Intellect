@@ -17,6 +17,11 @@ type TaskListProps = {
 
 export type TaskSortMode = 'asc' | 'desc' | 'recent';
 
+function getTaskCreationTime(task: TaskWithCompleted): number {
+    const createdAt = task.createdAt ? Date.parse(task.createdAt) : Number.NaN;
+    return Number.isNaN(createdAt) ? 0 : createdAt;
+}
+
 export function TaskList({ courseId, sortMode = 'recent' }: TaskListProps) {
     const tasksByCourse = useTaskStore((state) => state.tasksByCourse);
     const user = useAuthStore((state) => state.user);
@@ -43,7 +48,7 @@ export function TaskList({ courseId, sortMode = 'recent' }: TaskListProps) {
                 return sortMode === 'asc' ? result : -result;
             });
         } else {
-            sorted.sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime());
+            sorted.sort((a, b) => getTaskCreationTime(b) - getTaskCreationTime(a));
         }
         return sorted;
     }, [sortMode, tasks]);

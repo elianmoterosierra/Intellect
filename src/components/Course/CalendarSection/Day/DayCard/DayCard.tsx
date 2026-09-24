@@ -5,7 +5,7 @@ import { EMPTY_TASKS } from '../../../../../Hooks/useMonthDay';
 import { useTaskStore } from '../../../../../store/taskStorage';
 import { useAuthStore } from '../../../../../store/AuthStore';
 import { DetailsModal } from '../../../Common/DetailsModal/DetailsModal';
-import { TIME_SLOTS, fromDatabaseTime, isSameLocalDay } from '../../../../../utils/taskSchedule';
+import { SUBJECT_TIME_SLOTS, TIME_SLOTS, fromDatabaseTime, isSameLocalDay } from '../../../../../utils/taskSchedule';
 import { useTaskScheduleStore } from '../../../../../store/taskScheduleStorage';
 import { EMPTY_SUBJECTS, useSubjectStore } from '../../../../../store/subjectStorage';
 import { getSubjectWeekday } from '../../../../../utils/subjectSchedule';
@@ -34,6 +34,17 @@ function getSlotIndex(startTime: string, endTime: string): number {
     return TIME_SLOTS.findIndex((slot) => slot.start === startTime && slot.end === endTime);
 }
 
+function getSubjectSlotIndex(startTime: string, endTime: string, showNoonSlot: boolean): number {
+    const slots = showNoonSlot ? SUBJECT_TIME_SLOTS : TIME_SLOTS;
+    return slots.findIndex((slot) => slot.start === startTime && slot.end === endTime);
+}
+
+function getCalendarTaskSlotIndex(startTime: string, endTime: string, showNoonSlot: boolean): number {
+    const slotIndex = getSlotIndex(startTime, endTime);
+    if (showNoonSlot && slotIndex >= 3) return slotIndex + 1;
+    return slotIndex;
+}
+
 const typeStyles: Record<CalendarDay['type'], string> = {
     past: 'opacity-60 bg-muted border-line',
     today: 'bg-gradient-to-b from-amber-50 to-surface shadow-[0_2px_10px_-3px_rgba(251,191,36,0.35)]',
@@ -49,6 +60,7 @@ type DayCardProps = {
     courseId: number;
     weekly?: boolean;
     dataVersion: string;
+    showNoonSlot?: boolean;
 };
 
 function getDayStart(date: Date): Date {
@@ -57,7 +69,7 @@ function getDayStart(date: Date): Date {
     return result;
 }
 
-export const DayCard = memo(function DayCard({ day, year, month, courseId, weekly = false, dataVersion }: DayCardProps) {
+export const DayCard = memo(function DayCard({ day, year, month, courseId, weekly = false, dataVersion, showNoonSlot = false }: DayCardProps) {
     const { number, type } = day;
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSubject, setSelectedSubject] = useState<{ subject: Subject; schedule: SubjectSchedule } | null>(null);
@@ -139,11 +151,11 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId, weekl
 
     const weeklyCard = (
         <div
-            className={`weekly-day-card ${type === 'today' ? 'weekly-day-card-today' : ''}`}
+            className={`weekly-day-card ${showNoonSlot ? 'weekly-day-card-with-noon' : ''} ${type === 'today' ? 'weekly-day-card-today' : ''}`}
             data-version={dataVersion}
             data-today={isToday ? '' : undefined}
         >
-            {TIME_SLOTS.map((slot, index) => (
+            {(showNoonSlot ? SUBJECT_TIME_SLOTS : TIME_SLOTS).map((slot, index) => (
                 <div
                     key={slot.start}
                     className="weekly-slot"
@@ -152,7 +164,7 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId, weekl
                 />
             ))}
             {daySubjects.map(({ subject, segment }) => {
-                const slotIndex = getSlotIndex(segment.startTime, segment.endTime);
+                const slotIndex = getSubjectSlotIndex(segment.startTime, segment.endTime, showNoonSlot);
                 if (slotIndex < 0) return null;
                 const subjectTasks = segment.index === 0
                     ? tasks.filter((task) => task.subjectId === subject.id)
@@ -194,7 +206,7 @@ export const DayCard = memo(function DayCard({ day, year, month, courseId, weekl
             {weeklyTasks.map((task) => {
                 const schedule = getTaskSchedule(task);
                 if (!schedule) return null;
-                const slotIndex = getSlotIndex(schedule.startTime, schedule.endTime);
+                const slotIndex = getCalendarTaskSlotIndex(schedule.startTime, schedule.endTime, showNoonSlot);
                 if (slotIndex < 0) return null;
                 return (
                     <button

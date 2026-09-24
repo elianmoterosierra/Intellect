@@ -426,6 +426,10 @@ body {
     height: 480px;
 }
 
+.calendar-time-axis-with-noon {
+    grid-template-rows: repeat(5, minmax(0, 1fr));
+}
+
 .calendar-time-label {
     min-height: 0;
     display: flex;
@@ -450,6 +454,10 @@ body {
     background-color: var(--surface-container-lowest);
     cursor: pointer;
     transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.weekly-day-card-with-noon {
+    grid-template-rows: repeat(5, minmax(0, 1fr));
 }
 
 .weekly-day-card:hover {

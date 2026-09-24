@@ -121,7 +121,7 @@ export function TaskEdit({ task, courseId, onClose }: TaskEditProps) {
                     <div className="flex flex-col gap-4 text-left">
                         <label className="flex flex-col gap-1.5 text-sm font-semibold text-ink">
                             Título
-                            <input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={30} className="rounded-xl border border-line bg-muted px-4 py-3 text-base text-ink outline-none focus:border-brand md:text-sm" />
+                            <input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={50} className="rounded-xl border border-line bg-muted px-4 py-3 text-base text-ink outline-none focus:border-brand md:text-sm" />
                         </label>
 
                         <label className="flex flex-col gap-1.5 text-sm font-semibold text-ink">

@@ -13,7 +13,7 @@ Aplicación web de gestión académica creada con React, Vite y Supabase. Permit
 - El registro de membresías es idempotente: si el usuario ya pertenece al curso, no se genera
   un conflicto `409` ni se modifica su rol actual.
 - Solo un admin o el manager del curso puede ver y usar las acciones de crear, editar o eliminar tareas.
-- Materias recurrentes: admins y managers pueden crear, editar y eliminar materias con profesor, descripción, color elegido, varios horarios semanales sin solapamientos y un enlace opcional de Google Meet; se guardan en `public.subjects` y `public.subject_schedules` y se renderizan en el calendario.
+- Materias recurrentes: admins y managers pueden crear, editar y eliminar materias con profesor, descripción, color elegido, varios horarios semanales sin solapamientos y un enlace opcional de Google Meet; se guardan en `public.subjects` y `public.subject_schedules` y se renderizan en el calendario. Los horarios de materias incluyen `12:00–1:00 PM`; ese bloque no está disponible para tareas.
 - El formulario nuevo de tareas permite seleccionar una materia y una fecha válida para esa materia; las tareas mantienen `dueDate` para expiración y guardan la relación mediante `tasks.subject_id`.
 - Modal único de creación de tareas (`AddTaskModal/TaskModal.tsx`) reusado desde el dashboard y la sección "Agregar Tareas".
 - Descripción con textarea de auto-resize hasta 6 líneas, contador de caracteres en vivo y botón Guardar bloqueado al superar el límite de 2000 caracteres en el modal de creación.

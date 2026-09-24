@@ -175,7 +175,7 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
             .select("id, name, gmail, selected_course_id, task_status, is_admin")
             .eq("id", userId)
             .limit(1)
-            .single();
+            .maybeSingle();
 
         if (error || !data) return null;
         const { data: memberships } = await supabase

@@ -32,7 +32,7 @@ export function TaskItem({ task, courseId, canManageCourse, compact = false }: T
     const toggleTaskStatus = useAuthStore((state) => state.toggleTaskStatus);
     const [showDetails, setShowDetails] = useState(false);
     const isMobile = useMediaQuery('(max-width: 767px)');
-    const maxTitle = isMobile ? 15 : 20;
+    const maxTitle = isMobile ? 15 : 30;
     const done = task.completed;
     const statusCfg = getTaskStatusConfig(task.dueDate);
     const isOverdue = !done && statusCfg.status === 'overdue';
@@ -48,10 +48,10 @@ export function TaskItem({ task, courseId, canManageCourse, compact = false }: T
     return (
         <>
             <li
-                className={`${compact ? 'mx-4 my-2 rounded-lg border border-line-soft bg-muted/45 px-3 py-3' : 'px-6 py-4 border-t first:border-t-0'} flex items-center ${compact ? 'gap-3' : 'gap-6'} transition-colors duration-200 group cursor-pointer ${
+                className={`${compact ? 'mx-4 my-2 rounded-lg border border-line-soft px-3 py-3' : 'px-6 py-4 border-t first:border-t-0'} flex items-center ${compact ? 'gap-3' : 'gap-6'} transition-colors duration-200 group cursor-pointer ${
                     isOverdue
                         ? 'bg-danger border-danger hover:bg-danger text-white'
-                        : 'border-line hover:bg-muted'
+                        : 'bg-muted/45 border-line hover:bg-muted'
                 }`}
                 onClick={() => setShowDetails(true)}
             >

@@ -3,6 +3,11 @@ export type TaskSchedule = {
     endTime: string;
 };
 
+export type TimeSlot = {
+    start: string;
+    end: string;
+};
+
 export const TIME_OPTIONS = [
     '8:00 AM', '9:00 AM', '9:30 AM', '10:30 AM',
     '11:00 AM', '12:00 PM', '2:00 PM', '3:00 PM',
@@ -15,8 +20,16 @@ export const TIME_SLOTS = [
     { start: '2:00 PM', end: '3:00 PM' },
 ] as const;
 
-export function getTimeOptionsAfter(startTime: string): readonly string[] {
-    return TIME_SLOTS
+/** Horarios válidos para materias; el bloque del mediodía no aplica a tareas. */
+export const NOON_SUBJECT_SLOT = { start: '12:00 PM', end: '1:00 PM' } as const;
+export const SUBJECT_TIME_SLOTS = [
+    ...TIME_SLOTS.slice(0, 3),
+    NOON_SUBJECT_SLOT,
+    TIME_SLOTS[3],
+] as const;
+
+export function getTimeOptionsAfter(startTime: string, slots: readonly TimeSlot[] = TIME_SLOTS): readonly string[] {
+    return slots
         .filter((slot) => slot.start === startTime)
         .map((slot) => slot.end);
 }

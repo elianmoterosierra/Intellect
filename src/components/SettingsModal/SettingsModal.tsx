@@ -75,7 +75,7 @@ export function SettingsModal({ onClose, onOpenPerfil }: SettingsModalProps) {
                         <div className="text-center">
                             <span className="material-symbols-outlined text-6xl text-brand">info</span>
                             <h3 className="text-2xl font-bold text-ink mt-4">Intellect</h3>
-                            <p className="text-sm font-semibold text-ink-faint uppercase tracking-widest mt-1">v0.0.0</p>
+                            <p className="text-sm font-semibold text-ink-faint uppercase tracking-widest mt-1">v1.4.1</p>
                             <p className="text-[15px] text-ink-soft mt-4 max-w-sm mx-auto leading-6">
                                 Plataforma de gestión académica para organizar tareas, cursos y progreso personal.
                             </p>

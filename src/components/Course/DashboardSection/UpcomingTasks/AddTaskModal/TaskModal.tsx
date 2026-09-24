@@ -63,7 +63,7 @@ export function AddTaskModal({ closeModal, handleSubmit, titleInputRef, title, s
                             onChange={(event) => setTitle(event.target.value)}
                             placeholder="material o titulo de la clase..."
                             className="w-full rounded-xl border border-line bg-muted px-5 py-3 text-[15px] text-ink outline-none transition-all placeholder:text-ink-faint focus:border-brand focus:ring-2 focus:ring-brand/25"
-                            maxLength={30}
+                            maxLength={50}
                         />
 
                         <textarea

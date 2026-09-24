@@ -22,7 +22,7 @@ export default function ViewAllMemberSection({ courseId }: ViewAllMemberSectionP
     const [sortMode, setSortMode] = useState<MemberSortMode>('recent');
 
     useEffect(() => {
-        if (canManageCourse(user, courseId)) void fetchMembers(courseId);
+        if (canManageCourse(user, courseId)) void fetchMembers(courseId, true);
     }, [courseId, fetchMembers, user]);
 
     const orderedMembers = useMemo(() => {

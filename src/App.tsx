@@ -21,25 +21,42 @@ function App() {
   useEffect(() => {
     useThemeStore.getState().initTheme()
 
-    const restoreAndLoadData = async () => {
-      await useAuthStore.getState().restoreSession()
+    let initializationStarted = false
+    let dataLoadPromise: Promise<void> | null = null
 
-      if (useAuthStore.getState().isLoggedIn) {
-        const selectedCourseId = useAuthStore.getState().user?.selectedCourseId ?? null
-        await Promise.all([
-          useSubjectStore.getState().loadSubjects(selectedCourseId),
-          useTaskStore.getState().fetchTasks(),
-        ])
-      } else {
-        useSubjectStore.getState().clearSubjects()
-        useTaskStore.getState().clearTasks()
-      }
+    const restoreAndLoadData = (): Promise<void> => {
+      if (dataLoadPromise) return dataLoadPromise
+
+      initializationStarted = true
+      dataLoadPromise = (async () => {
+        await useAuthStore.getState().restoreSession()
+
+        if (useAuthStore.getState().isLoggedIn) {
+          const selectedCourseId = useAuthStore.getState().user?.selectedCourseId ?? null
+          await Promise.all([
+            useSubjectStore.getState().loadSubjects(selectedCourseId),
+            useTaskStore.getState().fetchTasks(),
+          ])
+        } else {
+          useSubjectStore.getState().clearSubjects()
+          useTaskStore.getState().clearTasks()
+        }
+      })().finally(() => {
+        dataLoadPromise = null
+      })
+
+      return dataLoadPromise
     }
 
     void restoreAndLoadData()
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+      if (event === 'SIGNED_IN' && session) {
+        void restoreAndLoadData()
+      }
+      // getSession() above already handles the initial session. Supabase also
+      // emits INITIAL_SESSION, so ignoring it here prevents a duplicate load.
+      if (event === 'INITIAL_SESSION' && session && !initializationStarted) {
         void restoreAndLoadData()
       }
       if (event === 'SIGNED_OUT') {

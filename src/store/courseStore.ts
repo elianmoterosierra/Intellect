@@ -12,7 +12,7 @@ function selectedCourseStatus(): Record<string, ButtonStatus> {
 interface CourseStore {
     buttonStatus: Record<string, ButtonStatus>;
     syncFromAuth: () => void;
-    handleLeave: (courseId: number) => boolean;
+    handleLeave: (courseId: number) => Promise<boolean>;
     verifyAndSelect: (courseId: number, code: string) => Promise<{ success: boolean; error?: string }>;
 }
 
@@ -27,7 +27,7 @@ export const useCourseStore = create<CourseStore>((set) => ({
             .select('id')
             .eq('id', courseId)
             .eq('code_verification', code.trim())
-            .single();
+            .maybeSingle();
         if (rpcError || !isValid) {
             return { success: false, error: 'Código de acceso incorrecto' };
         }
@@ -69,11 +69,26 @@ export const useCourseStore = create<CourseStore>((set) => ({
     },
 
 
-    handleLeave: (courseId) => {
+    handleLeave: async (courseId) => {
         const selectedCourseId = useAuthStore.getState().user?.selectedCourseId;
         if (selectedCourseId == null || String(selectedCourseId) !== String(courseId)) return false;
 
-        useAuthStore.getState().setSelectedCourse(null);
+        const user = useAuthStore.getState().user;
+        if (!user) return false;
+
+        const { error: membershipError } = await supabase
+            .from('course_members')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('course_id', courseId);
+        if (membershipError) {
+            console.error('[courseStore] error leaving course:', membershipError.message);
+            return false;
+        }
+
+        const selectedCourseUpdated = await useAuthStore.getState().setSelectedCourse(null);
+        if (!selectedCourseUpdated) return false;
+
         set({ buttonStatus: {} });
         return true;
     },
